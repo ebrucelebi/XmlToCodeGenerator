@@ -1,0 +1,22 @@
+parseElement ("<" ∷ "to" ∷ ">" ∷ "Tove" ∷ "</" ∷ "to" ∷ ">" ∷ []) []
+
+parseXml "<to>Tove</to>"
+parseXml "<from>Jani</from>"
+parseXml "<heading>Reminder</heading>"
+parseXml "<body>Don't forget me this weekend!</body>"
+
+parseXml
+"<note>
+	<to>Tove</to>
+</note>"
+parseXml "<note><to>Tove</to></note>"
+
+parseXml
+"<note>
+	<to>Tove</to>
+	<from>Jani</from>
+	<heading>Reminder</heading>
+	<body>Don't forget me this weekend!</body>
+</note>"
+
+parseTokens (toList "<note><to>Tove</to></note>")
