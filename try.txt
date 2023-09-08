@@ -20,3 +20,21 @@ parseXml
 </note>"
 
 parseTokens (toList "<note><to>Tove</to></note>")
+
+parseXml
+"<note>
+	<to>Tove</to>
+	<from>Jani</from>
+	<heading>Reminder</heading>
+	<body>Don't forget me this weekend!</body>
+	<empty/>
+</note>"
+
+parseTokens (toList
+"<note>
+	<to>Tove</to>
+	<from>Jani</from>
+	<heading>Reminder</heading>
+	<body>Don't forget me this weekend!</body>
+	<empty/>
+</note>")
