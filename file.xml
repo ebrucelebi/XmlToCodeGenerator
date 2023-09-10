@@ -4,4 +4,8 @@
 	<heading>Reminder</heading>
 	<body>Don't forget me this weekend!</body>
 	<empty/>
+	<atEl attribute1="value1" attribute2="value2">
+		<tos>aaaaa</tos>
+	</atEl>
+	<atElEmp attribute1="value3" attribute2="value4" />
 </note>

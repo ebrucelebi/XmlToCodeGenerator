@@ -23,9 +23,11 @@ parseTokens (toList "<note><to>Tove</to></note>")
 
 parseXml
 "<note>
-	<to>Tove</to>
+	sdfdfh
+	<to>To            ve</to>
 	<from>Jani</from>
-	<heading>Reminder</heading>
+	<heading>Remi
+	nder</heading>
 	<body>Don't forget me this weekend!</body>
 	<empty/>
 </note>"
@@ -38,3 +40,6 @@ parseTokens (toList
 	<body>Don't forget me this weekend!</body>
 	<empty/>
 </note>")
+
+
+parseTokens (toList "<atElEmp attribute1=\"value3\" attribute2=\"value4\" />") [] false false
