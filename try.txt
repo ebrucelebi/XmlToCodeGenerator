@@ -39,7 +39,17 @@ parseTokens (toList
 	<heading>Reminder</heading>
 	<body>Don't forget me this weekend!</body>
 	<empty/>
-</note>")
+	<atElEmp attribute1=\"value3\" attribute2=\"value4\" />
+</note>") [] false false
 
+parseXml
+"<note>
+	<to>Tove</to>
+	<from>Jani</from>
+	<heading>Reminder</heading>
+	<body>Don't forget me this weekend!</body>
+	<empty/>
+	<atElEmp attribute1=\"value3\" attribute2=\"value4\" />
+</note>"
 
 parseTokens (toList "<atElEmp attribute1=\"value3\" attribute2=\"value4\" />") [] false false
