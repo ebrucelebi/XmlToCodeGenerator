@@ -71,3 +71,9 @@ parseElement _ _ = nothing
 
 parseXml : String -> Maybe XmlElement
 parseXml input = parseElement (parseTokens (toList input) [] false false) []
+
+getAttributeValue : List XmlAttribute -> String -> Maybe String
+getAttributeValue ((Attribute n1 v) ∷ xs) n2 with isYes (n1 Data.String.≟ n2)
+... | true = just v
+... | false = getAttributeValue xs n2
+getAttributeValue [] _ = nothing
