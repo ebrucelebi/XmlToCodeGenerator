@@ -2,8 +2,8 @@ module IMODESaveFile where
 
 open import Data.String
 
-imodeString : String
-imodeString = "
+projectXml : String
+projectXml = "
 <project name=\"Project1\" id=\"1667757607687_1\">
     <submodels>
         <model path=\"logicModel1.mdlx\" hash=\"\"/>
