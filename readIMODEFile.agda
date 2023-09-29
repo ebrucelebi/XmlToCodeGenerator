@@ -4,6 +4,7 @@ module readIMODEFile where
 
 open import parseXml
 open import IMODEDataTypes
+open import IMODESaveFile
 open import Data.String
 open import Data.List
 open import Data.Maybe
@@ -49,3 +50,31 @@ readTypes _ = just []
 readTypesFile : XmlElement -> Maybe (List Type)
 readTypesFile (Element "types" _ es) = readTypes es
 readTypesFile _ = nothing
+
+
+createInterface : Maybe String -> Maybe String -> Maybe String -> Maybe String -> Maybe String -> Maybe Interface
+createInterface nothing _ _ _ _ = nothing
+createInterface _ nothing _ _ _ = nothing
+createInterface _ _ nothing _ _ = nothing
+createInterface _ _ _ nothing _ = nothing
+createInterface _ _ _ _ nothing = nothing
+createInterface (just n) (just d) (just io) (just v) (just c) = just record { name = n ; type = iBool; ioType = (getIOType io); value = v; comment = c}
+
+
+readInterfaces : List XmlElement -> Maybe (List Type)
+readInterfaces ((Element "interface" as es) ∷ xs) = just []
+readInterfaces _ = just []
+
+readInterfacesFile : XmlElement -> Maybe (List Type)
+readInterfacesFile (Element "types" _ es) = readInterfaces es
+readInterfacesFile _ = nothing
+
+
+
+readConstants : List XmlElement -> Maybe (List Type)
+readConstants ((Element "type" as es) ∷ xs) = just []
+readConstants _ = just []
+
+readConstantsFile : XmlElement -> Maybe (List Type)
+readConstantsFile (Element "types" _ es) = readInterfaces es
+readConstantsFile _ = nothing
