@@ -77,3 +77,9 @@ getAttributeValue ((Attribute n1 v) ∷ xs) n2 with isYes (n1 Data.String.≟ n2
 ... | true = just v
 ... | false = getAttributeValue xs n2
 getAttributeValue [] _ = nothing
+
+getElement : List XmlElement -> String -> Maybe XmlElement
+getElement ((Element n1 as es) ∷ xs) n2 with isYes (n1 Data.String.≟ n2)
+... | true = just (Element n1 as es)
+... | false = getElement xs n2
+getElement _ _ = nothing
