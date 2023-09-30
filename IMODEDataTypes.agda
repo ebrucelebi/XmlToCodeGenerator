@@ -24,8 +24,8 @@ data Type : Set where
   iStructure : (name : String) -> List (String × Type) -> Type
   iArray : (name : String) -> List (ℕ) -> Type -> Type
   iEnum : (name : String) -> (values : List String) -> Type
-  iOther : (name : String) -> Type -> Type
-  iUserDefined : (otherTypesName : String) -> Type
+  iUserDefined : (name : String) -> Type -> Type
+  iOther : (otherTypesName : String) -> Type
 
 getType : String -> Type
 getType "_null" = iNull

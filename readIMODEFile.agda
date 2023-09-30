@@ -35,8 +35,8 @@ createType (just n) (just "array") es = createArrayType n es
 createType (just n) (just "structure") es = createStructureType n es
 createType (just n) (just "enumeration") es = createEnumerationType n es
 createType (just n) (just d) _ with getType d
-... | iNone = just (iUserDefined d)
-... | t = just (iOther n t)
+... | iNone = just (iOther d)
+... | t = just (iUserDefined n t)
 
 
 readTypes : List XmlElement -> Maybe (List Type)
@@ -58,23 +58,41 @@ createInterface _ nothing _ _ _ = nothing
 createInterface _ _ nothing _ _ = nothing
 createInterface _ _ _ nothing _ = nothing
 createInterface _ _ _ _ nothing = nothing
-createInterface (just n) (just d) (just io) (just v) (just c) = just record { name = n ; type = iBool; ioType = (getIOType io); value = v; comment = c}
+createInterface (just n) (just d) (just io) (just v) (just c) with getType d
+... | iNone = just record { name = n ; type = (iOther d) ; ioType = (getIOType io) ; value = v ; comment = c}
+... | t     = just record { name = n ; type = t ;          ioType = (getIOType io) ; value = v ; comment = c}
 
 
-readInterfaces : List XmlElement -> Maybe (List Type)
-readInterfaces ((Element "interface" as es) ∷ xs) = just []
+readInterfaces : List XmlElement -> Maybe (List Interface)
+readInterfaces ((Element "interface" as es) ∷ xs) with readInterfaces xs
+... | nothing = nothing
+... | just is with createInterface (getAttributeValue as "name") (getAttributeValue as "definition") (getAttributeValue as "IO" ) (getAttributeValue as "value") (getAttributeValue as "comment")
+... | nothing = nothing
+... | just i = just (i ∷ is)
 readInterfaces _ = just []
 
-readInterfacesFile : XmlElement -> Maybe (List Type)
+readInterfacesFile : XmlElement -> Maybe (List Interface)
 readInterfacesFile (Element "types" _ es) = readInterfaces es
 readInterfacesFile _ = nothing
 
 
+createConstant : Maybe String -> Maybe String -> Maybe String -> Maybe String -> Maybe Constant
+createConstant nothing _ _ _ = nothing
+createConstant _ nothing _ _ = nothing
+createConstant _ _ nothing _ = nothing
+createConstant _ _ _ nothing = nothing
+createConstant (just n) (just d) (just v) (just c) with getType d
+... | iNone = just record { name = n ; type = (iOther d) ; value = v ; comment = c}
+... | t     = just record { name = n ; type = t          ; value = v ; comment = c}
 
-readConstants : List XmlElement -> Maybe (List Type)
-readConstants ((Element "type" as es) ∷ xs) = just []
+readConstants : List XmlElement -> Maybe (List Constant)
+readConstants ((Element "type" as es) ∷ xs) with readConstants xs
+... | nothing = nothing
+... | just cs with createConstant(getAttributeValue as "name") (getAttributeValue as "definition") (getAttributeValue as "value") (getAttributeValue as "comment")
+... | nothing = nothing
+... | just c = just (c ∷ cs)
 readConstants _ = just []
 
-readConstantsFile : XmlElement -> Maybe (List Type)
-readConstantsFile (Element "types" _ es) = readInterfaces es
+readConstantsFile : XmlElement -> Maybe (List Constant)
+readConstantsFile (Element "types" _ es) = readConstants es
 readConstantsFile _ = nothing
