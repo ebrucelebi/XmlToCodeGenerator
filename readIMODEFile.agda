@@ -9,6 +9,8 @@ open import Data.String
 open import Data.List
 open import Data.Maybe
 open import Data.Product
+open import Data.Nat
+open import Data.Char
 
 createProject : String -> Project
 createProject n = record { name = n ; subModels = [] ; types = [] ; interfaces = [] ; constants = []}
@@ -19,9 +21,52 @@ readProjectFile (Element "project" as es) with getAttributeValue as "name"
 ... | nothing = nothing
 readProjectFile _ = nothing
 
+charToNat : Char -> Maybe ℕ
+charToNat '0' = just 0
+charToNat '1' = just 1
+charToNat '2' = just 2
+charToNat '3' = just 3
+charToNat '4' = just 4
+charToNat '5' = just 5
+charToNat '6' = just 6
+charToNat '7' = just 7
+charToNat '8' = just 8
+charToNat '9' = just 9
+charToNat _ = nothing
+
+reverseCharListToNat : List Char -> Maybe ℕ
+reverseCharListToNat [] = just 0
+reverseCharListToNat (x ∷ xs) with reverseCharListToNat xs
+... | nothing = nothing
+... | just r with charToNat x
+... | nothing = nothing
+... | just a = just (a + r * 10)
+
+stringToNat : String -> Maybe ℕ
+stringToNat s = reverseCharListToNat (reverse (toList s))
+
+getDimensions : List XmlElement -> Maybe (List (ℕ))
+getDimensions ((Element "dimension" _ ((TextNode i) ∷ as)) ∷ xs) with getDimensions xs
+... | nothing = nothing
+... | just ds with stringToNat i
+... | nothing = nothing
+... | just d = just (d ∷ ds)
+getDimensions _ = nothing
 
 createArrayType : String -> List XmlElement -> Maybe Type
-createArrayType _ _ = nothing
+createArrayType n xs with getElement xs "arrayInfo"
+... | nothing = nothing
+... | just (TextNode _) = nothing
+... | just (Element _ as es1) with getElement es1 "dimensions"
+... | nothing = nothing
+... | just (TextNode _) = nothing
+... | just (Element _ _ es2) with getDimensions es2
+... | nothing = nothing
+... | just ds with getAttributeValue as "definition"
+... | nothing = nothing
+... | just d with getType d
+... | iNone = just (iArray n ds (iOther d))
+... | t = just (iArray n ds t)
 
 createLabels : List XmlElement -> Maybe (List (String × Type))
 createLabels ((Element "definitionElement" as _ ) ∷ xs) with createLabels xs
