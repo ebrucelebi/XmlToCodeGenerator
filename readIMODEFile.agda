@@ -12,15 +12,6 @@ open import Data.Product
 open import Data.Nat
 open import Data.Char
 
-createProject : String -> Project
-createProject n = record { name = n ; subModels = [] ; types = [] ; interfaces = [] ; constants = []}
-
-readProjectFile : XmlElement -> Maybe Project
-readProjectFile (Element "project" as es) with getAttributeValue as "name"
-... | just s = just (createProject s)
-... | nothing = nothing
-readProjectFile _ = nothing
-
 charToNat : Char -> Maybe ℕ
 charToNat '0' = just 0
 charToNat '1' = just 1
@@ -46,6 +37,7 @@ stringToNat : String -> Maybe ℕ
 stringToNat s = reverseCharListToNat (reverse (toList s))
 
 getDimensions : List XmlElement -> Maybe (List (ℕ))
+getDimensions [] = just []
 getDimensions ((Element "dimension" _ ((TextNode i) ∷ as)) ∷ xs) with getDimensions xs
 ... | nothing = nothing
 ... | just ds with stringToNat i
@@ -69,6 +61,7 @@ createArrayType n xs with getElement xs "arrayInfo"
 ... | t = just (iArray n ds t)
 
 createLabels : List XmlElement -> Maybe (List (String × Type))
+createLabels [] = just []
 createLabels ((Element "definitionElement" as _ ) ∷ xs) with createLabels xs
 ... | nothing = nothing
 ... | just vs with getAttributeValue as "name"
@@ -102,14 +95,15 @@ createEnumerationType n xs with createEnumerationValues xs
 createType : Maybe String -> Maybe String -> List XmlElement -> Maybe Type
 createType nothing _ _ = nothing
 createType _ nothing _ = nothing
-createType (just n) (just "array") es = createArrayType n es
-createType (just n) (just "structure") es = createStructureType n es
-createType (just n) (just "enumeration") es = createEnumerationType n es
+createType (just n) (just "&lt;array&gt;") es = createArrayType n es
+createType (just n) (just "&lt;structure&gt;") es = createStructureType n es
+createType (just n) (just "&lt;enumeration&gt;") es = createEnumerationType n es
 createType (just n) (just d) _ with getType d
 ... | iNone = just (iOther d)
 ... | t = just (iUserDefined n t)
 
 readTypes : List XmlElement -> Maybe (List Type)
+readTypes [] = just []
 readTypes ((Element "type" as es) ∷ xs) with readTypes xs
 ... | nothing = nothing
 ... | just ts with (createType (getAttributeValue as "name") (getAttributeValue as "definition") es)
@@ -117,8 +111,8 @@ readTypes ((Element "type" as es) ∷ xs) with readTypes xs
 ... | just t = just (t ∷ ts)
 readTypes _ = just []
 
-readTypesFile : XmlElement -> Maybe (List Type)
-readTypesFile (Element "types" _ es) = readTypes es
+readTypesFile : Maybe XmlElement -> Maybe (List Type)
+readTypesFile (just (Element "types" _ es)) = readTypes es
 readTypesFile _ = nothing
 
 
@@ -133,6 +127,7 @@ createInterface (just n) (just d) (just io) (just v) (just c) with getType d
 ... | t     = just record { name = n ; type = t ;          ioType = (getIOType io) ; value = v ; comment = c}
 
 readInterfaces : List XmlElement -> Maybe (List Interface)
+readInterfaces [] = just []
 readInterfaces ((Element "interface" as es) ∷ xs) with readInterfaces xs
 ... | nothing = nothing
 ... | just is with createInterface (getAttributeValue as "name") (getAttributeValue as "definition") (getAttributeValue as "IO" ) (getAttributeValue as "value") (getAttributeValue as "comment")
@@ -140,8 +135,8 @@ readInterfaces ((Element "interface" as es) ∷ xs) with readInterfaces xs
 ... | just i = just (i ∷ is)
 readInterfaces _ = just []
 
-readInterfacesFile : XmlElement -> Maybe (List Interface)
-readInterfacesFile (Element "types" _ es) = readInterfaces es
+readInterfacesFile : Maybe XmlElement -> Maybe (List Interface)
+readInterfacesFile (just (Element "interfaces" _ es)) = readInterfaces es
 readInterfacesFile _ = nothing
 
 
@@ -155,13 +150,30 @@ createConstant (just n) (just d) (just v) (just c) with getType d
 ... | t     = just record { name = n ; type = t          ; value = v ; comment = c}
 
 readConstants : List XmlElement -> Maybe (List Constant)
-readConstants ((Element "type" as es) ∷ xs) with readConstants xs
+readConstants [] = just []
+readConstants ((Element "constant" as es) ∷ xs) with readConstants xs
 ... | nothing = nothing
 ... | just cs with createConstant(getAttributeValue as "name") (getAttributeValue as "definition") (getAttributeValue as "value") (getAttributeValue as "comment")
 ... | nothing = nothing
 ... | just c = just (c ∷ cs)
 readConstants _ = just []
 
-readConstantsFile : XmlElement -> Maybe (List Constant)
-readConstantsFile (Element "types" _ es) = readConstants es
+readConstantsFile : Maybe XmlElement -> Maybe (List Constant)
+readConstantsFile (just (Element "constants" _ es)) = readConstants es
 readConstantsFile _ = nothing
+
+
+createProject : Maybe String -> Maybe (List Type) ->  Maybe (List Interface) -> Maybe (List Constant) -> Maybe Project
+createProject nothing _ _ _ = nothing
+createProject _ nothing _ _ = nothing
+createProject _ _ nothing _ = nothing
+createProject _ _ _ nothing = nothing
+createProject (just n) (just ts) (just is) (just cs) = just record { name = n ; subModels = [] ; types = ts ; interfaces = is ; constants = cs}
+
+readProjectFile : Maybe XmlElement -> Maybe Project
+readProjectFile (just (Element "project" as es)) = createProject (getAttributeValue as "name") (readTypesFile (parseXml typesXmlString)) (readInterfacesFile (parseXml interfacesXmlString)) (readConstantsFile (parseXml constantsXmlString))
+readProjectFile _ = nothing
+
+
+readIMODEFiles : Maybe Project
+readIMODEFiles = readProjectFile (parseXml projectXmlString)
