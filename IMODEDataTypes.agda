@@ -69,15 +69,18 @@ record Constant : Set where
     type : Type
     value : String
     comment : String
-    
+
 data Model : Set where
-  Connection : String -> (startModel : Model) -> (endModel : Model) -> Model
-  Input : String -> Type -> Model
-  Output : String -> Type -> Model
-  Addition : String -> (inputs : List Model) -> Model
+  TestModel : ℕ -> Model
+  Connection : String -> (id : String) -> (startModelId : String) -> (endModelId : String) -> Model
+  Input : String -> (id : String) -> Type -> Model
+  Output : String -> (id : String) -> Type -> Model
+  InputInstance :  String -> (id : String) -> (sourceId : String) -> Model
+  OutputInstance : String -> (id : String) -> (sourceId : String) -> Model
+  Addition : String -> (id : String) -> (inputConsId : List String) -> Model
 
 data Frame : Set where
-  Operation : String -> (inputs : List Model) -> (outputs : List Model) -> Frame
+  Operation : String -> (inputs : List Model) -> (outputs : List Model) -> (subModels : List Model)-> Frame
   
 record Project : Set where
   field
