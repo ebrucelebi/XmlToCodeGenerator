@@ -1,0 +1,18 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE prjx>
+<project id="1696681038889_1" name="ExampleIMODESave">
+    <submodels>
+        <model path="logicModel1.mdlx" hash=""/>
+    </submodels>
+    <types path="Types.typx"/>
+    <constants path="Constants.constx"/>
+    <interfaces path="Interfaces.intrfx"/>
+    <ports path="Ports.portx"/>
+    <packages/>
+    <Refs/>
+    <configurations>
+        <configuration path="ExampleIMODESave.confx"/>
+    </configurations>
+    <version createdVer="0.011.6701" modifiedVer="0.011.6701"/>
+    <requirement reqCounter="0"/>
+</project>

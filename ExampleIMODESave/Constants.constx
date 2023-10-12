@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE constx>
+<constants>
+    <constant name="Constant1" isTypeTemp="0" definition="Type1" comment="" value="[[0, 0], [0, 0], [0, 0]]"/>
+    <constant name="Constant2" isTypeTemp="0" definition="int8" comment="" value="0"/>
+    <constant name="Constant3" isTypeTemp="0" definition="Type2" comment="" value="value1"/>
+    <constant name="Constant4" isTypeTemp="0" definition="Type3" comment="" value="{label1 : 0, label2 : ' ', label3 : [[0, 0], [0, 0], [0, 0]]}"/>
+</constants>

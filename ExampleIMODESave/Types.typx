@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE typx>
+<types>
+    <type name="Type1" isTypeTemp="0" definition="&lt;array&gt;" comment="">
+        <arrayInfo name="" isTypeTemp="0" definition="int16" comment="">
+            <dimensions>
+                <dimension>3</dimension>
+                <dimension>2</dimension>
+            </dimensions>
+        </arrayInfo>
+    </type>
+    <type name="Type2" isTypeTemp="0" definition="&lt;enumeration&gt;" comment="">
+        <definitionElements>
+            <definitionElement value="value1" comment=""/>
+            <definitionElement value="value2" comment=""/>
+        </definitionElements>
+    </type>
+    <type name="Type3" isTypeTemp="0" definition="&lt;structure&gt;" comment="">
+        <definitionElements>
+            <definitionElement name="label1" isTypeTemp="0" definition="uint8" comment=""/>
+            <definitionElement name="label2" isTypeTemp="0" definition="char" comment=""/>
+            <definitionElement name="label3" isTypeTemp="0" definition="Type1" comment=""/>
+        </definitionElements>
+    </type>
+    <type name="Type4" isTypeTemp="0" definition="Type2" comment=""/>
+</types>
