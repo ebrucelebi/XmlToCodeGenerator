@@ -1,8 +1,9 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE prjx>
-<project id="1696681038889_1" name="ExampleIMODESave">
+<project name="ExampleIMODESave" id="1696681038889_1">
     <submodels>
         <model path="logicModel1.mdlx" hash=""/>
+        <model path="logicModel2.mdlx" hash=""/>
     </submodels>
     <types path="Types.typx"/>
     <constants path="Constants.constx"/>
