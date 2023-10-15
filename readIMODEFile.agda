@@ -29,94 +29,75 @@ charToNat _ = nothing
 
 reverseCharListToNat : List Char -> Maybe ℕ
 reverseCharListToNat [] = just 0
-reverseCharListToNat (x ∷ xs) with reverseCharListToNat xs
-... | nothing = nothing
-... | just r with charToNat x
-... | nothing = nothing
-... | just a = just (a + r * 10)
+reverseCharListToNat (x ∷ xs) with reverseCharListToNat xs | charToNat x
+... | just r | just a = just (a + r * 10)
+... | _ | _ = nothing
 
 stringToNat : String -> Maybe ℕ
 stringToNat s = reverseCharListToNat (reverse (toList s))
 
 getDimensions : List XmlElement -> Maybe (List (ℕ))
 getDimensions [] = just []
-getDimensions ((Element "dimension" _ ((TextNode i) ∷ as)) ∷ xs) with getDimensions xs
-... | nothing = nothing
-... | just ds with stringToNat i
-... | nothing = nothing
-... | just d = just (d ∷ ds)
+getDimensions ((Element "dimension" _ ((TextNode i) ∷ as)) ∷ xs) with getDimensions xs | stringToNat i
+... | just ds | just d = just (d ∷ ds)
+... | _ | _ = nothing
 getDimensions _ = nothing
 
 createArrayType : String -> List XmlElement -> Maybe Type
 createArrayType n xs with getElement xs "arrayInfo"
-... | nothing = nothing
-... | just (TextNode _) = nothing
-... | just (Element _ as es1) with getElement es1 "dimensions"
-... | nothing = nothing
-... | just (TextNode _) = nothing
-... | just (Element _ _ es2) with getDimensions es2
-... | nothing = nothing
-... | just ds with getAttributeValue as "definition"
-... | nothing = nothing
-... | just d with getType d
-... | iNone = just (iArray n ds (iOther d))
-... | t = just (iArray n ds t)
+createArrayType n xs | just (Element _ as es1) with getElement es1 "dimensions"
+createArrayType n xs | just (Element _ as es1) | just (Element _ _ es2) with getDimensions es2 |  getAttributeValue as "definition"
+createArrayType n xs | just (Element _ as es1) | just (Element _ _ es2) | just ds | just d with getType d
+...                                                                                        | iNone = just (iArray n ds (iOther d))
+...                                                                                        | t = just (iArray n ds t)
+createArrayType n xs | just (Element _ as es1) | just (Element _ _ es2) | _ | _ = nothing
+createArrayType n xs | just (Element _ as es1) | _ = nothing
+createArrayType n xs | _ = nothing
 
 createLabels : List XmlElement -> Maybe (List (String × Type))
 createLabels [] = just []
-createLabels ((Element "definitionElement" as _ ) ∷ xs) with createLabels xs
-... | nothing = nothing
-... | just vs with getAttributeValue as "name"
-... | nothing = nothing
-... | just n with getAttributeValue as "definition"
-... | nothing = nothing
-... | just d with getType d
-... | iNone = just ((n , (iOther d)) ∷ vs)
-... | t = just ((n , t) ∷ vs)
+createLabels ((Element "definitionElement" as _ ) ∷ xs) with createLabels xs | getAttributeValue as "name" | getAttributeValue as "definition"
+createLabels ((Element "definitionElement" as _ ) ∷ xs) | just vs | just n | just d with getType d
+...                                                                                 | iNone = just ((n , (iOther d)) ∷ vs)
+...                                                                                 | t     = just ((n , t) ∷ vs)
+createLabels ((Element "definitionElement" as _ ) ∷ xs) | _ | _ | _ = nothing
 createLabels _ = nothing
 
 createStructureType : String -> List XmlElement -> Maybe Type
 createStructureType n xs with getElement xs "definitionElements"
-... | nothing = nothing
-... | just (TextNode _) = nothing
-... | just (Element _ _ es) with createLabels es
-... | nothing = nothing
-... | just vs = just (iStructure n vs)
+createStructureType n xs | just (Element _ _ es) with createLabels es
+...                                              | nothing = nothing
+...                                              | just vs = just (iStructure n vs)
+createStructureType n xs | _ = nothing
 
 createEnumerationValues : List XmlElement -> Maybe (List String)
 createEnumerationValues [] = just []
-createEnumerationValues ((Element "definitionElement" as _) ∷ xs) with createEnumerationValues xs
-... | nothing = nothing
-... | just vs with getAttributeValue as "value"
-... | nothing = nothing
-... | just v = just (v ∷ vs)
+createEnumerationValues ((Element "definitionElement" as _) ∷ xs) with createEnumerationValues xs | getAttributeValue as "value"
+... | just vs | just v = just (v ∷ vs)
+... | _ | _ = nothing
 createEnumerationValues _ = nothing
 
 createEnumerationType : String -> List XmlElement -> Maybe Type
 createEnumerationType n xs with getElement xs "definitionElements"
-... | nothing = nothing
-... | just (TextNode _) = nothing
-... | just (Element _ _ es) with createEnumerationValues es
-... | nothing = nothing
-... | just vs = just (iEnum n vs)
+createEnumerationType n xs | just (Element _ _ es) with createEnumerationValues es
+...                                                | nothing = nothing
+...                                                | just vs = just (iEnum n vs)
+createEnumerationType n xs | _ = nothing
 
 createType : Maybe String -> Maybe String -> List XmlElement -> Maybe Type
-createType nothing _ _ = nothing
-createType _ nothing _ = nothing
 createType (just n) (just "&lt;array&gt;") es = createArrayType n es
 createType (just n) (just "&lt;structure&gt;") es = createStructureType n es
 createType (just n) (just "&lt;enumeration&gt;") es = createEnumerationType n es
 createType (just n) (just d) _ with getType d
 ... | iNone = just (iOther d)
 ... | t = just (iUserDefined n t)
+createType _ _ _ = nothing
 
 readTypes : List XmlElement -> Maybe (List Type)
 readTypes [] = just []
-readTypes ((Element "type" as es) ∷ xs) with readTypes xs
-... | nothing = nothing
-... | just ts with (createType (getAttributeValue as "name") (getAttributeValue as "definition") es)
-... | nothing = nothing
-... | just t = just (t ∷ ts)
+readTypes ((Element "type" as es) ∷ xs) with readTypes xs | (createType (getAttributeValue as "name") (getAttributeValue as "definition") es)
+... | just ts | just t = just (t ∷ ts)
+... | _ | _ = nothing
 readTypes _ = nothing
 
 readTypesFile : Maybe XmlElement -> Maybe (List Type)
@@ -125,22 +106,16 @@ readTypesFile _ = nothing
 
 
 createInterface : Maybe String -> Maybe String -> Maybe String -> Maybe String -> Maybe String -> Maybe Interface
-createInterface nothing _ _ _ _ = nothing
-createInterface _ nothing _ _ _ = nothing
-createInterface _ _ nothing _ _ = nothing
-createInterface _ _ _ nothing _ = nothing
-createInterface _ _ _ _ nothing = nothing
 createInterface (just n) (just d) (just io) (just v) (just c) with getType d
 ... | iNone = just record { name = n ; type = (iOther d) ; ioType = (getIOType io) ; value = v ; comment = c}
 ... | t     = just record { name = n ; type = t ;          ioType = (getIOType io) ; value = v ; comment = c}
+createInterface _ _ _ _ _ = nothing
 
 readInterfaces : List XmlElement -> Maybe (List Interface)
 readInterfaces [] = just []
-readInterfaces ((Element "interface" as es) ∷ xs) with readInterfaces xs
-... | nothing = nothing
-... | just is with createInterface (getAttributeValue as "name") (getAttributeValue as "definition") (getAttributeValue as "IO" ) (getAttributeValue as "value") (getAttributeValue as "comment")
-... | nothing = nothing
-... | just i = just (i ∷ is)
+readInterfaces ((Element "interface" as es) ∷ xs) with readInterfaces xs | createInterface (getAttributeValue as "name") (getAttributeValue as "definition") (getAttributeValue as "IO" ) (getAttributeValue as "value") (getAttributeValue as "comment")
+... | just is | just i = just (i ∷ is)
+... | _ | _ = nothing
 readInterfaces _ = nothing
 
 readInterfacesFile : Maybe XmlElement -> Maybe (List Interface)
@@ -149,21 +124,16 @@ readInterfacesFile _ = nothing
 
 
 createConstant : Maybe String -> Maybe String -> Maybe String -> Maybe String -> Maybe Constant
-createConstant nothing _ _ _ = nothing
-createConstant _ nothing _ _ = nothing
-createConstant _ _ nothing _ = nothing
-createConstant _ _ _ nothing = nothing
 createConstant (just n) (just d) (just v) (just c) with getType d
 ... | iNone = just record { name = n ; type = (iOther d) ; value = v ; comment = c}
 ... | t     = just record { name = n ; type = t          ; value = v ; comment = c}
+createConstant _ _ _ _ = nothing
 
 readConstants : List XmlElement -> Maybe (List Constant)
 readConstants [] = just []
-readConstants ((Element "constant" as es) ∷ xs) with readConstants xs
-... | nothing = nothing
-... | just cs with createConstant(getAttributeValue as "name") (getAttributeValue as "definition") (getAttributeValue as "value") (getAttributeValue as "comment")
-... | nothing = nothing
-... | just c = just (c ∷ cs)
+readConstants ((Element "constant" as es) ∷ xs) with readConstants xs | createConstant(getAttributeValue as "name") (getAttributeValue as "definition") (getAttributeValue as "value") (getAttributeValue as "comment")
+... | just cs | just c = just (c ∷ cs)
+... | _ | _ = nothing
 readConstants _ = nothing
 
 readConstantsFile : Maybe XmlElement -> Maybe (List Constant)
@@ -172,124 +142,178 @@ readConstantsFile _ = nothing
 
 
 createProject : Maybe String -> Maybe (List Type) ->  Maybe (List Interface) -> Maybe (List Constant) -> Maybe (List Frame) -> Maybe Project
-createProject nothing _ _ _ _ = nothing
-createProject _ nothing _ _ _ = nothing
-createProject _ _ nothing _ _ = nothing
-createProject _ _ _ nothing _ = nothing
-createProject _ _ _ _ nothing = nothing
 createProject (just n) (just ts) (just is) (just cs) (just fs) = just record { name = n ; subModels = fs ; types = ts ; interfaces = is ; constants = cs}
+createProject _ _ _ _ _ = nothing
 
-createAddition : String -> String -> List XmlElement -> Maybe Model
-createAddition n id es = just (Addition n id [])
+
+readInputConnectionIds : List XmlElement -> Maybe (List String)
+readInputConnectionIds [] = just []
+readInputConnectionIds ((Element "inputConnection" as _) ∷ xs) with readInputConnectionIds xs | getAttributeValue as "connectedTo"
+... | just inConIds | just id = just (id ∷ inConIds)
+... | _ | _ = nothing
+readInputConnectionIds _ = nothing
+
+readInputConnections : Maybe XmlElement -> Maybe (List String)
+readInputConnections (just (Element "inputConnections" _ es)) = readInputConnectionIds es
+readInputConnections _ = nothing
+
+
+createBasicOpModel : String -> String -> String -> List XmlElement -> Maybe Model
+createBasicOpModel hash n id es with readInputConnections (getElement es "inputConnections")
+... | just inCons with Properties n id inCons
+... | p with hash
+... | "955ca6d568f93954497d59e165f9fa9b" = just (Addition p)
+... | "f8806a128e6f1a8d41cfa9b5f0f38f82" = just (Modulo p)
+... | "c242c66d2b427ca579e166bcb7d29e13" = just (Multiplication p)
+... | "f3717bffb869f6ff1fcce091f166f965" = just (NumericCast p)
+... | "32d7b1f51ebe3b5ef0526278e223fcc9" = just (PolymorphicDivision p)
+... | "8738acafef8eef7ddb3f91485d3ef88a" = just (Subtraction p)
+... | "b69fd2eb52ec5bbe329447a438dd969a" = just (UnaryMinus p)
+... | "bda26cfe60688578d081dd59071212cc" = just (LogicalAnd p)
+... | "1bec680337697dc8b16c30e08df84a05" = just (LogicalNor p)
+... | "5be489a447538f2bf9867665203e0561" = just (LogicalNot p)
+... | "9c5febda3a36f236a93fdf532df6c5bf" = just (LogicalOr p)
+... | "3c5ca129c2ad6f45890b03d9ea594927" = just (LogicalSharp p)
+... | "5f857ecd847e60cf0b94eb8dfe61555e" = just (LogicalXor p)
+... | "c9282e847e784046b17a01772be488c2" = just (BitwiseAnd p)
+... | "bbc0c49eb5b7d5bee5435fc245c46c8d" = just (BitwiseNot p)
+... | "c56b0df1c625a2184688ecc1076fbba5" = just (BitwiseOr p)
+... | "7b3cbca16789893ffc523eb95d447f40" = just (BitwiseXor p)
+... | "18c8a883eb26ba04ad7f346beae150ea" = just (LeftShift p)
+... | "4ce5e6e4238b68f9ef8eb6cc79a89389" = just (RightShift p)
+... | "e25f5536bb430d15c4ecf1c70674d1ae" = just (Different p)
+... | "41f309026b7b989c3ae8dc03f41835d8" = just (Equal p)
+... | "28ea640cc30fe446dd8f983de1e9a608" = just (GreaterThanEqual p)
+... | "e2cdc9d4a7472ccc00f1700972004d71" = just (LessThanEqual p)
+... | "c43404828b6fb52b32bbfe69adde0b63" = just (StrictlyGreaterThan p)
+... | "10c8829be556be2c9869269b7d3782c2" = just (StrictlyLessThan p)
+... | _ = nothing
+createBasicOpModel hash n id es | _ = nothing
+
 
 createInput : String -> String -> List XmlElement -> Maybe Model
 createInput n id es with getElement es "sourceInstance"
 createInput n id es | just e with getElement es "type"
 createInput n id es | just e | just (Element _ as _) with getAttributeValue as "name"
-createInput n id es | just e | just (Element _ as _) | nothing = nothing
-createInput n id es | just e | just (Element _ as _) | just typeName = just (Input n id (getType typeName))
+...                                                  | nothing = nothing
+...                                                  | just typeName = just (Input n id (getType typeName))
 createInput n id es | just e | _ = nothing
 createInput n id es | nothing with getElement es "copyOf"
 createInput n id es | nothing | just (Element _ as _) with getAttributeValue as "value"
-createInput n id es | nothing | just (Element _ as _) | nothing = nothing
-createInput n id es | nothing | just (Element _ as _) | just sourceId = just (InputInstance n id sourceId)
+...                                                   | nothing = nothing
+...                                                   | just sourceId = just (InputInstance n id sourceId)
 createInput n id es | nothing | _ = nothing
+
 
 createOutput : String -> String -> List XmlElement -> Maybe Model
 createOutput n id es with getElement es "sourceInstance"
 createOutput n id es | just e with getElement es "type"
 createOutput n id es | just e | just (Element _ as _) with getAttributeValue as "name"
-createOutput n id es | just e | just (Element _ as _) | nothing = nothing
-createOutput n id es | just e | just (Element _ as _) | just typeName = just (Output n id (getType typeName))
+...                                                   | nothing = nothing
+...                                                   | just typeName = just (Output n id (getType typeName))
 createOutput n id es | just e | _ = nothing
 createOutput n id es | nothing with getElement es "copyOf"
-createOutput n id es | nothing | just (Element _ as _) with getAttributeValue as "value"
-createOutput n id es | nothing | just (Element _ as _) | nothing = nothing
-createOutput n id es | nothing | just (Element _ as _) | just sourceId = just (OutputInstance n id sourceId)
+createOutput n id es | nothing | just (Element _ as _) with getAttributeValue as "value" | readInputConnections (getElement es "inputConnections")
+...                                                    | just sourceId | just inCons = just (OutputInstance n id sourceId inCons)
+...                                                    | _ | _ = nothing
 createOutput n id es | nothing | _ = nothing
 
+
 createConnection : String -> String -> List XmlElement -> Maybe Model
-createConnection n id es = just (Connection n id "" "") 
+createConnection n id es with getElement es "startOperation" | getElement es "endOperation"
+... | just (Element "startOperation" as1 _) | just (Element "endOperation" as2 _) with getAttributeValue as1 "connectedTo" | getAttributeValue as2 "connectedTo"
+... | just startOpId | just endOpId = just (Connection n id startOpId endOpId)
+... | _ | _ = nothing
+createConnection n id e | _ | _ = nothing
+
 
 createModel : XmlElement -> Maybe Model
-createModel (Element "model" as es) with getAttributeValue as "name" | getAttributeValue as "id" | getAttributeValue as "hash"
-... | just n | just id | just "955ca6d568f93954497d59e165f9fa9b" = createAddition n id es
-... | just n | just id | just "47652e68b75f740d7c4228759d31a8f5" = createInput n id es
-... | just n | just id | just "1deb5a48a4655393a18760b265134ef3" = createOutput n id es
-... | just n | just id | just "c2459d3d1ef8a0b20f3e7125bae74582" = createConnection n id es
-... | _      | _       | _                                       = nothing
+createModel (Element "model" as es) with getAttributeValue as "name" | getAttributeValue as "id"
+createModel (Element "model" as es) | just n | just id with getAttributeValue as "hash"
+createModel (Element "model" as es) | just n | just id | just hash with hash
+... | "955ca6d568f93954497d59e165f9fa9b" = createBasicOpModel hash n id es
+... | "f8806a128e6f1a8d41cfa9b5f0f38f82" = createBasicOpModel hash n id es
+... | "c242c66d2b427ca579e166bcb7d29e13" = createBasicOpModel hash n id es
+... | "f3717bffb869f6ff1fcce091f166f965" = createBasicOpModel hash n id es
+... | "32d7b1f51ebe3b5ef0526278e223fcc9" = createBasicOpModel hash n id es
+... | "8738acafef8eef7ddb3f91485d3ef88a" = createBasicOpModel hash n id es
+... | "b69fd2eb52ec5bbe329447a438dd969a" = createBasicOpModel hash n id es
+... | "bda26cfe60688578d081dd59071212cc" = createBasicOpModel hash n id es
+... | "1bec680337697dc8b16c30e08df84a05" = createBasicOpModel hash n id es
+... | "5be489a447538f2bf9867665203e0561" = createBasicOpModel hash n id es
+... | "9c5febda3a36f236a93fdf532df6c5bf" = createBasicOpModel hash n id es
+... | "3c5ca129c2ad6f45890b03d9ea594927" = createBasicOpModel hash n id es
+... | "5f857ecd847e60cf0b94eb8dfe61555e" = createBasicOpModel hash n id es
+... | "c9282e847e784046b17a01772be488c2" = createBasicOpModel hash n id es
+... | "bbc0c49eb5b7d5bee5435fc245c46c8d" = createBasicOpModel hash n id es
+... | "c56b0df1c625a2184688ecc1076fbba5" = createBasicOpModel hash n id es
+... | "7b3cbca16789893ffc523eb95d447f40" = createBasicOpModel hash n id es
+... | "18c8a883eb26ba04ad7f346beae150ea" = createBasicOpModel hash n id es
+... | "4ce5e6e4238b68f9ef8eb6cc79a89389" = createBasicOpModel hash n id es
+... | "e25f5536bb430d15c4ecf1c70674d1ae" = createBasicOpModel hash n id es
+... | "41f309026b7b989c3ae8dc03f41835d8" = createBasicOpModel hash n id es
+... | "28ea640cc30fe446dd8f983de1e9a608" = createBasicOpModel hash n id es
+... | "e2cdc9d4a7472ccc00f1700972004d71" = createBasicOpModel hash n id es
+... | "c43404828b6fb52b32bbfe69adde0b63" = createBasicOpModel hash n id es
+... | "10c8829be556be2c9869269b7d3782c2" = createBasicOpModel hash n id es
+... | "47652e68b75f740d7c4228759d31a8f5" = createInput n id es
+... | "1deb5a48a4655393a18760b265134ef3" = createOutput n id es
+... | "c2459d3d1ef8a0b20f3e7125bae74582" = createConnection n id es
+... | _ = nothing
+createModel e | just n | just id | _  = nothing
+createModel e | _      | _  = nothing
 createModel _ = nothing
+
 
 readModels : List XmlElement -> Maybe (List Model)
 readModels [] = just []
-readModels ((Element n as es) ∷ xs) with readModels xs
-... | nothing = nothing
-... | just ms with getElement es "sourceInstance"
-... | just e = just (ms)
-... | _ with createModel (Element n as es)
-... | nothing = nothing
-... | just m = just (m ∷ ms)
+readModels ((Element n as es) ∷ xs) with readModels xs | getElement es "sourceInstance" | createModel (Element n as es)
+... | just ms | nothing | just m = just (m ∷ ms)
+... | just ms | just e  | _      = just ms
+... | _       | _       | _      = nothing
 readModels _ = nothing
+
 
 findAndCreateModelWithId : List XmlElement -> String -> Maybe Model
 findAndCreateModelWithId [] _ = nothing
 findAndCreateModelWithId ((Element n as es) ∷ xs) id with getAttributeValue as "id"
 ... | nothing = findAndCreateModelWithId xs id
 ... | just (otherId) with isYes (id Data.String.≟ otherId)
-... | false = findAndCreateModelWithId xs id
-... | true = createModel (Element n as es)
+...         | false = findAndCreateModelWithId xs id
+...         | true = createModel (Element n as es)
 findAndCreateModelWithId (x ∷ xs) id = findAndCreateModelWithId xs id
 
 readStartModels : List XmlElement -> List XmlElement -> Maybe (List Model)
 readStartModels [] _ = just []
-readStartModels ((Element "startModel" as _) ∷ es) subModels with readStartModels es subModels
-... | nothing = nothing
-... | just startModels with getAttributeValue as "hash"
-... | nothing = nothing
-... | just id with findAndCreateModelWithId subModels id
-... | nothing = nothing
-... | just sm = just (sm ∷ startModels)
+readStartModels ((Element "startModel" as _) ∷ es) subModels with readStartModels es subModels | getAttributeValue as "hash"
+readStartModels ((Element "startModel" as _) ∷ es) subModels | just startModels | just id with findAndCreateModelWithId subModels id
+readStartModels ((Element "startModel" as _) ∷ es) subModels | just startModels | just id | just sm = just (sm ∷ startModels)
+readStartModels ((Element "startModel" as _) ∷ es) subModels | _                | _       | _       = nothing
+readStartModels ((Element "startModel" as _) ∷ es) subModels | _                | _       = nothing
 readStartModels _ _ = nothing
 
 readEndModels : List XmlElement -> List XmlElement -> Maybe (List Model)
 readEndModels [] _ = just []
-readEndModels ((Element "endModel" as _) ∷ es) subModels with readEndModels es subModels
-... | nothing = nothing
-... | just endModels with getAttributeValue as "hash"
-... | nothing = nothing
-... | just id with findAndCreateModelWithId subModels id
-... | nothing = nothing
-... | just em = just (em ∷ endModels)
+readEndModels ((Element "endModel" as _) ∷ es) subModels with readEndModels es subModels | getAttributeValue as "hash"
+readEndModels ((Element "endModel" as _) ∷ es) subModels | just endModels | just id with findAndCreateModelWithId subModels id
+readEndModels ((Element "endModel" as _) ∷ es) subModels | just endModels | just id | just em = just (em ∷ endModels)
+readEndModels ((Element "endModel" as _) ∷ es) subModels | _              | _       | _       = nothing
+readEndModels ((Element "endModel" as _) ∷ es) subModels | _              | _       = nothing
 readEndModels _ _ = nothing
 
 readFrameFile : Maybe XmlElement -> Maybe Frame
-readFrameFile (just (Element "model" as es)) with getAttributeValue as "name"
-... | nothing = nothing
-... | just n with getElement es "submodels"
-... | nothing = nothing
-... | just (TextNode _) = nothing
-... | just (Element _ _ sms) with getElement es "startModels"
-... | nothing = nothing
-... | just (TextNode _) = nothing
-... | just (Element _ _ es2) with readStartModels es2 sms
-... | nothing = nothing
-... | just startModels with getElement es "endModels"
-... | nothing = nothing
-... | just (TextNode _) = nothing
-... | just (Element _ _ es3) with readEndModels es3 sms
-... | nothing = nothing
-... | just endModels with readModels sms
-... | nothing = nothing
-... | just subModels = just (Operation n startModels endModels subModels)
+readFrameFile (just (Element "model" as es)) with getAttributeValue as "name" | getElement es "submodels" | getElement es "startModels" | getElement es "endModels"
+readFrameFile (just (Element "model" as es)) | just n | just (Element _ _ sms) | just (Element _ _ es2) | just (Element _ _ es3) with readStartModels es2 sms | readEndModels es3 sms | readModels sms
+readFrameFile (just (Element "model" as es)) | just n | just (Element _ _ sms) | just (Element _ _ es2) | just (Element _ _ es3) | just startModels | just endModels | just subModels = just (Operation n startModels endModels subModels)
+readFrameFile (just (Element "model" as es)) | _      | _                      | _                      | _                      | _                | _              | _              = nothing
+readFrameFile (just (Element "model" as es)) | _      | _                      | _                      | _                      = nothing
 readFrameFile _ = nothing
 
 readFrameFiles : List String -> Maybe (List Frame)
 readFrameFiles [] = just []
-readFrameFiles (x ∷ xs) with readFrameFiles xs
-... | nothing = nothing
-... | just fs with readFrameFile (parseXml x)
-... | nothing = nothing
-... | just f = just (f ∷ fs)
+readFrameFiles (x ∷ xs) with readFrameFiles xs | readFrameFile (parseXml x)
+... | just fs | just f = just (f ∷ fs)
+... | _ | _ = nothing
 
 readProjectFile : Maybe XmlElement -> Maybe Project
 readProjectFile (just (Element "project" as es)) = createProject (getAttributeValue as "name") (readTypesFile (parseXml typesXmlString)) (readInterfacesFile (parseXml interfacesXmlString)) (readConstantsFile (parseXml constantsXmlString)) (readFrameFiles modelXmlStrings)
