@@ -141,7 +141,7 @@ readConstantsFile (just (Element "constants" _ es)) = readConstants es
 readConstantsFile _ = nothing
 
 
-createProject : Maybe String -> Maybe (List Type) ->  Maybe (List Interface) -> Maybe (List Constant) -> Maybe (List Frame) -> Maybe Project
+createProject : Maybe String -> Maybe (List Type) ->  Maybe (List Interface) -> Maybe (List Constant) -> Maybe (List Model) -> Maybe Project
 createProject (just n) (just ts) (just is) (just cs) (just fs) = just record { name = n ; subModels = fs ; types = ts ; interfaces = is ; constants = cs}
 createProject _ _ _ _ _ = nothing
 
@@ -158,8 +158,8 @@ readInputConnections (just (Element "inputConnections" _ es)) = readInputConnect
 readInputConnections _ = nothing
 
 
-createBasicOpModel : String -> String -> String -> List XmlElement -> Maybe Model
-createBasicOpModel hash n id es with readInputConnections (getElement es "inputConnections")
+createBasicOpModelElement : String -> String -> String -> List XmlElement -> Maybe ModelElement
+createBasicOpModelElement hash n id es with readInputConnections (getElement es "inputConnections")
 ... | just inCons with Properties n id inCons
 ... | p with hash
 ... | "955ca6d568f93954497d59e165f9fa9b" = just (Addition p)
@@ -188,10 +188,10 @@ createBasicOpModel hash n id es with readInputConnections (getElement es "inputC
 ... | "c43404828b6fb52b32bbfe69adde0b63" = just (StrictlyGreaterThan p)
 ... | "10c8829be556be2c9869269b7d3782c2" = just (StrictlyLessThan p)
 ... | _ = nothing
-createBasicOpModel hash n id es | _ = nothing
+createBasicOpModelElement hash n id es | _ = nothing
 
 
-createInput : String -> String -> List XmlElement -> Maybe Model
+createInput : String -> String -> List XmlElement -> Maybe ModelElement
 createInput n id es with getElement es "sourceInstance"
 createInput n id es | just e with getElement es "type"
 createInput n id es | just e | just (Element _ as _) with getAttributeValue as "name"
@@ -205,7 +205,7 @@ createInput n id es | nothing | just (Element _ as _) with getAttributeValue as 
 createInput n id es | nothing | _ = nothing
 
 
-createOutput : String -> String -> List XmlElement -> Maybe Model
+createOutput : String -> String -> List XmlElement -> Maybe ModelElement
 createOutput n id es with getElement es "sourceInstance"
 createOutput n id es | just e with getElement es "type"
 createOutput n id es | just e | just (Element _ as _) with getAttributeValue as "name"
@@ -219,7 +219,7 @@ createOutput n id es | nothing | just (Element _ as _) with getAttributeValue as
 createOutput n id es | nothing | _ = nothing
 
 
-createConnection : String -> String -> List XmlElement -> Maybe Model
+createConnection : String -> String -> List XmlElement -> Maybe ModelElement
 createConnection n id es with getElement es "startOperation" | getElement es "endOperation"
 ... | just (Element "startOperation" as1 _) | just (Element "endOperation" as2 _) with getAttributeValue as1 "connectedTo" | getAttributeValue as2 "connectedTo"
 ... | just startOpId | just endOpId = just (Connection n id startOpId endOpId)
@@ -227,96 +227,71 @@ createConnection n id es with getElement es "startOperation" | getElement es "en
 createConnection n id e | _ | _ = nothing
 
 
-createModel : XmlElement -> Maybe Model
-createModel (Element "model" as es) with getAttributeValue as "name" | getAttributeValue as "id"
-createModel (Element "model" as es) | just n | just id with getAttributeValue as "hash"
-createModel (Element "model" as es) | just n | just id | just hash with hash
-... | "955ca6d568f93954497d59e165f9fa9b" = createBasicOpModel hash n id es
-... | "f8806a128e6f1a8d41cfa9b5f0f38f82" = createBasicOpModel hash n id es
-... | "c242c66d2b427ca579e166bcb7d29e13" = createBasicOpModel hash n id es
-... | "f3717bffb869f6ff1fcce091f166f965" = createBasicOpModel hash n id es
-... | "32d7b1f51ebe3b5ef0526278e223fcc9" = createBasicOpModel hash n id es
-... | "8738acafef8eef7ddb3f91485d3ef88a" = createBasicOpModel hash n id es
-... | "b69fd2eb52ec5bbe329447a438dd969a" = createBasicOpModel hash n id es
-... | "bda26cfe60688578d081dd59071212cc" = createBasicOpModel hash n id es
-... | "1bec680337697dc8b16c30e08df84a05" = createBasicOpModel hash n id es
-... | "5be489a447538f2bf9867665203e0561" = createBasicOpModel hash n id es
-... | "9c5febda3a36f236a93fdf532df6c5bf" = createBasicOpModel hash n id es
-... | "3c5ca129c2ad6f45890b03d9ea594927" = createBasicOpModel hash n id es
-... | "5f857ecd847e60cf0b94eb8dfe61555e" = createBasicOpModel hash n id es
-... | "c9282e847e784046b17a01772be488c2" = createBasicOpModel hash n id es
-... | "bbc0c49eb5b7d5bee5435fc245c46c8d" = createBasicOpModel hash n id es
-... | "c56b0df1c625a2184688ecc1076fbba5" = createBasicOpModel hash n id es
-... | "7b3cbca16789893ffc523eb95d447f40" = createBasicOpModel hash n id es
-... | "18c8a883eb26ba04ad7f346beae150ea" = createBasicOpModel hash n id es
-... | "4ce5e6e4238b68f9ef8eb6cc79a89389" = createBasicOpModel hash n id es
-... | "e25f5536bb430d15c4ecf1c70674d1ae" = createBasicOpModel hash n id es
-... | "41f309026b7b989c3ae8dc03f41835d8" = createBasicOpModel hash n id es
-... | "28ea640cc30fe446dd8f983de1e9a608" = createBasicOpModel hash n id es
-... | "e2cdc9d4a7472ccc00f1700972004d71" = createBasicOpModel hash n id es
-... | "c43404828b6fb52b32bbfe69adde0b63" = createBasicOpModel hash n id es
-... | "10c8829be556be2c9869269b7d3782c2" = createBasicOpModel hash n id es
+createModelElement : XmlElement -> Maybe ModelElement
+createModelElement (Element "model" as es) with getAttributeValue as "name" | getAttributeValue as "id"
+createModelElement (Element "model" as es) | just n | just id with getAttributeValue as "hash"
+createModelElement (Element "model" as es) | just n | just id | just hash with hash
 ... | "47652e68b75f740d7c4228759d31a8f5" = createInput n id es
 ... | "1deb5a48a4655393a18760b265134ef3" = createOutput n id es
 ... | "c2459d3d1ef8a0b20f3e7125bae74582" = createConnection n id es
-... | _ = nothing
-createModel e | just n | just id | _  = nothing
-createModel e | _      | _  = nothing
-createModel _ = nothing
+... | _ = createBasicOpModelElement hash n id es
+createModelElement e | just n | just id | _  = nothing
+createModelElement e | _      | _  = nothing
+createModelElement _ = nothing
 
 
-readModels : List XmlElement -> Maybe (List Model)
-readModels [] = just []
-readModels ((Element n as es) ∷ xs) with readModels xs | getElement es "sourceInstance" | createModel (Element n as es)
+readModelElements : List XmlElement -> Maybe (List ModelElement)
+readModelElements [] = just []
+readModelElements ((Element n as es) ∷ xs) with readModelElements xs | getElement es "sourceInstance" | createModelElement (Element n as es)
 ... | just ms | nothing | just m = just (m ∷ ms)
 ... | just ms | just e  | _      = just ms
 ... | _       | _       | _      = nothing
-readModels _ = nothing
+readModelElements _ = nothing
 
 
-findAndCreateModelWithId : List XmlElement -> String -> Maybe Model
+findAndCreateModelWithId : List XmlElement -> String -> Maybe ModelElement
 findAndCreateModelWithId [] _ = nothing
 findAndCreateModelWithId ((Element n as es) ∷ xs) id with getAttributeValue as "id"
 ... | nothing = findAndCreateModelWithId xs id
 ... | just (otherId) with isYes (id Data.String.≟ otherId)
 ...         | false = findAndCreateModelWithId xs id
-...         | true = createModel (Element n as es)
+...         | true = createModelElement (Element n as es)
 findAndCreateModelWithId (x ∷ xs) id = findAndCreateModelWithId xs id
 
-readStartModels : List XmlElement -> List XmlElement -> Maybe (List Model)
-readStartModels [] _ = just []
-readStartModels ((Element "startModel" as _) ∷ es) subModels with readStartModels es subModels | getAttributeValue as "hash"
-readStartModels ((Element "startModel" as _) ∷ es) subModels | just startModels | just id with findAndCreateModelWithId subModels id
-readStartModels ((Element "startModel" as _) ∷ es) subModels | just startModels | just id | just sm = just (sm ∷ startModels)
-readStartModels ((Element "startModel" as _) ∷ es) subModels | _                | _       | _       = nothing
-readStartModels ((Element "startModel" as _) ∷ es) subModels | _                | _       = nothing
-readStartModels _ _ = nothing
+readInputsForModel : List XmlElement -> List XmlElement -> Maybe (List ModelElement)
+readInputsForModel [] _ = just []
+readInputsForModel ((Element "startModel" as _) ∷ es) subModels with readInputsForModel es subModels | getAttributeValue as "hash"
+readInputsForModel ((Element "startModel" as _) ∷ es) subModels | just startModels | just id with findAndCreateModelWithId subModels id
+readInputsForModel ((Element "startModel" as _) ∷ es) subModels | just startModels | just id | just sm = just (sm ∷ startModels)
+readInputsForModel ((Element "startModel" as _) ∷ es) subModels | _                | _       | _       = nothing
+readInputsForModel ((Element "startModel" as _) ∷ es) subModels | _                | _       = nothing
+readInputsForModel _ _ = nothing
 
-readEndModels : List XmlElement -> List XmlElement -> Maybe (List Model)
-readEndModels [] _ = just []
-readEndModels ((Element "endModel" as _) ∷ es) subModels with readEndModels es subModels | getAttributeValue as "hash"
-readEndModels ((Element "endModel" as _) ∷ es) subModels | just endModels | just id with findAndCreateModelWithId subModels id
-readEndModels ((Element "endModel" as _) ∷ es) subModels | just endModels | just id | just em = just (em ∷ endModels)
-readEndModels ((Element "endModel" as _) ∷ es) subModels | _              | _       | _       = nothing
-readEndModels ((Element "endModel" as _) ∷ es) subModels | _              | _       = nothing
-readEndModels _ _ = nothing
+readOutputsForModel : List XmlElement -> List XmlElement -> Maybe (List ModelElement)
+readOutputsForModel [] _ = just []
+readOutputsForModel ((Element "endModel" as _) ∷ es) subModels with readOutputsForModel es subModels | getAttributeValue as "hash"
+readOutputsForModel ((Element "endModel" as _) ∷ es) subModels | just endModels | just id with findAndCreateModelWithId subModels id
+readOutputsForModel ((Element "endModel" as _) ∷ es) subModels | just endModels | just id | just em = just (em ∷ endModels)
+readOutputsForModel ((Element "endModel" as _) ∷ es) subModels | _              | _       | _       = nothing
+readOutputsForModel ((Element "endModel" as _) ∷ es) subModels | _              | _       = nothing
+readOutputsForModel _ _ = nothing
 
-readFrameFile : Maybe XmlElement -> Maybe Frame
-readFrameFile (just (Element "model" as es)) with getAttributeValue as "name" | getElement es "submodels" | getElement es "startModels" | getElement es "endModels"
-readFrameFile (just (Element "model" as es)) | just n | just (Element _ _ sms) | just (Element _ _ es2) | just (Element _ _ es3) with readStartModels es2 sms | readEndModels es3 sms | readModels sms
-readFrameFile (just (Element "model" as es)) | just n | just (Element _ _ sms) | just (Element _ _ es2) | just (Element _ _ es3) | just startModels | just endModels | just subModels = just (Operation n startModels endModels subModels)
-readFrameFile (just (Element "model" as es)) | _      | _                      | _                      | _                      | _                | _              | _              = nothing
-readFrameFile (just (Element "model" as es)) | _      | _                      | _                      | _                      = nothing
-readFrameFile _ = nothing
+readModelFile : Maybe XmlElement -> Maybe Model
+readModelFile (just (Element "model" as es)) with getAttributeValue as "name" | getElement es "submodels" | getElement es "startModels" | getElement es "endModels"
+readModelFile (just (Element "model" as es)) | just n | just (Element _ _ sms) | just (Element _ _ es2) | just (Element _ _ es3) with readInputsForModel es2 sms | readOutputsForModel es3 sms | readModelElements sms
+readModelFile (just (Element "model" as es)) | just n | just (Element _ _ sms) | just (Element _ _ es2) | just (Element _ _ es3) | just startModels | just endModels | just subModels = just (Operation n startModels endModels subModels)
+readModelFile (just (Element "model" as es)) | _      | _                      | _                      | _                      | _                | _              | _              = nothing
+readModelFile (just (Element "model" as es)) | _      | _                      | _                      | _                      = nothing
+readModelFile _ = nothing
 
-readFrameFiles : List String -> Maybe (List Frame)
-readFrameFiles [] = just []
-readFrameFiles (x ∷ xs) with readFrameFiles xs | readFrameFile (parseXml x)
+readModelFiles : List String -> Maybe (List Model)
+readModelFiles [] = just []
+readModelFiles (x ∷ xs) with readModelFiles xs | readModelFile (parseXml x)
 ... | just fs | just f = just (f ∷ fs)
 ... | _ | _ = nothing
 
 readProjectFile : Maybe XmlElement -> Maybe Project
-readProjectFile (just (Element "project" as es)) = createProject (getAttributeValue as "name") (readTypesFile (parseXml typesXmlString)) (readInterfacesFile (parseXml interfacesXmlString)) (readConstantsFile (parseXml constantsXmlString)) (readFrameFiles modelXmlStrings)
+readProjectFile (just (Element "project" as es)) = createProject (getAttributeValue as "name") (readTypesFile (parseXml typesXmlString)) (readInterfacesFile (parseXml interfacesXmlString)) (readConstantsFile (parseXml constantsXmlString)) (readModelFiles modelXmlStrings)
 readProjectFile _ = nothing
 
 
@@ -340,8 +315,8 @@ modelStr = "<model tracedRequirements=\"\" visibility=\"1\" enable=\"1\" id=\"16
             <value value=\"0\"/>
         </model>"
 
-deneme : Maybe Model
+deneme : Maybe ModelElement
 deneme with parseXml modelStr
 deneme | nothing = just (Input "haha" "" iNone)
 deneme | just (Element _ _ es) = createInput "a" "b" es
-deneme | _ = just (TestModel 0)
+deneme | _ = just (TestModelElement 0)

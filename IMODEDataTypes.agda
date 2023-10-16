@@ -73,46 +73,47 @@ record Constant : Set where
 data BaseModelElementProperties : Set where
   Properties : (name : String) -> (id : String) -> (inputConsId : List String) -> BaseModelElementProperties
 
+data ModelElement : Set where
+  TestModelElement : ℕ -> ModelElement
+  Connection : String -> (id : String) -> (startModelId : String) -> (endModelId : String) -> ModelElement
+  Input : String -> (id : String) -> Type -> ModelElement
+  Output : String -> (id : String) -> Type -> ModelElement
+  InputInstance :  String -> (id : String) -> (sourceId : String) -> ModelElement
+  OutputInstance : String -> (id : String) -> (sourceId : String) -> (inputConsId : List String) -> ModelElement
+  Addition : BaseModelElementProperties -> ModelElement
+  Modulo : BaseModelElementProperties -> ModelElement
+  Multiplication : BaseModelElementProperties -> ModelElement
+  NumericCast : BaseModelElementProperties -> ModelElement
+  PolymorphicDivision : BaseModelElementProperties -> ModelElement
+  Subtraction : BaseModelElementProperties -> ModelElement
+  UnaryMinus : BaseModelElementProperties -> ModelElement
+  LogicalAnd : BaseModelElementProperties -> ModelElement
+  LogicalNor : BaseModelElementProperties -> ModelElement
+  LogicalNot : BaseModelElementProperties -> ModelElement
+  LogicalOr : BaseModelElementProperties -> ModelElement
+  LogicalSharp : BaseModelElementProperties -> ModelElement
+  LogicalXor : BaseModelElementProperties -> ModelElement
+  BitwiseAnd : BaseModelElementProperties -> ModelElement
+  BitwiseNot : BaseModelElementProperties -> ModelElement
+  BitwiseOr : BaseModelElementProperties -> ModelElement
+  BitwiseXor : BaseModelElementProperties -> ModelElement
+  LeftShift : BaseModelElementProperties -> ModelElement
+  RightShift : BaseModelElementProperties -> ModelElement
+  Different : BaseModelElementProperties -> ModelElement
+  Equal : BaseModelElementProperties -> ModelElement
+  GreaterThanEqual : BaseModelElementProperties -> ModelElement
+  LessThanEqual : BaseModelElementProperties -> ModelElement
+  StrictlyGreaterThan : BaseModelElementProperties -> ModelElement
+  StrictlyLessThan : BaseModelElementProperties -> ModelElement
+
 data Model : Set where
   TestModel : ℕ -> Model
-  Connection : String -> (id : String) -> (startModelId : String) -> (endModelId : String) -> Model
-  Input : String -> (id : String) -> Type -> Model
-  Output : String -> (id : String) -> Type -> Model
-  InputInstance :  String -> (id : String) -> (sourceId : String) -> Model
-  OutputInstance : String -> (id : String) -> (sourceId : String) -> (inputConsId : List String) -> Model
-  Addition : BaseModelElementProperties -> Model
-  Modulo : BaseModelElementProperties -> Model
-  Multiplication : BaseModelElementProperties -> Model
-  NumericCast : BaseModelElementProperties -> Model
-  PolymorphicDivision : BaseModelElementProperties -> Model
-  Subtraction : BaseModelElementProperties -> Model
-  UnaryMinus : BaseModelElementProperties -> Model
-  LogicalAnd : BaseModelElementProperties -> Model
-  LogicalNor : BaseModelElementProperties -> Model
-  LogicalNot : BaseModelElementProperties -> Model
-  LogicalOr : BaseModelElementProperties -> Model
-  LogicalSharp : BaseModelElementProperties -> Model
-  LogicalXor : BaseModelElementProperties -> Model
-  BitwiseAnd : BaseModelElementProperties -> Model
-  BitwiseNot : BaseModelElementProperties -> Model
-  BitwiseOr : BaseModelElementProperties -> Model
-  BitwiseXor : BaseModelElementProperties -> Model
-  LeftShift : BaseModelElementProperties -> Model
-  RightShift : BaseModelElementProperties -> Model
-  Different : BaseModelElementProperties -> Model
-  Equal : BaseModelElementProperties -> Model
-  GreaterThanEqual : BaseModelElementProperties -> Model
-  LessThanEqual : BaseModelElementProperties -> Model
-  StrictlyGreaterThan : BaseModelElementProperties -> Model
-  StrictlyLessThan : BaseModelElementProperties -> Model
-
-data Frame : Set where
-  Operation : String -> (inputs : List Model) -> (outputs : List Model) -> (subModels : List Model)-> Frame
+  Operation : String -> (inputs : List ModelElement) -> (outputs : List ModelElement) -> (subModels : List ModelElement)-> Model
   
 record Project : Set where
   field
     name : String
-    subModels : List Frame
+    subModels : List Model
     types : List Type
     interfaces : List Interface
     constants : List Constant
