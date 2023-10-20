@@ -89,7 +89,7 @@ createType (just n) (just "&lt;array&gt;") es = createArrayType n es
 createType (just n) (just "&lt;structure&gt;") es = createStructureType n es
 createType (just n) (just "&lt;enumeration&gt;") es = createEnumerationType n es
 createType (just n) (just d) _ with getType d
-... | iNone = just (iOther d)
+... | iNone = just (iUserDefined n (iOther d))
 ... | t = just (iUserDefined n t)
 createType _ _ _ = nothing
 

@@ -2,11 +2,14 @@
 
 module main where
 
-open import Data.Maybe
+open import Data.Bool
+open import Data.String
 open import Data.List
+open import Data.Maybe
+open import Data.Product
 open import IO
-open import parseXml
-open import IMODESaveFile
+open import readIMODEFile
+open import checkProject
 
-main : Maybe XmlElement
-main = parseXml imodeString
+main : Bool × (List String)
+main = checkProject readIMODEFiles

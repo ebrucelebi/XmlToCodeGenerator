@@ -45,6 +45,7 @@ typesXmlString = "<types>
         </definitionElements>
     </type>
     <type name=\"Type4\" isTypeTemp=\"0\" definition=\"Type2\" comment=\"\"/>
+    <type name=\"Type5\" isTypeTemp=\"0\" definition=\"_null\" comment=\"\"/>
 </types>"
 
 interfacesXmlString : String
