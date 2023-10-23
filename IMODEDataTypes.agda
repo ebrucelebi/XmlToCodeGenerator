@@ -5,6 +5,8 @@ open import Data.List
 open import Data.Bool
 open import Data.Product
 open import Data.Nat
+open import Data.Maybe
+open import Relation.Nullary.Decidable
 
 data Type : Set where
   iNone : Type
@@ -71,15 +73,15 @@ record Constant : Set where
     comment : String
 
 data BaseModelElementProperties : Set where
-  Properties : (name : String) -> (id : String) -> (inputConsId : List String) -> BaseModelElementProperties
+  Properties : (name : String) -> (id : String) -> (inputConsId : List String) -> (outputConsId : List (ℕ × String)) -> BaseModelElementProperties
 
 data ModelElement : Set where
   TestModelElement : ℕ -> ModelElement
   Connection : String -> (id : String) -> (startModelId : String) -> (endModelId : String) -> ModelElement
   Input : String -> (id : String) -> Type -> ModelElement
   Output : String -> (id : String) -> Type -> ModelElement
-  InputInstance :  String -> (id : String) -> (sourceId : String) -> ModelElement
-  OutputInstance : String -> (id : String) -> (sourceId : String) -> (inputConsId : List String) -> ModelElement
+  InputInstance : BaseModelElementProperties -> (sourceId : String) -> ModelElement
+  OutputInstance : BaseModelElementProperties -> (sourceId : String) -> ModelElement
   Addition : BaseModelElementProperties -> ModelElement
   Modulo : BaseModelElementProperties -> ModelElement
   Multiplication : BaseModelElementProperties -> ModelElement
@@ -118,3 +120,78 @@ record Project : Set where
     interfaces : List Interface
     constants : List Constant
 
+contains : List String -> String -> Bool
+contains [] _ = false
+contains (x ∷ xs) y with isYes (x Data.String.≟ y)
+... | true = true
+... | false = contains xs y
+
+concatenate : ∀{ℓ}{A : Set ℓ} → List (List A) → List A
+concatenate [] = []
+concatenate (x ∷ xs) = x Data.List.++ concatenate xs
+
+concatenateTwoList : ∀{ℓ}{A : Set ℓ} → List A -> List A → List A
+concatenateTwoList xs1 xs2 = xs1 Data.List.++ xs2
+
+
+concatenateStrings : List String -> String
+concatenateStrings [] = ""
+concatenateStrings (x ∷ xs) = x Data.String.++ (concatenateStrings xs)
+
+getBaseModelProperties : ModelElement -> Maybe BaseModelElementProperties
+getBaseModelProperties (InputInstance p _) = just p
+getBaseModelProperties (OutputInstance p _) = just p
+getBaseModelProperties (Addition p) = just p
+getBaseModelProperties (Modulo p) = just p
+getBaseModelProperties (Multiplication p) = just p
+getBaseModelProperties (NumericCast p) = just p
+getBaseModelProperties (PolymorphicDivision p) = just p
+getBaseModelProperties (Subtraction p) = just p
+getBaseModelProperties (UnaryMinus p) = just p
+getBaseModelProperties (LogicalAnd p) = just p
+getBaseModelProperties (LogicalNor p) = just p
+getBaseModelProperties (LogicalNot p) = just p
+getBaseModelProperties (LogicalOr p) = just p
+getBaseModelProperties (LogicalSharp p) = just p
+getBaseModelProperties (LogicalXor p) = just p
+getBaseModelProperties (BitwiseAnd p) = just p
+getBaseModelProperties (BitwiseNot p) = just p
+getBaseModelProperties (BitwiseOr p) = just p
+getBaseModelProperties (BitwiseXor p) = just p
+getBaseModelProperties (LeftShift p) = just p
+getBaseModelProperties (RightShift p) = just p
+getBaseModelProperties (Different p) = just p
+getBaseModelProperties (Equal p) = just p
+getBaseModelProperties (GreaterThanEqual p) = just p
+getBaseModelProperties (LessThanEqual p) = just p
+getBaseModelProperties (StrictlyGreaterThan p) = just p
+getBaseModelProperties (StrictlyLessThan p) = just p
+getBaseModelProperties _ = nothing
+
+getModelElementID : ModelElement -> String
+getModelElementID m with getBaseModelProperties m
+... | just (Properties _ id _ _) = id
+... | _ with m
+... | Input _ id _ = id 
+... | Output _ id _ = id
+... | Connection _ id _ _ = id
+... | _ = "" -- Should not come here
+
+findModelElementWithID : List ModelElement -> String -> Maybe ModelElement
+findModelElementWithID [] _ = nothing
+findModelElementWithID (m ∷ ms) otherId with isYes ((getModelElementID m) Data.String.≟ otherId)
+... | true = just m
+... | false = findModelElementWithID ms otherId
+
+findModelElementInModelWithID : Model -> String -> Maybe ModelElement
+findModelElementInModelWithID (Operation _ inputs outputs subModels) id = findModelElementWithID (concatenate (inputs ∷ outputs ∷ subModels ∷ [])) id
+findModelElementInModelWithID _ _ = nothing
+
+findModelElementInModelListWithID : List Model -> String -> Maybe ModelElement
+findModelElementInModelListWithID [] _ = nothing
+findModelElementInModelListWithID (m ∷ ms) id with findModelElementInModelWithID m id
+... | just me = just me
+... | nothing = findModelElementInModelListWithID ms id
+
+findModelElementInProjectWithID : Project -> String -> Maybe ModelElement
+findModelElementInProjectWithID record {subModels = sms} id = findModelElementInModelListWithID sms id

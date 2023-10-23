@@ -158,9 +158,23 @@ readInputConnections (just (Element "inputConnections" _ es)) = readInputConnect
 readInputConnections _ = nothing
 
 
+readOutputConnectionIds : List XmlElement -> Maybe (List (ℕ × String))
+readOutputConnectionIds [] = just []
+readOutputConnectionIds ((Element "outputConnection" as _) ∷ xs) with readOutputConnectionIds xs | getAttributeValue as "connectedTo" | getAttributeValue as "portOrder"
+... | just outConIds | just id | just portOrderStr with stringToNat portOrderStr
+... | just portOrder = just ((portOrder , id) ∷ outConIds)
+... | _ = nothing
+readOutputConnectionIds _ | _ | _ | _ = nothing
+readOutputConnectionIds _ = nothing
+
+readOutputConnections : Maybe XmlElement -> Maybe (List (ℕ × String))
+readOutputConnections (just (Element "outputConnections" _ es)) = readOutputConnectionIds es
+readOutputConnections _ = nothing
+
+
 createBasicOpModelElement : String -> String -> String -> List XmlElement -> Maybe ModelElement
-createBasicOpModelElement hash n id es with readInputConnections (getElement es "inputConnections")
-... | just inCons with Properties n id inCons
+createBasicOpModelElement hash n id es with readInputConnections (getElement es "inputConnections") | readOutputConnections (getElement es "outputConnections")
+... | just inCons | just outCons with Properties n id inCons outCons
 ... | p with hash
 ... | "955ca6d568f93954497d59e165f9fa9b" = just (Addition p)
 ... | "f8806a128e6f1a8d41cfa9b5f0f38f82" = just (Modulo p)
@@ -188,7 +202,7 @@ createBasicOpModelElement hash n id es with readInputConnections (getElement es 
 ... | "c43404828b6fb52b32bbfe69adde0b63" = just (StrictlyGreaterThan p)
 ... | "10c8829be556be2c9869269b7d3782c2" = just (StrictlyLessThan p)
 ... | _ = nothing
-createBasicOpModelElement hash n id es | _ = nothing
+createBasicOpModelElement hash n id es | _ | _ = nothing
 
 
 createInput : String -> String -> List XmlElement -> Maybe ModelElement
@@ -199,9 +213,9 @@ createInput n id es | just e | just (Element _ as _) with getAttributeValue as "
 ...                                                  | just typeName = just (Input n id (getType typeName))
 createInput n id es | just e | _ = nothing
 createInput n id es | nothing with getElement es "copyOf"
-createInput n id es | nothing | just (Element _ as _) with getAttributeValue as "value"
-...                                                   | nothing = nothing
-...                                                   | just sourceId = just (InputInstance n id sourceId)
+createInput n id es | nothing | just (Element _ as _) with getAttributeValue as "value" | readOutputConnections (getElement es "outputConnections")
+...                                                   | just sourceId | just outCons = just (InputInstance (Properties n id [] outCons) sourceId)
+...                                                   | _ | _ = nothing
 createInput n id es | nothing | _ = nothing
 
 
@@ -214,7 +228,7 @@ createOutput n id es | just e | just (Element _ as _) with getAttributeValue as 
 createOutput n id es | just e | _ = nothing
 createOutput n id es | nothing with getElement es "copyOf"
 createOutput n id es | nothing | just (Element _ as _) with getAttributeValue as "value" | readInputConnections (getElement es "inputConnections")
-...                                                    | just sourceId | just inCons = just (OutputInstance n id sourceId inCons)
+...                                                    | just sourceId | just inCons = just (OutputInstance (Properties n id inCons []) sourceId)
 ...                                                    | _ | _ = nothing
 createOutput n id es | nothing | _ = nothing
 

@@ -1,6 +1,6 @@
 <?xml version='1.0' encoding='UTF-8'?>
 <!DOCTYPE prjx>
-<project name="ExampleIMODESave" id="1696681038889_1">
+<project id="1696681038889_1" name="ExampleIMODESave">
     <submodels>
         <model path="logicModel1.mdlx" hash=""/>
         <model path="logicModel2.mdlx" hash=""/>
@@ -14,6 +14,6 @@
     <configurations>
         <configuration path="ExampleIMODESave.confx"/>
     </configurations>
-    <version createdVer="0.011.6701" modifiedVer="0.011.6701"/>
+    <version modifiedVer="0.011.6701" createdVer="0.011.6701"/>
     <requirement reqCounter="0"/>
 </project>
