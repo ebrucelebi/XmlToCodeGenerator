@@ -1,4 +1,4 @@
-{-# OPTIONS --guardedness #-}
+{-# OPTIONS --safe #-}
 
 module main where
 
@@ -7,9 +7,8 @@ open import Data.String
 open import Data.List
 open import Data.Maybe
 open import Data.Product
-open import IO
 open import readIMODEFile
-open import checkProject
+open import codeGeneration
 
 main : Bool × (List String)
-main = checkProject readIMODEFiles
+main = checkAndGenerateCode readIMODEFiles "logicModel1"

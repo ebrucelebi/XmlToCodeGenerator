@@ -1,3 +1,4 @@
+{-# OPTIONS --safe #-}
 module IMODEDataTypes where
 
 open import Data.String
@@ -195,3 +196,14 @@ findModelElementInModelListWithID (m ∷ ms) id with findModelElementInModelWith
 
 findModelElementInProjectWithID : Project -> String -> Maybe ModelElement
 findModelElementInProjectWithID record {subModels = sms} id = findModelElementInModelListWithID sms id
+
+
+findModelInModelListWithName : List Model -> String -> Maybe Model
+findModelInModelListWithName [] _ = nothing
+findModelInModelListWithName ((Operation n1 _ _ _) ∷ ms) n2 with isYes (n1 Data.String.≟ n2)
+findModelInModelListWithName ((Operation n1 _ _ _) ∷ ms) n2 | false = findModelInModelListWithName ms n2
+findModelInModelListWithName (m ∷ ms) n2 | true = just m
+findModelInModelListWithName (m ∷ ms) n2 = findModelInModelListWithName ms n2
+
+findModelInProjectWithName : Project -> String -> Maybe Model
+findModelInProjectWithName record {subModels = sms} n = findModelInModelListWithName sms n 

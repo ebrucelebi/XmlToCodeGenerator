@@ -1,4 +1,4 @@
-{-# OPTIONS --guardedness #-}
+{-# OPTIONS --safe #-}
 
 module checkProject where
 
@@ -9,6 +9,9 @@ open import Data.Maybe
 open import Data.Product
 open import Data.Nat
 open import IMODEDataTypes
+open import Relation.Binary.PropositionalEquality
+open import Data.Empty
+open import Relation.Nullary.Decidable
 
 
 
@@ -56,7 +59,7 @@ checkModels (m ∷ ms) = concatenateTwoList (checkModel m) (checkModels ms)
 
 
 checkProject : Maybe Project -> Bool × (List String)
-checkProject nothing = false , "Project load failed." ∷ []
-checkProject (just record {types = ts}) with checkTypes ts
-... | [] = true , []
-... | errors = false , errors
+checkProject nothing = false , ("Project load failed." ∷ [])
+checkProject (just (record {subModels = sms ; types = ts})) with checkTypes ts | checkModels sms
+... | [] | [] = true , []
+... | tErrors | mErrors = false , (concatenate (tErrors ∷ mErrors ∷ []))
