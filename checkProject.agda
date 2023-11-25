@@ -2,18 +2,15 @@
 
 module checkProject where
 
+open import utility
+open import IMODEDataTypes
+
 open import Data.Bool
 open import Data.String
 open import Data.List
 open import Data.Maybe
 open import Data.Product
 open import Data.Nat
-open import IMODEDataTypes
-open import Relation.Binary.PropositionalEquality
-open import Data.Empty
-open import Relation.Nullary.Decidable
-
-
 
 checkStructureDefElem : String -> String × Type -> List String
 checkStructureDefElem n (l , iNull) = concatenateStrings ("Type " ∷ n ∷ " label " ∷ l ∷ " is null." ∷ []) ∷ []

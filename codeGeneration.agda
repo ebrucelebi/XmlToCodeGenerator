@@ -2,13 +2,15 @@
 
 module codeGeneration where
 
+open import utility
+open import IMODEDataTypes
+open import checkProject
+
 open import Data.String
 open import Data.Maybe
 open import Data.Bool
 open import Data.Product
 open import Data.List
-open import IMODEDataTypes
-open import checkProject
 
 generateModelElements : Project -> List ModelElement -> List String
 
@@ -40,4 +42,3 @@ checkAndGenerateCode : Maybe Project -> String -> Bool × (List String)
 checkAndGenerateCode p n with checkProject p | p
 ... | true , _ | just project = (generateCode project n)
 ... | result | _ = result
-

@@ -1,5 +1,8 @@
 {-# OPTIONS --safe #-}
+
 module IMODEDataTypes where
+
+open import utility
 
 open import Data.String
 open import Data.List
@@ -7,7 +10,6 @@ open import Data.Bool
 open import Data.Product
 open import Data.Nat
 open import Data.Maybe
-open import Relation.Nullary.Decidable
 
 data Type : Set where
   iNone : Type
@@ -121,24 +123,6 @@ record Project : Set where
     interfaces : List Interface
     constants : List Constant
 
-contains : List String -> String -> Bool
-contains [] _ = false
-contains (x ∷ xs) y with isYes (x Data.String.≟ y)
-... | true = true
-... | false = contains xs y
-
-concatenate : ∀{ℓ}{A : Set ℓ} → List (List A) → List A
-concatenate [] = []
-concatenate (x ∷ xs) = x Data.List.++ concatenate xs
-
-concatenateTwoList : ∀{ℓ}{A : Set ℓ} → List A -> List A → List A
-concatenateTwoList xs1 xs2 = xs1 Data.List.++ xs2
-
-
-concatenateStrings : List String -> String
-concatenateStrings [] = ""
-concatenateStrings (x ∷ xs) = x Data.String.++ (concatenateStrings xs)
-
 getBaseModelProperties : ModelElement -> Maybe BaseModelElementProperties
 getBaseModelProperties (InputInstance p _) = just p
 getBaseModelProperties (OutputInstance p _) = just p
@@ -180,7 +164,7 @@ getModelElementID m with getBaseModelProperties m
 
 findModelElementWithID : List ModelElement -> String -> Maybe ModelElement
 findModelElementWithID [] _ = nothing
-findModelElementWithID (m ∷ ms) otherId with isYes ((getModelElementID m) Data.String.≟ otherId)
+findModelElementWithID (m ∷ ms) otherId with (getModelElementID m) == otherId
 ... | true = just m
 ... | false = findModelElementWithID ms otherId
 
@@ -200,7 +184,7 @@ findModelElementInProjectWithID record {subModels = sms} id = findModelElementIn
 
 findModelInModelListWithName : List Model -> String -> Maybe Model
 findModelInModelListWithName [] _ = nothing
-findModelInModelListWithName ((Operation n1 _ _ _) ∷ ms) n2 with isYes (n1 Data.String.≟ n2)
+findModelInModelListWithName ((Operation n1 _ _ _) ∷ ms) n2 with n1 == n2
 findModelInModelListWithName ((Operation n1 _ _ _) ∷ ms) n2 | false = findModelInModelListWithName ms n2
 findModelInModelListWithName (m ∷ ms) n2 | true = just m
 findModelInModelListWithName (m ∷ ms) n2 = findModelInModelListWithName ms n2

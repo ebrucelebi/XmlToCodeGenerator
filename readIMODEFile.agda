@@ -2,39 +2,18 @@
 
 module readIMODEFile where
 
+open import utility
 open import parseXml
 open import IMODEDataTypes
 open import IMODESaveFile
+
 open import Data.String
 open import Data.List
 open import Data.Maybe
 open import Data.Product
 open import Data.Nat
-open import Data.Char
 open import Data.Bool
 open import Relation.Nullary.Decidable
-
-charToNat : Char -> Maybe ℕ
-charToNat '0' = just 0
-charToNat '1' = just 1
-charToNat '2' = just 2
-charToNat '3' = just 3
-charToNat '4' = just 4
-charToNat '5' = just 5
-charToNat '6' = just 6
-charToNat '7' = just 7
-charToNat '8' = just 8
-charToNat '9' = just 9
-charToNat _ = nothing
-
-reverseCharListToNat : List Char -> Maybe ℕ
-reverseCharListToNat [] = just 0
-reverseCharListToNat (x ∷ xs) with reverseCharListToNat xs | charToNat x
-... | just r | just a = just (a + r * 10)
-... | _ | _ = nothing
-
-stringToNat : String -> Maybe ℕ
-stringToNat s = reverseCharListToNat (reverse (toList s))
 
 getDimensions : List XmlElement -> Maybe (List (ℕ))
 getDimensions [] = just []
@@ -311,26 +290,3 @@ readProjectFile _ = nothing
 
 readIMODEFiles : Maybe Project
 readIMODEFiles = readProjectFile (parseXml projectXmlString)
-
-modelStr : String
-modelStr = "<model tracedRequirements=\"\" visibility=\"1\" enable=\"1\" id=\"1696681110644_1\" name=\"Input1\" projectFileName=\"\" description=\"\" hash=\"47652e68b75f740d7c4228759d31a8f5\">
-            <submodels/>
-            <ioDirection value=\"0\"/>
-            <center yCoord=\"-58\" xCoord=\"-400\"/>
-            <size height=\"40\" width=\"60\"/>
-            <inputConnections/>
-            <outputConnections>
-                <outputConnection connectedTo=\"1696681114575_1\" portOrder=\"0\"/>
-            </outputConnections>
-            <conditionConnections/>
-            <parameterConnections/>
-            <copyOf value=\"1696681110711_2\"/>
-            <last last=\"0\"/>
-            <value value=\"0\"/>
-        </model>"
-
-deneme : Maybe ModelElement
-deneme with parseXml modelStr
-deneme | nothing = just (Input "haha" "" iNone)
-deneme | just (Element _ _ es) = createInput "a" "b" es
-deneme | _ = just (TestModelElement 0)
