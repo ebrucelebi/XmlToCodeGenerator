@@ -8,7 +8,7 @@ open import Data.String
 open import Data.Bool
 open import Data.Maybe
 open import Data.Nat
-open import Relation.Nullary.Decidable
+open import Data.Vec hiding (reverse; toList)
 
 appendToList : ∀{ℓ}{A : Set ℓ} → List A → A → List A
 appendToList l e = (l Data.List.++ Data.List.[_] e)
@@ -41,6 +41,12 @@ contains (x ∷ xs) y with x == y
 ... | true = true
 ... | false = contains xs y
 
+containsVec : ∀ {n} -> Vec String n -> String -> Bool
+containsVec [] _ = false
+containsVec (x ∷ xs) y with x == y
+... | true = true
+... | false = containsVec xs y
+
 concatenate : ∀{ℓ}{A : Set ℓ} → List (List A) → List A
 concatenate [] = []
 concatenate (x ∷ xs) = x Data.List.++ concatenate xs
@@ -50,4 +56,4 @@ concatenateTwoList xs1 xs2 = xs1 Data.List.++ xs2
 
 concatenateStrings : List String -> String
 concatenateStrings [] = ""
-concatenateStrings (x ∷ xs) = x Data.String.++ (concatenateStrings xs)
+concatenateStrings (x ∷ xs) = x Data.String.++ (concatenateStrings xs) 

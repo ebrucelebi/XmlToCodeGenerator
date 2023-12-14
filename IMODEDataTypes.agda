@@ -112,7 +112,6 @@ data ModelElement : Set where
   StrictlyLessThan : BaseModelElementProperties -> ModelElement
 
 data Model : Set where
-  TestModel : ℕ -> Model
   Operation : String -> (inputs : List ModelElement) -> (outputs : List ModelElement) -> (subModels : List ModelElement)-> Model
   
 record Project : Set where
@@ -170,7 +169,6 @@ findModelElementWithID (m ∷ ms) otherId with (getModelElementID m) == otherId
 
 findModelElementInModelWithID : Model -> String -> Maybe ModelElement
 findModelElementInModelWithID (Operation _ inputs outputs subModels) id = findModelElementWithID (concatenate (inputs ∷ outputs ∷ subModels ∷ [])) id
-findModelElementInModelWithID _ _ = nothing
 
 findModelElementInModelListWithID : List Model -> String -> Maybe ModelElement
 findModelElementInModelListWithID [] _ = nothing
@@ -187,7 +185,41 @@ findModelInModelListWithName [] _ = nothing
 findModelInModelListWithName ((Operation n1 _ _ _) ∷ ms) n2 with n1 == n2
 findModelInModelListWithName ((Operation n1 _ _ _) ∷ ms) n2 | false = findModelInModelListWithName ms n2
 findModelInModelListWithName (m ∷ ms) n2 | true = just m
-findModelInModelListWithName (m ∷ ms) n2 = findModelInModelListWithName ms n2
 
 findModelInProjectWithName : Project -> String -> Maybe Model
 findModelInProjectWithName record {subModels = sms} n = findModelInModelListWithName sms n 
+
+exampleModel : Model
+exampleModel = (Operation "logicModel1"
+ (Input "Input1" "1696681110711_2" iInt16 ∷
+  Input "Input3" "1696681112176_4" iInt16 ∷ [])
+ (Output "Output1" "1696681118077_2" iInt16 ∷ [])
+ (InputInstance
+  (Properties "Input1" "1696681110644_1" []
+   ((0 , "1696681114575_1") ∷ []))
+  "1696681110711_2"
+  ∷
+  InputInstance
+  (Properties "Input3" "1696681112129_3" []
+   ((0 , "1696681115337_2") ∷ []))
+  "1696681112176_4"
+  ∷
+  Addition
+  (Properties "Addition1" "1696681114187_1"
+   ("1696681114575_1" ∷ "1696681115337_2" ∷ [])
+   ((0 , "1696681118357_3") ∷ []))
+  ∷
+  Connection "Connect1" "1696681114575_1" "1696681110644_1"
+  "1696681114187_1"
+  ∷
+  Connection "Connect2" "1696681115337_2" "1696681112129_3"
+  "1696681114187_1"
+  ∷
+  OutputInstance
+  (Properties "Output1" "1696681118011_1" ("1696681118357_3" ∷ [])
+   [])
+  "1696681118077_2"
+  ∷
+  Connection "Connect3" "1696681118357_3" "1696681114187_1"
+  "1696681118011_1"
+  ∷ []))
