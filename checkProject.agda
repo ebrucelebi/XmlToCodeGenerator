@@ -4,6 +4,8 @@ module checkProject where
 
 open import utility
 open import IMODEDataTypes
+open import IMODEScannedDataTypes
+open import createNodes
 
 open import Data.Bool
 open import Data.String
@@ -60,3 +62,32 @@ checkProject nothing = false , ("Project load failed." ∷ [])
 checkProject (just (record {subModels = sms ; types = ts})) with checkTypes ts | checkModels sms
 ... | [] | [] = true , []
 ... | tErrors | mErrors = false , (concatenate (tErrors ∷ mErrors ∷ []))
+
+containsModelElement : List ModelElement -> ModelElement -> Bool
+containsModelElement [] _ = false
+containsModelElement (m1 ∷ ms) m2 with (getModelElementID m1) == (getModelElementID m2)
+... | true = true
+... | false = containsModelElement ms m2
+
+mutual
+    checkForCyclicMulti : ∀ {n} -> List (ModelTree n) -> List ModelElement -> Bool × (List String)
+    checkForCyclicMulti [] _ = true , []
+    checkForCyclicMulti (t ∷ ts) seen with checkForCyclic t seen
+    ... | false , errs = false , errs
+    ... | true , _ = checkForCyclicMulti ts seen
+
+    checkForCyclic : ∀ {n} -> ModelTree n -> List ModelElement -> Bool × (List String)
+    checkForCyclic (ExampleTree a) _ = false , "ExampleTree" ∷ []
+    checkForCyclic (Leaf _) _ = true , []
+    checkForCyclic (Root ts) seen = checkForCyclicMulti ts seen
+    checkForCyclic (m ∷ ts) seen with containsModelElement seen m
+    ... | true = false , ("Cycle detected." ∷ [])
+    ... | false = checkForCyclicMulti ts (m ∷ seen)
+
+checkModelTree : ∀ {n} -> ModelTree n -> Bool × (List String)
+checkModelTree t = checkForCyclic t [] 
+
+deneme : Bool × (List String)
+deneme with createModelTree exampleModel
+... | nothing = false , ("Could not create tree." ∷ [])
+... | just ts = checkForCyclic ts []
