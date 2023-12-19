@@ -1,0 +1,212 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<!DOCTYPE mdlx>
+<model tracedRequirements="" description="" id="1702982513357_5" name="doubleOutput" hash="a67070cb51e7193b57ee8ad63c72b3f5" projectFileName="ExampleIMODESave.prjx">
+    <submodels>
+        <model tracedRequirements="" description="" id="1702982541825_11" name="Input11" hash="47652e68b75f740d7c4228759d31a8f5" projectFileName="" enable="1" visibility="1">
+            <submodels/>
+            <ioDirection value="0"/>
+            <center yCoord="-136" xCoord="-395"/>
+            <size width="60" height="40"/>
+            <inputConnections/>
+            <outputConnections>
+                <outputConnection connectedTo="1702982548262_16" portOrder="0"/>
+            </outputConnections>
+            <conditionConnections/>
+            <parameterConnections/>
+            <copyOf value="1702982541890_12"/>
+            <last last="0"/>
+            <value value="0"/>
+        </model>
+        <model tracedRequirements="" description="" id="1702982542875_13" name="Input13" hash="47652e68b75f740d7c4228759d31a8f5" projectFileName="" enable="1" visibility="1">
+            <submodels/>
+            <ioDirection value="0"/>
+            <center yCoord="-6" xCoord="-407"/>
+            <size width="60" height="40"/>
+            <inputConnections/>
+            <outputConnections>
+                <outputConnection connectedTo="1702982549172_17" portOrder="0"/>
+                <outputConnection connectedTo="1702982551338_19" portOrder="0"/>
+            </outputConnections>
+            <conditionConnections/>
+            <parameterConnections/>
+            <copyOf value="1702982542944_14"/>
+            <last last="0"/>
+            <value value="0"/>
+        </model>
+        <model tracedRequirements="" description="" id="1702982544232_6" name="Addition6" hash="955ca6d568f93954497d59e165f9fa9b" projectFileName="" enable="1" visibility="1">
+            <submodels/>
+            <ioDirection value="0"/>
+            <center yCoord="-94" xCoord="-182"/>
+            <size width="60" height="40"/>
+            <inputConnections>
+                <inputConnection connectedTo="1702982548262_16" portOrder="0"/>
+                <inputConnection connectedTo="1702982549172_17" portOrder="1"/>
+            </inputConnections>
+            <outputConnections>
+                <outputConnection connectedTo="1702982549830_18" portOrder="0"/>
+                <outputConnection connectedTo="1702982558161_20" portOrder="0"/>
+            </outputConnections>
+            <conditionConnections/>
+            <parameterConnections/>
+        </model>
+        <model tracedRequirements="" description="" id="1702982546543_1" name="Multiplication1" hash="c242c66d2b427ca579e166bcb7d29e13" projectFileName="" enable="1" visibility="1">
+            <submodels/>
+            <ioDirection value="0"/>
+            <center yCoord="-38" xCoord="-7"/>
+            <size width="60" height="40"/>
+            <inputConnections>
+                <inputConnection connectedTo="1702982549830_18" portOrder="0"/>
+                <inputConnection connectedTo="1702982551338_19" portOrder="1"/>
+            </inputConnections>
+            <outputConnections>
+                <outputConnection connectedTo="1702982559195_21" portOrder="0"/>
+            </outputConnections>
+            <conditionConnections/>
+            <parameterConnections/>
+        </model>
+        <model tracedRequirements="" description="" id="1702982548262_16" name="Connect16" hash="c2459d3d1ef8a0b20f3e7125bae74582" projectFileName="" enable="1" visibility="1">
+            <submodels/>
+            <startOperation yCoord="-136" connectedTo="1702982541825_11" xCoord="-365"/>
+            <endOperation yCoord="-100.66666666666667" connectedTo="1702982544232_6" xCoord="-212"/>
+            <points>
+                <point yCoord="-136" xCoord="-365"/>
+                <point yCoord="-136" xCoord="-233"/>
+                <point yCoord="-100.66666666666667" xCoord="-233"/>
+                <point yCoord="-100.66666666666667" xCoord="-212"/>
+            </points>
+            <type name="int16"/>
+        </model>
+        <model tracedRequirements="" description="" id="1702982549172_17" name="Connect17" hash="c2459d3d1ef8a0b20f3e7125bae74582" projectFileName="" enable="1" visibility="1">
+            <submodels/>
+            <startOperation yCoord="-6" connectedTo="1702982542875_13" xCoord="-377"/>
+            <endOperation yCoord="-87.33333333333333" connectedTo="1702982544232_6" xCoord="-212"/>
+            <points>
+                <point yCoord="-6" xCoord="-377"/>
+                <point yCoord="-6" xCoord="-233"/>
+                <point yCoord="-87.33333333333333" xCoord="-233"/>
+                <point yCoord="-87.33333333333333" xCoord="-212"/>
+            </points>
+            <type name="int16"/>
+        </model>
+        <model tracedRequirements="" description="" id="1702982549830_18" name="Connect18" hash="c2459d3d1ef8a0b20f3e7125bae74582" projectFileName="" enable="1" visibility="1">
+            <submodels/>
+            <startOperation yCoord="-94" connectedTo="1702982544232_6" xCoord="-152"/>
+            <endOperation yCoord="-44.666666666666664" connectedTo="1702982546543_1" xCoord="-37"/>
+            <points>
+                <point yCoord="-94" xCoord="-152"/>
+                <point yCoord="-94" xCoord="-103"/>
+                <point yCoord="-44.666666666666664" xCoord="-103"/>
+                <point yCoord="-44.666666666666664" xCoord="-37"/>
+            </points>
+            <type name="int16"/>
+        </model>
+        <model tracedRequirements="" description="" id="1702982551338_19" name="Connect19" hash="c2459d3d1ef8a0b20f3e7125bae74582" projectFileName="" enable="1" visibility="1">
+            <submodels/>
+            <startOperation yCoord="-6" connectedTo="1702982542875_13" xCoord="-377"/>
+            <endOperation yCoord="-31.333333333333332" connectedTo="1702982546543_1" xCoord="-37"/>
+            <points>
+                <point yCoord="-6" xCoord="-377"/>
+                <point yCoord="-6" xCoord="-103"/>
+                <point yCoord="-31.333333333333332" xCoord="-103"/>
+                <point yCoord="-31.333333333333332" xCoord="-37"/>
+            </points>
+            <type name="int16"/>
+        </model>
+        <model tracedRequirements="" description="" id="1702982555559_9" name="Output9" hash="1deb5a48a4655393a18760b265134ef3" projectFileName="" enable="1" visibility="1">
+            <submodels/>
+            <ioDirection value="0"/>
+            <center yCoord="-134" xCoord="-18"/>
+            <size width="60" height="40"/>
+            <inputConnections>
+                <inputConnection connectedTo="1702982558161_20" portOrder="0"/>
+            </inputConnections>
+            <outputConnections/>
+            <conditionConnections/>
+            <parameterConnections/>
+            <copyOf value="1702982555602_10"/>
+            <last last="0"/>
+        </model>
+        <model tracedRequirements="" description="" id="1702982556907_11" name="Output11" hash="1deb5a48a4655393a18760b265134ef3" projectFileName="" enable="1" visibility="1">
+            <submodels/>
+            <ioDirection value="0"/>
+            <center yCoord="-43" xCoord="104"/>
+            <size width="60" height="40"/>
+            <inputConnections>
+                <inputConnection connectedTo="1702982559195_21" portOrder="0"/>
+            </inputConnections>
+            <outputConnections/>
+            <conditionConnections/>
+            <parameterConnections/>
+            <copyOf value="1702982556952_12"/>
+            <last last="0"/>
+        </model>
+        <model tracedRequirements="" description="" id="1702982558161_20" name="Connect20" hash="c2459d3d1ef8a0b20f3e7125bae74582" projectFileName="" enable="1" visibility="1">
+            <submodels/>
+            <startOperation yCoord="-94" connectedTo="1702982544232_6" xCoord="-152"/>
+            <endOperation yCoord="-134" connectedTo="1702982555559_9" xCoord="-48"/>
+            <points>
+                <point yCoord="-94" xCoord="-152"/>
+                <point yCoord="-94" xCoord="-132"/>
+                <point yCoord="-134" xCoord="-132"/>
+                <point yCoord="-134" xCoord="-48"/>
+            </points>
+            <type name="int16"/>
+        </model>
+        <model tracedRequirements="" description="" id="1702982559195_21" name="Connect21" hash="c2459d3d1ef8a0b20f3e7125bae74582" projectFileName="" enable="1" visibility="1">
+            <submodels/>
+            <startOperation yCoord="-38" connectedTo="1702982546543_1" xCoord="23"/>
+            <endOperation yCoord="-43" connectedTo="1702982556907_11" xCoord="74"/>
+            <points>
+                <point yCoord="-38" xCoord="23"/>
+                <point yCoord="-38" xCoord="43"/>
+                <point yCoord="-43" xCoord="43"/>
+                <point yCoord="-43" xCoord="74"/>
+            </points>
+            <type name="int16"/>
+        </model>
+        <model tracedRequirements="" description="" id="1702982541890_12" name="Input11" hash="47652e68b75f740d7c4228759d31a8f5" projectFileName="" enable="1" visibility="1">
+            <submodels/>
+            <type name="int16"/>
+            <sourceInstance value="1"/>
+            <last value=""/>
+            <default value=""/>
+            <value value="0"/>
+        </model>
+        <model tracedRequirements="" description="" id="1702982542944_14" name="Input13" hash="47652e68b75f740d7c4228759d31a8f5" projectFileName="" enable="1" visibility="1">
+            <submodels/>
+            <type name="int16"/>
+            <sourceInstance value="1"/>
+            <last value=""/>
+            <default value=""/>
+            <value value="0"/>
+        </model>
+        <model tracedRequirements="" description="" id="1702982555602_10" name="Output9" hash="1deb5a48a4655393a18760b265134ef3" projectFileName="" enable="1" visibility="1">
+            <submodels/>
+            <type name="int16"/>
+            <sourceInstance value="1"/>
+            <last value=""/>
+            <default value=""/>
+        </model>
+        <model tracedRequirements="" description="" id="1702982556952_12" name="Output11" hash="1deb5a48a4655393a18760b265134ef3" projectFileName="" enable="1" visibility="1">
+            <submodels/>
+            <type name="int16"/>
+            <sourceInstance value="1"/>
+            <last value=""/>
+            <default value=""/>
+        </model>
+    </submodels>
+    <genericTypes/>
+    <sizeParameters/>
+    <startModels>
+        <startModel hash="1702982541890_12"/>
+        <startModel hash="1702982542944_14"/>
+    </startModels>
+    <endModels>
+        <endModel hash="1702982555602_10"/>
+        <endModel hash="1702982556952_12"/>
+    </endModels>
+    <inputSensors/>
+    <outputSensors/>
+    <locals/>
+    <lookups/>
+</model>

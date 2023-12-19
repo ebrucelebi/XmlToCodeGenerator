@@ -3,7 +3,9 @@
 <project id="1696681038889_1" name="ExampleIMODESave">
     <submodels>
         <model path="logicModel1.mdlx" hash=""/>
-        <model path="logicModel2.mdlx" hash=""/>
+        <model path="hasCycle.mdlx" hash=""/>
+        <model path="hasCycle2.mdlx" hash=""/>
+        <model path="doubleOutput.mdlx" hash=""/>
     </submodels>
     <types path="Types.typx"/>
     <constants path="Constants.constx"/>

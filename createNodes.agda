@@ -39,30 +39,38 @@ findModelsWithIds m (x ∷ xs) with findModelElementInModelWithID m x | findMode
 ... | just me | just mes = just (me ∷ mes)
 ... | _ | _ = nothing
 
+containsModelElement : List ModelElement -> ModelElement -> Bool
+containsModelElement [] _ = false
+containsModelElement (m1 ∷ ms) m2 with (getModelElementID m1) == (getModelElementID m2)
+... | true = true
+... | false = containsModelElement ms m2
+
 mutual
-    createTree : Model -> (n : ℕ) -> ModelElement -> Maybe (ModelTree n)
-    createTree m zero me = just (Leaf me)
-    createTree m (suc n) (Connection _ _ startMID _ ) with findModelElementInModelWithID m startMID
-    createTree m (suc n) c | nothing = just (ExampleTree "createTree4")
-    createTree m (suc n) c | just startM with createTree m n startM
-    ... | nothing = just (ExampleTree "createTree5")
-    ... | just t = just (c ∷ (t ∷ []))
-    createTree m (suc n) me with getBaseModelProperties me
+    createTree : Model -> List ModelElement -> (n : ℕ) -> ModelElement -> Maybe (ModelTree n)
+    createTree m seen zero me = just (Leaf me)
+    createTree m seen (suc n) (Connection _ _ startMID _ ) with findModelElementInModelWithID m startMID
+    createTree m seen (suc n) c | nothing = just (ExampleTree "createTree4")
+    createTree m seen (suc n) c | just startM with createTree m (c ∷ seen) n startM
+    ...                             | nothing = just (ExampleTree "createTree5")
+    ...                             | just t = just (c ∷ (t ∷ []))
+    createTree m seen (suc n) me with containsModelElement seen me
+    ... | true = just (Leaf me) -- Cycle detected
+    ... | false with getBaseModelProperties me
     ... | nothing = just (ExampleTree "createTree1")
     ... | just (Properties _ _ [] _) = just (Leaf me)
     ... | just (Properties _ _ inConIds _) with findModelsWithIds m inConIds
     ... | nothing = just (ExampleTree "createTree2")
-    ... | just inCons with createTrees m n inCons
+    ... | just inCons with createTrees m (me ∷ seen) n inCons
     ... | nothing = just (ExampleTree "createTree3")
     ... | just ts = just (me ∷ ts)
 
-    createTrees : Model -> (n : ℕ) -> List ModelElement -> Maybe (List (ModelTree n))
-    createTrees m _ [] = just []
-    createTrees m n (x ∷ xs) with createTree m n x | createTrees m n xs
+    createTrees : Model -> List ModelElement -> (n : ℕ) -> List ModelElement -> Maybe (List (ModelTree n))
+    createTrees m seen _ [] = just []
+    createTrees m seen n (x ∷ xs) with createTree m seen n x | createTrees m seen n xs
     ... | just t | just ts = just (t ∷ ts)
     ... | _ | _ = just (ExampleTree "createTrees" ∷ [])
 
 createModelTree : (m : Model) -> Maybe (ModelTree (findDepth m))
-createModelTree (Operation a b c sm) with createTrees (Operation a b c sm) (Data.List.length sm) (findEndModels sm)
+createModelTree (Operation a b c sm) with createTrees (Operation a b c sm) [] (Data.List.length sm) (findEndModels sm)
 ... | nothing = just (ExampleTree "createModelTree")
 ... | just trees = just (Root trees)

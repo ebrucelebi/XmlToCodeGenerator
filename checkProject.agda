@@ -63,12 +63,6 @@ checkProject (just (record {subModels = sms ; types = ts})) with checkTypes ts |
 ... | [] | [] = true , []
 ... | tErrors | mErrors = false , (concatenate (tErrors ∷ mErrors ∷ []))
 
-containsModelElement : List ModelElement -> ModelElement -> Bool
-containsModelElement [] _ = false
-containsModelElement (m1 ∷ ms) m2 with (getModelElementID m1) == (getModelElementID m2)
-... | true = true
-... | false = containsModelElement ms m2
-
 mutual
     checkForCyclicMulti : ∀ {n} -> List (ModelTree n) -> List ModelElement -> Bool × (List String)
     checkForCyclicMulti [] _ = true , []
@@ -78,7 +72,9 @@ mutual
 
     checkForCyclic : ∀ {n} -> ModelTree n -> List ModelElement -> Bool × (List String)
     checkForCyclic (ExampleTree a) _ = false , "ExampleTree" ∷ []
-    checkForCyclic (Leaf _) _ = true , []
+    checkForCyclic (Leaf m) seen with containsModelElement seen m
+    ... | true = false , ("Cycle detected." ∷ [])
+    ... | false = true , []
     checkForCyclic (Root ts) seen = checkForCyclicMulti ts seen
     checkForCyclic (m ∷ ts) seen with containsModelElement seen m
     ... | true = false , ("Cycle detected." ∷ [])
@@ -89,5 +85,20 @@ checkModelTree t = checkForCyclic t []
 
 deneme : Bool × (List String)
 deneme with createModelTree exampleModel
+... | nothing = false , ("Could not create tree." ∷ [])
+... | just ts = checkForCyclic ts []
+
+deneme2 : Bool × (List String)
+deneme2 with createModelTree exampleModelThatHasCycle
+... | nothing = false , ("Could not create tree." ∷ [])
+... | just ts = checkForCyclic ts []
+
+deneme3 : Bool × (List String)
+deneme3 with createModelTree exampleModelThatHasCycle2
+... | nothing = false , ("Could not create tree." ∷ [])
+... | just ts = checkForCyclic ts []
+
+deneme4 : Bool × (List String)
+deneme4 with createModelTree doubleOutputModel
 ... | nothing = false , ("Could not create tree." ∷ [])
 ... | just ts = checkForCyclic ts []
