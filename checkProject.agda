@@ -43,6 +43,36 @@ checkModelElement m with getBaseModelProperties m
 ... | _ | _ = concatenateStrings ("There is an unconnected point in " ∷ n ∷ []) ∷ []
 checkModelElement m | nothing = []
 
+checkInputConnectionCounts : ModelElement -> Bool
+checkInputConnectionCounts (InputInstance (Properties _ _ inCons _) _) = (Data.List.length inCons) ==ℕ 0
+checkInputConnectionCounts (OutputInstance (Properties _ _ inCons _) _) = (Data.List.length inCons) ==ℕ 1
+checkInputConnectionCounts (Addition (Properties _ _ inCons _)) = (Data.List.length inCons) >=ℕ 2
+checkInputConnectionCounts (Modulo (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (Multiplication (Properties _ _ inCons _)) = (Data.List.length inCons) >=ℕ 2
+checkInputConnectionCounts (NumericCast (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 1
+checkInputConnectionCounts (PolymorphicDivision (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (Subtraction (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (UnaryMinus (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 1
+checkInputConnectionCounts (LogicalAnd (Properties _ _ inCons _)) = (Data.List.length inCons) >=ℕ 2
+checkInputConnectionCounts (LogicalNor (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (LogicalNot (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 1
+checkInputConnectionCounts (LogicalOr (Properties _ _ inCons _)) = (Data.List.length inCons) >=ℕ 2
+checkInputConnectionCounts (LogicalSharp (Properties _ _ inCons _)) = (Data.List.length inCons) >=ℕ 2
+checkInputConnectionCounts (LogicalXor (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (BitwiseAnd (Properties _ _ inCons _)) = (Data.List.length inCons) >=ℕ 2
+checkInputConnectionCounts (BitwiseNot (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 1
+checkInputConnectionCounts (BitwiseOr (Properties _ _ inCons _)) = (Data.List.length inCons) >=ℕ 2
+checkInputConnectionCounts (BitwiseXor (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (LeftShift (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (RightShift (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (Different (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (Equal (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (GreaterThanEqual (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (LessThanEqual (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (StrictlyGreaterThan (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (StrictlyLessThan (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts _ = false
+
 checkModelElements : List ModelElement -> List String
 checkModelElements [] = []
 checkModelElements (m ∷ ms) = concatenateTwoList (checkModelElement m) (checkModelElements ms)
@@ -50,8 +80,6 @@ checkModelElements (m ∷ ms) = concatenateTwoList (checkModelElement m) (checkM
 
 checkModel : Model -> List String
 checkModel (Operation n inputs outputs subModels) = checkModelElements (concatenate (inputs ∷ outputs ∷ subModels ∷ []))
-checkModel _ = []
-
 checkModels : List Model -> List String
 checkModels [] = []
 checkModels (m ∷ ms) = concatenateTwoList (checkModel m) (checkModels ms)

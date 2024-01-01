@@ -9,6 +9,7 @@ open import Data.Bool
 open import Data.Maybe
 open import Data.Nat
 open import Data.Vec hiding (reverse; toList)
+open import Relation.Nullary.Decidable
 
 appendToList : ∀{ℓ}{A : Set ℓ} → List A → A → List A
 appendToList l e = (l Data.List.++ Data.List.[_] e)
@@ -57,3 +58,12 @@ concatenateTwoList xs1 xs2 = xs1 Data.List.++ xs2
 concatenateStrings : List String -> String
 concatenateStrings [] = ""
 concatenateStrings (x ∷ xs) = x Data.String.++ (concatenateStrings xs) 
+
+_==ℕ_ : ℕ -> ℕ -> Bool
+_==ℕ_ n m = isYes (n Data.Nat.≟ m)
+
+_!=ℕ_ : ℕ -> ℕ -> Bool
+_!=ℕ_ n m = isNo (n Data.Nat.≟ m)
+
+_>=ℕ_ : ℕ -> ℕ -> Bool
+_>=ℕ_ n m = isYes (n Data.Nat.≥? m)
