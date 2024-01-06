@@ -67,3 +67,8 @@ _!=ℕ_ n m = isNo (n Data.Nat.≟ m)
 
 _>=ℕ_ : ℕ -> ℕ -> Bool
 _>=ℕ_ n m = isYes (n Data.Nat.≥? m)
+
+max : ℕ -> ℕ -> ℕ
+max zero n = n
+max n zero = n
+max (suc n) (suc m) = max n m
