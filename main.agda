@@ -18,4 +18,4 @@ main = checkAndGenerateCode readIMODEFiles "logicModel1"
 deneme : Maybe Model
 deneme with readIMODEFiles
 ... | nothing = nothing
-... | just p = findModelInProjectWithName p "logicModel1"
+... | just p = findModelInProjectWithName p "doubleOutput"

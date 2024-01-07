@@ -31,7 +31,6 @@ collectEndModelElements (m ∷ ms) with m
 
 generateModel : Project -> Model -> List String
 generateModel p (Operation _ _ _ sms) = generateModelElements p (collectEndModelElements sms)
-generateModel _ _ = []
 
 generateCode : Project -> String -> Bool × (List String)
 generateCode p n with findModelInProjectWithName p n

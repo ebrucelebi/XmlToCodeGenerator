@@ -287,6 +287,5 @@ readProjectFile : Maybe XmlElement -> Maybe Project
 readProjectFile (just (Element "project" as es)) = createProject (getAttributeValue as "name") (readTypesFile (parseXml typesXmlString)) (readInterfacesFile (parseXml interfacesXmlString)) (readConstantsFile (parseXml constantsXmlString)) (readModelFiles modelXmlStrings)
 readProjectFile _ = nothing
 
-
 readIMODEFiles : Maybe Project
 readIMODEFiles = readProjectFile (parseXml projectXmlString)

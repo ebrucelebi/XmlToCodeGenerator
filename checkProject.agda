@@ -36,12 +36,6 @@ collectOutConIds : List (ℕ × String) -> List String
 collectOutConIds [] = []
 collectOutConIds ((n , id) ∷ xs) = id ∷ collectOutConIds xs
 
-checkModelElement : ModelElement -> List String
-checkModelElement m with getBaseModelProperties m
-... | just (Properties n id inCons outCons) with contains inCons "" | contains (collectOutConIds outCons) ""
-... | false | false = []
-... | _ | _ = concatenateStrings ("There is an unconnected point in " ∷ n ∷ []) ∷ []
-checkModelElement m | nothing = []
 
 checkInputConnectionCounts : ModelElement -> Bool
 checkInputConnectionCounts (InputInstance (Properties _ _ inCons _) _) = (Data.List.length inCons) ==ℕ 0
@@ -73,17 +67,78 @@ checkInputConnectionCounts (StrictlyGreaterThan (Properties _ _ inCons _)) = (Da
 checkInputConnectionCounts (StrictlyLessThan (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
 checkInputConnectionCounts _ = false
 
-checkModelElements : List ModelElement -> List String
-checkModelElements [] = []
-checkModelElements (m ∷ ms) = concatenateTwoList (checkModelElement m) (checkModelElements ms)
 
+checkOutputConnectionCounts : ModelElement -> Bool
+checkOutputConnectionCounts (InputInstance (Properties _ _ inCons _) _) = (Data.List.length inCons) ==ℕ 0
+checkOutputConnectionCounts (OutputInstance (Properties _ _ inCons _) _) = (Data.List.length inCons) ==ℕ 1
+checkOutputConnectionCounts (Addition (Properties _ _ inCons _)) = (Data.List.length inCons) >=ℕ 2
+checkOutputConnectionCounts (Modulo (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkOutputConnectionCounts (Multiplication (Properties _ _ inCons _)) = (Data.List.length inCons) >=ℕ 2
+checkOutputConnectionCounts (NumericCast (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 1
+checkOutputConnectionCounts (PolymorphicDivision (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkOutputConnectionCounts (Subtraction (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkOutputConnectionCounts (UnaryMinus (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 1
+checkOutputConnectionCounts (LogicalAnd (Properties _ _ inCons _)) = (Data.List.length inCons) >=ℕ 2
+checkOutputConnectionCounts (LogicalNor (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkOutputConnectionCounts (LogicalNot (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 1
+checkOutputConnectionCounts (LogicalOr (Properties _ _ inCons _)) = (Data.List.length inCons) >=ℕ 2
+checkOutputConnectionCounts (LogicalSharp (Properties _ _ inCons _)) = (Data.List.length inCons) >=ℕ 2
+checkOutputConnectionCounts (LogicalXor (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkOutputConnectionCounts (BitwiseAnd (Properties _ _ inCons _)) = (Data.List.length inCons) >=ℕ 2
+checkOutputConnectionCounts (BitwiseNot (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 1
+checkOutputConnectionCounts (BitwiseOr (Properties _ _ inCons _)) = (Data.List.length inCons) >=ℕ 2
+checkOutputConnectionCounts (BitwiseXor (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkOutputConnectionCounts (LeftShift (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkOutputConnectionCounts (RightShift (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkOutputConnectionCounts (Different (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkOutputConnectionCounts (Equal (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkOutputConnectionCounts (GreaterThanEqual (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkOutputConnectionCounts (LessThanEqual (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkOutputConnectionCounts (StrictlyGreaterThan (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkOutputConnectionCounts (StrictlyLessThan (Properties _ _ inCons _)) = (Data.List.length inCons) ==ℕ 2
+checkOutputConnectionCounts _ = false
+
+checkInputConnections : ModelElement -> List String
+checkInputConnections m with getBaseModelProperties m
+... | nothing = []
+... | just (Properties n id inCons outCons) with checkInputConnectionCounts m
+... | false = concatenateStrings ("Input connection count is not correct for " ∷ n ∷ []) ∷ []
+... | true with contains inCons ""
+... | false = []
+... | true = concatenateStrings ("There is an unconnected input point in " ∷ n ∷ []) ∷ []
+
+checkOutputConnections : ModelElement -> List String
+checkOutputConnections m with getBaseModelProperties m
+... | nothing = []
+... | just (Properties n id inCons outCons) with checkOutputConnectionCounts m
+... | false = concatenateStrings ("Output connection count is not correct for " ∷ n ∷ []) ∷ []
+... | true with contains (collectOutConIds outCons) ""
+... | false = []
+... | true = concatenateStrings ("There is an unconnected output point in " ∷ n ∷ []) ∷ []
+
+checkModelElementsConnections : List ModelElement -> List String
+checkModelElementsConnections [] = []
+checkModelElementsConnections (m ∷ ms) = concatenate ((checkInputConnections m) ∷ (checkOutputConnections m) ∷ (checkModelElementsConnections ms) ∷ [])
+
+-- Returns true if cyclic
+checkForCyclic : ∀ {n} -> ModelDAG n -> Bool
+checkForCyclic dag = containsDuplicateModelElement (DAGToList dag)
+
+checkModelDAG : ∀ {n} -> Model -> ModelDAG n -> List String
+checkModelDAG (Operation n inputs outputs subModels) dag with checkForCyclic dag
+... | true = concatenateStrings ("There is a cycle in " ∷ n ∷ []) ∷ []
+... | false = []
 
 checkModel : Model -> List String
-checkModel (Operation n inputs outputs subModels) = checkModelElements (concatenate (inputs ∷ outputs ∷ subModels ∷ []))
+checkModel (Operation n inputs outputs subModels) with checkModelElementsConnections (concatenate (inputs ∷ outputs ∷ subModels ∷ []))
+checkModel (Operation n inputs outputs subModels) | [] with createDAG (Operation n inputs outputs subModels)
+checkModel (Operation n inputs outputs subModels) | [] | nothing = concatenateStrings ("Could not create DAG for " ∷ n ∷ []) ∷ []
+checkModel m                                      | [] | just dag = checkModelDAG m dag
+checkModel (Operation n inputs outputs subModels) | l = l
+
 checkModels : List Model -> List String
 checkModels [] = []
 checkModels (m ∷ ms) = concatenateTwoList (checkModel m) (checkModels ms)
-
 
 checkProject : Maybe Project -> Bool × (List String)
 checkProject nothing = false , ("Project load failed." ∷ [])
@@ -91,42 +146,14 @@ checkProject (just (record {subModels = sms ; types = ts})) with checkTypes ts |
 ... | [] | [] = true , []
 ... | tErrors | mErrors = false , (concatenate (tErrors ∷ mErrors ∷ []))
 
-mutual
-    checkForCyclicMulti : ∀ {n} -> List (ModelTree n) -> List ModelElement -> Bool × (List String)
-    checkForCyclicMulti [] _ = true , []
-    checkForCyclicMulti (t ∷ ts) seen with checkForCyclic t seen
-    ... | false , errs = false , errs
-    ... | true , _ = checkForCyclicMulti ts seen
+deneme : List String
+deneme = checkModel exampleModel
 
-    checkForCyclic : ∀ {n} -> ModelTree n -> List ModelElement -> Bool × (List String)
-    checkForCyclic (ExampleTree a) _ = false , "ExampleTree" ∷ []
-    checkForCyclic (Leaf m) seen with containsModelElement seen m
-    ... | true = false , ("Cycle detected." ∷ [])
-    ... | false = true , []
-    checkForCyclic (Root ts) seen = checkForCyclicMulti ts seen
-    checkForCyclic (m ∷ ts) seen with containsModelElement seen m
-    ... | true = false , ("Cycle detected." ∷ [])
-    ... | false = checkForCyclicMulti ts (m ∷ seen)
+deneme2 : List String
+deneme2 = checkModel exampleModelThatHasCycle
 
-checkModelTree : ∀ {n} -> ModelTree n -> Bool × (List String)
-checkModelTree t = checkForCyclic t [] 
+deneme3 : List String
+deneme3 = checkModel exampleModelThatHasCycle2
 
-deneme : Bool × (List String)
-deneme with createModelTree exampleModel
-... | nothing = false , ("Could not create tree." ∷ [])
-... | just ts = checkForCyclic ts []
-
-deneme2 : Bool × (List String)
-deneme2 with createModelTree exampleModelThatHasCycle
-... | nothing = false , ("Could not create tree." ∷ [])
-... | just ts = checkForCyclic ts []
-
-deneme3 : Bool × (List String)
-deneme3 with createModelTree exampleModelThatHasCycle2
-... | nothing = false , ("Could not create tree." ∷ [])
-... | just ts = checkForCyclic ts []
-
-deneme4 : Bool × (List String)
-deneme4 with createModelTree doubleOutputModel
-... | nothing = false , ("Could not create tree." ∷ [])
-... | just ts = checkForCyclic ts []
+deneme4 : List String
+deneme4 = checkModel doubleOutputModel
