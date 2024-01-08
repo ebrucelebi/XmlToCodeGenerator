@@ -115,6 +115,7 @@ data Model : Set where
   Operation : String -> (inputs : List ModelElement) -> (outputs : List ModelElement) -> (subModels : List ModelElement)-> Model
   
 record Project : Set where
+  constructor project
   field
     name : String
     subModels : List Model
@@ -355,4 +356,4 @@ doubleOutputModel = (Operation "doubleOutput"
   ∷
   Connection "Connect21" "1702982559195_21" "1702982546543_1"
   "1702982556907_11"
-  ∷ []))
+  ∷ [])) 

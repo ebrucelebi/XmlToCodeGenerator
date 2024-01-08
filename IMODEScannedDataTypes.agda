@@ -12,6 +12,7 @@ open import Data.Maybe
 open import Data.Vec
 open import Data.Empty
 open import Data.Unit
+open import Data.Fin
 open import Relation.Nullary.Decidable
 open import Relation.Binary.PropositionalEquality
 open import Data.Graph.Acyclic
@@ -25,3 +26,13 @@ data ModelDAG : ℕ → Set where
 DAGToList : ∀ {n} -> ModelDAG n -> List ModelElement
 DAGToList ∅ = []
 DAGToList ((context me e) & dag) = me ∷ (DAGToList dag)
+
+sub : (n : ℕ) -> Fin n -> ℕ
+sub zero _ = zero
+sub n zero = n
+sub (suc n) (suc i) = sub n i
+
+getEdgeDestination : ∀ {n} -> ModelDAG n -> ((me , i) : ModelElement × Fin n) -> ModelDAG (sub n i)
+getEdgeDestination ∅ _ = ∅
+getEdgeDestination dag (_ , zero) = dag
+getEdgeDestination (c & dag) (me , suc n) = getEdgeDestination dag (me , n)
