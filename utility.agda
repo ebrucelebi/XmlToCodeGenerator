@@ -52,6 +52,11 @@ concatenate : ∀{ℓ}{A : Set ℓ} → List (List A) → List A
 concatenate [] = []
 concatenate (x ∷ xs) = x Data.List.++ concatenate xs
 
+getElementAtIndex : ∀{ℓ}{A : Set ℓ} -> List A -> ℕ -> Maybe A
+getElementAtIndex [] _ = nothing
+getElementAtIndex (x ∷ xs) zero = just x
+getElementAtIndex (x ∷ xs) (suc n) = getElementAtIndex xs n
+
 concatenateTwoList : ∀{ℓ}{A : Set ℓ} → List A -> List A → List A
 concatenateTwoList xs1 xs2 = xs1 Data.List.++ xs2
 

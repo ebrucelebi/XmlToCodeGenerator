@@ -153,6 +153,15 @@ getBaseModelProperties (StrictlyGreaterThan p) = just p
 getBaseModelProperties (StrictlyLessThan p) = just p
 getBaseModelProperties _ = nothing
 
+getModelElementName : ModelElement -> String
+getModelElementName m with getBaseModelProperties m
+... | just (Properties n _ _ _) = n
+... | _ with m
+... | Input n _ _ = n 
+... | Output n _ _ = n
+... | Connection n _ _ _ = n
+... | _ = "" -- Should not come here
+
 getModelElementID : ModelElement -> String
 getModelElementID m with getBaseModelProperties m
 ... | just (Properties _ id _ _) = id
