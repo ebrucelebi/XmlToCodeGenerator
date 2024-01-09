@@ -42,12 +42,6 @@ contains (x ∷ xs) y with x == y
 ... | true = true
 ... | false = contains xs y
 
-containsVec : ∀ {n} -> Vec String n -> String -> Bool
-containsVec [] _ = false
-containsVec (x ∷ xs) y with x == y
-... | true = true
-... | false = containsVec xs y
-
 concatenate : ∀{ℓ}{A : Set ℓ} → List (List A) → List A
 concatenate [] = []
 concatenate (x ∷ xs) = x Data.List.++ concatenate xs

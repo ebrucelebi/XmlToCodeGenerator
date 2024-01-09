@@ -180,6 +180,12 @@ findModelElementWithID (m ∷ ms) otherId with (getModelElementID m) == otherId
 findModelElementInModelWithID : Model -> String -> Maybe ModelElement
 findModelElementInModelWithID (Operation _ inputs outputs subModels) id = findModelElementWithID (concatenate (inputs ∷ outputs ∷ subModels ∷ [])) id
 
+findModelElementsInModelWithID : Model -> List String -> Maybe (List ModelElement)
+findModelElementsInModelWithID _ [] = just []
+findModelElementsInModelWithID m (x ∷ xs) with findModelElementInModelWithID m x | findModelElementsInModelWithID m xs
+... | just me | just mes = just (me ∷ mes)
+... | _ | _ = nothing
+
 findModelElementInModelListWithID : List Model -> String -> Maybe ModelElement
 findModelElementInModelListWithID [] _ = nothing
 findModelElementInModelListWithID (m ∷ ms) id with findModelElementInModelWithID m id
@@ -198,6 +204,20 @@ findModelInModelListWithName (m ∷ ms) n2 | true = just m
 findModelInProjectWithName : Project -> String -> Maybe Model
 findModelInProjectWithName record {subModels = sms} n = findModelInModelListWithName sms n 
 
+findEndModels : List ModelElement -> List ModelElement
+findEndModels [] = []
+findEndModels (x ∷ xs) with getBaseModelProperties x
+... | just (Properties _ _ _ []) = x ∷ findEndModels xs
+... | _ = findEndModels xs
+
+findNonConnectionModelElementCountAlt : List ModelElement -> ℕ
+findNonConnectionModelElementCountAlt [] = zero
+findNonConnectionModelElementCountAlt ((Connection _ _ _ _) ∷ xs) = findNonConnectionModelElementCountAlt xs
+findNonConnectionModelElementCountAlt (x ∷ xs) = suc (findNonConnectionModelElementCountAlt xs)
+
+findNonConnectionModelElementCount : Model -> ℕ
+findNonConnectionModelElementCount (Operation _ _ _ sm) = findNonConnectionModelElementCountAlt sm
+
 containsModelElement : List ModelElement -> ModelElement -> Bool
 containsModelElement [] _ = false
 containsModelElement (m1 ∷ ms) m2 with (getModelElementID m1) == (getModelElementID m2)
@@ -207,6 +227,13 @@ containsModelElement (m1 ∷ ms) m2 with (getModelElementID m1) == (getModelElem
 containsDuplicateModelElement : List ModelElement -> Bool
 containsDuplicateModelElement [] = false
 containsDuplicateModelElement (m ∷ ms) = (containsModelElement ms m) ∨ (containsDuplicateModelElement ms)
+
+appendUniqueModelElement : List ModelElement -> List ModelElement -> List ModelElement
+appendUniqueModelElement [] l = l
+appendUniqueModelElement l [] = l
+appendUniqueModelElement (x ∷ xs) l with containsModelElement (appendUniqueModelElement xs l) x
+... | true = (appendUniqueModelElement xs l)
+... | false = x ∷ (appendUniqueModelElement xs l)
 
 exampleModel : Model
 exampleModel = (Operation "logicModel1"

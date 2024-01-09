@@ -25,7 +25,6 @@ mutual
     generateEdges : ∀ {n} -> Project -> List ModelElement -> CodeSection -> List (ModelElement × Fin n) -> ModelDAG n -> (List String) × (List ModelElement)
     generateEdges _ seen _ [] _ = ([] , seen)
     generateEdges p seen _ (e ∷ xs) ∅ = ([] , seen)
-    
     generateEdges p seen section (e ∷ xs) (c & dag) with generateEdges p seen section xs (c & dag)
     generateEdges p seen section (e ∷ xs) (c & dag) | (res1 , seen1) with e
     generateEdges p seen section (e ∷ xs) (c & dag) | (res1 , seen1) | (_ , zero) with generateModelElement p seen1 section c dag
@@ -63,6 +62,8 @@ mutual
     ... | (InputInstance _ _) = (res , me ∷ seen1)
     ... | _ = ([] , seen)
 
+-- Go over DAG and call generate Main code for the model element. Skip it if it is already generated (added to the seen).
+-- Later model elements might be generated before this function arrives to that model element because of the edges.
 generateModelElements : ∀ {n} -> Project -> List ModelElement -> ModelDAG n -> (List String) × (List ModelElement)
 generateModelElements _ seen ∅ = ([] , seen)
 generateModelElements p seen ((context me edges) & dag) with containsModelElement seen me
@@ -71,18 +72,14 @@ generateModelElements p seen (c & dag) | false with generateModelElement p seen 
 ...                                         | (res1 , seen1) with generateModelElements p seen1 dag
 ...                                         | (res2 , seen2) = (concatenateTwoList (Data.List.reverse res1) res2 , seen2)
 
-collectEndModelElements : List ModelElement -> List ModelElement
-collectEndModelElements [] = []
-collectEndModelElements (m ∷ ms) with m
-... | (OutputInstance _ _) = m ∷ collectEndModelElements ms
-... | _ = collectEndModelElements ms
-
+-- Create DAG and start the code generation for the model elements in the order.
 generateModel : Project -> Model -> List String
 generateModel p (Operation n ins outs sms) with (createDAG (Operation n ins outs sms))
 ... | nothing = []
 ... | just dag with generateModelElements p [] dag
 ... | (res , _) = res
 
+-- To generate a code for the project, code generation should have a root model to start.
 generateCode : Project -> String -> Bool × (List String)
 generateCode p n with findModelInProjectWithName p n
 ... | nothing = false , concatenateStrings ("Could not find the root model " ∷ n ∷ []) ∷ []

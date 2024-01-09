@@ -92,7 +92,7 @@ createInterface _ _ _ _ _ = nothing
 
 readInterfaces : List XmlElement -> Maybe (List Interface)
 readInterfaces [] = just []
-readInterfaces ((Element "interface" as es) ∷ xs) with readInterfaces xs | createInterface (getAttributeValue as "name") (getAttributeValue as "definition") (getAttributeValue as "IO" ) (getAttributeValue as "value") (getAttributeValue as "comment")
+readInterfaces ((Element "interface" as es) ∷ xs) with readInterfaces xs | createInterface (getAttributeValue as "name") (getAttributeValue as "definition") (getAttributeValue as "IO") (getAttributeValue as "value") (getAttributeValue as "comment")
 ... | just is | just i = just (i ∷ is)
 ... | _ | _ = nothing
 readInterfaces _ = nothing
