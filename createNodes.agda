@@ -3,7 +3,7 @@
 module createNodes where
 
 open import IMODEDataTypes
-open import IMODEScannedDataTypes
+open import ModelDAG
 
 open import Data.Bool
 open import Data.String

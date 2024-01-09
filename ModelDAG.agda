@@ -1,5 +1,5 @@
 {-# OPTIONS --safe #-}
-module IMODEScannedDataTypes where
+module ModelDAG where
 
 open import IMODEDataTypes
 

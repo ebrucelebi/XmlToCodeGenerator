@@ -4,7 +4,7 @@ module codeGeneration where
 
 open import utility
 open import IMODEDataTypes
-open import IMODEScannedDataTypes
+open import ModelDAG
 open import createNodes
 open import checkProject
 
