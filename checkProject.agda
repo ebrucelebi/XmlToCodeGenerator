@@ -5,7 +5,7 @@ module checkProject where
 open import utility
 open import IMODEDataTypes
 open import ModelDAG
-open import createNodes
+open import createDAG
 
 open import Data.Bool
 open import Data.String

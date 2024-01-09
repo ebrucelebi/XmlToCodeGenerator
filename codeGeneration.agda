@@ -5,7 +5,7 @@ module codeGeneration where
 open import utility
 open import IMODEDataTypes
 open import ModelDAG
-open import createNodes
+open import createDAG
 open import checkProject
 
 open import Data.String

@@ -1,6 +1,6 @@
 {-# OPTIONS --safe #-}
 
-module createNodes where
+module createDAG where
 
 open import IMODEDataTypes
 open import ModelDAG
