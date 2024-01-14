@@ -13,7 +13,7 @@ open import Data.Maybe
 open import Data.Bool
 open import Data.Product
 open import Data.List
-open import Data.Fin
+open import Data.Fin hiding (join)
 open import Data.Nat
 open import Data.Graph.Acyclic
 
@@ -32,35 +32,50 @@ mutual
     generateEdges p seen section (e ∷ xs) (c & dag) | (res1 , seen1) | (me , (suc m)) with generateEdges p seen1 section ((me , m) ∷ []) dag
     generateEdges p seen section (e ∷ xs) (c & dag) | (res1 , seen1) | (me , (suc m)) | (res2 , seen2) = (concatenateTwoList res1 res2 , seen2)
 
-    generateIdentifierEdge : ∀ {n} -> Project -> List (ModelElement × Fin n) -> ℕ -> ModelDAG n -> String
-    generateIdentifierEdge p es n dag with getElementAtIndex es n
-    ... | nothing = ""
-    ... | just e with generateEdges p [] Identifier (e ∷ []) dag
+    generateIdentifierEdge : ∀ {n} -> Project -> ModelElement × Fin n -> ModelDAG n -> String
+    generateIdentifierEdge p e dag with generateEdges p [] Identifier (e ∷ []) dag
     ... | (x ∷ [] , _) = x
     ... | _ = ""
+
+    generateIdentifierAtEdge : ∀ {n} -> Project -> List (ModelElement × Fin n) -> ℕ -> ModelDAG n -> String
+    generateIdentifierAtEdge p [] n dag = ""
+    generateIdentifierAtEdge p (e ∷ es) zero dag = generateIdentifierEdge p e dag
+    generateIdentifierAtEdge p (e ∷ es) (suc n) dag = generateIdentifierAtEdge p es n dag
     
+    generateIdentifierEdges : ∀ {n} -> Project -> List (ModelElement × Fin n) -> ModelDAG n -> List String
+    generateIdentifierEdges _ [] _ = []
+    generateIdentifierEdges p (e ∷ es) dag = (generateIdentifierEdge p e dag) ∷ (generateIdentifierEdges p es dag)
+
     generateIdentifierContext : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> String
     generateIdentifierContext p c dag with generateModelElement p [] Identifier c dag
     ... | (x ∷ [] , _) = x
     ... | _ = ""
+
+    generateOutputMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> String
+    generateOutputMain p (context me edges) dag = (concatenateStrings ((generateIdentifierContext p (context me edges) dag) ∷ " = " ∷
+                                  (generateIdentifierAtEdge p edges 0 dag) ∷ ";" ∷ []))
+
+    generateAdditionMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> String
+    generateAdditionMain p (context me edges) dag = (concatenateStrings ((generateIdentifierContext p (context me edges) dag) ∷ " = " ∷
+                                  (join (generateIdentifierEdges p edges dag) " + ") ∷ ";" ∷ []))
+
+    generateMultiplicationMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> String
+    generateMultiplicationMain p (context me edges) dag = (concatenateStrings ((generateIdentifierContext p (context me edges) dag) ∷ " = " ∷
+                                  (join (generateIdentifierEdges p edges dag) " * ") ∷ ";" ∷ []))
+
+    generateModelElementMain : ∀ {n} -> ModelElement -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> String
+    generateModelElementMain (OutputInstance _ _) p c dag = generateOutputMain p c dag
+    generateModelElementMain (Addition _) p c dag = generateAdditionMain p c dag
+    generateModelElementMain (Multiplication _) p c dag = generateMultiplicationMain p c dag
+    generateModelElementMain (InputInstance _ _) p c dag = ""
+    generateModelElementMain _ p c dag = ""
 
     generateModelElement : ∀ {n} -> Project -> List ModelElement -> CodeSection -> Context ModelElement ModelElement n -> ModelDAG n -> (List String) × (List ModelElement)
     generateModelElement p seen Identifier (context me edges) dag = ((getModelElementName me) ∷ [] , seen)
     generateModelElement p seen Main (context me edges) dag with containsModelElement seen me
     ... | true = ([] , seen)
     ... | false with generateEdges p seen Main edges dag
-    ... | (res , seen1) with me
-    ... | (OutputInstance _ _) = ((concatenateStrings ((generateIdentifierContext p (context me edges) dag) ∷ " = " ∷
-                                  (generateIdentifierEdge p edges 0 dag) ∷ ";" ∷ []))
-                                        ∷ res , me ∷ seen1)
-    ... | (Addition _) = ((concatenateStrings ((generateIdentifierContext p (context me edges) dag) ∷ " = " ∷
-                                  (generateIdentifierEdge p edges 0 dag) ∷ " + " ∷ (generateIdentifierEdge p edges 1 dag) ∷ ";" ∷ []))
-                                        ∷ res , me ∷ seen1)
-    ... | (Multiplication _) = ((concatenateStrings ((generateIdentifierContext p (context me edges) dag) ∷ " = " ∷
-                                  (generateIdentifierEdge p edges 0 dag) ∷ " * " ∷ (generateIdentifierEdge p edges 1 dag) ∷ ";" ∷ []))
-                                        ∷ res , me ∷ seen1)
-    ... | (InputInstance _ _) = (res , me ∷ seen1)
-    ... | _ = ([] , seen)
+    ... | (res , seen1) = (generateModelElementMain me p (context me edges) dag ∷ res , me ∷ seen1)
 
 -- Go over DAG and call generate Main code for the model element. Skip it if it is already generated (added to the seen).
 -- Later model elements might be generated before this function arrives to that model element because of the edges.

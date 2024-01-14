@@ -71,3 +71,8 @@ max : ℕ -> ℕ -> ℕ
 max zero n = n
 max n zero = n
 max (suc n) (suc m) = max n m
+
+join : List String -> String -> String
+join [] _ = ""
+join (x ∷ []) _ = x
+join (x ∷ xs) y = concatenateStrings (x ∷ y ∷ (join xs y) ∷ [])
