@@ -74,3 +74,10 @@ join (x ∷ xs) y = x Data.String.++ y Data.String.++ (join xs y)
 
 lastString : String -> Maybe Char
 lastString s = last (toList s)
+
+indent : List String -> List String
+indent [] = []
+indent (x ∷ xs) = ("    " Data.String.++ x) ∷ indent xs
+
+encapsulateBraces : List String -> List String
+encapsulateBraces l = ("{" ∷ indent l) Data.List.++ ["}"]
