@@ -12,10 +12,20 @@ open import Data.String
 open import Data.Maybe
 open import Data.Bool
 open import Data.Product
-open import Data.List
+open import Data.List hiding (concat; _++_)
 open import Data.Fin hiding (join)
 open import Data.Nat
 open import Data.Graph.Acyclic
+
+record GeneratedFile : Set where
+    constructor File
+    field
+        fileName : String
+        content : List String
+
+data CodeGenerationResult : Set where
+    Success : List String -> CodeGenerationResult
+    Error : String -> CodeGenerationResult
 
 data CodeSection : Set where
     Identifier : CodeSection
@@ -52,23 +62,23 @@ mutual
     ... | _ = ""
 
     generateOutputMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> String
-    generateOutputMain p (context me edges) dag = (concatenateStrings ((generateIdentifierContext p (context me edges) dag) ∷ " = " ∷
-                                  (generateIdentifierAtEdge p edges 0 dag) ∷ ";" ∷ []))
+    generateOutputMain p (context me edges) dag = (generateIdentifierContext p (context me edges) dag) ++ " = " ++
+                                  (generateIdentifierAtEdge p edges 0 dag) ++ ";"
 
     generateAdditionMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> String
-    generateAdditionMain p (context me edges) dag = (concatenateStrings ((generateIdentifierContext p (context me edges) dag) ∷ " = " ∷
-                                  (join (generateIdentifierEdges p edges dag) " + ") ∷ ";" ∷ []))
+    generateAdditionMain p (context me edges) dag = (generateIdentifierContext p (context me edges) dag) ++ " = " ++
+                                  (join (generateIdentifierEdges p edges dag) " + ") ++ ";"
 
     generateMultiplicationMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> String
-    generateMultiplicationMain p (context me edges) dag = (concatenateStrings ((generateIdentifierContext p (context me edges) dag) ∷ " = " ∷
-                                  (join (generateIdentifierEdges p edges dag) " * ") ∷ ";" ∷ []))
-
+    generateMultiplicationMain p (context me edges) dag = (generateIdentifierContext p (context me edges) dag) ++ " = " ++
+                                  (join (generateIdentifierEdges p edges dag) " * ") ++ ";"
+                                  
     generateModelElementMain : ∀ {n} -> ModelElement -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> String
-    generateModelElementMain (OutputInstance _ _) p c dag = generateOutputMain p c dag
-    generateModelElementMain (Addition _) p c dag = generateAdditionMain p c dag
-    generateModelElementMain (Multiplication _) p c dag = generateMultiplicationMain p c dag
-    generateModelElementMain (InputInstance _ _) p c dag = ""
-    generateModelElementMain _ p c dag = ""
+    generateModelElementMain (OutputInstance _ _) p c dag = generateOutputMain p c dag ++ ";"
+    generateModelElementMain (Addition _) p c dag = generateAdditionMain p c dag ++ ";"
+    generateModelElementMain (Multiplication _) p c dag = generateMultiplicationMain p c dag ++ ";"
+    generateModelElementMain (InputInstance _ _) p c dag = ";"
+    generateModelElementMain _ p c dag = "aaa;"
 
     generateModelElement : ∀ {n} -> Project -> List ModelElement -> CodeSection -> Context ModelElement ModelElement n -> ModelDAG n -> (List String) × (List ModelElement)
     generateModelElement p seen Identifier (context me edges) dag = ((getModelElementName me) ∷ [] , seen)
@@ -97,7 +107,7 @@ generateModel p (Operation n ins outs sms) with (createDAG (Operation n ins outs
 -- To generate a code for the project, code generation should have a root model to start.
 generateCode : Project -> String -> Bool × (List String)
 generateCode p n with findModelInProjectWithName p n
-... | nothing = false , concatenateStrings ("Could not find the root model " ∷ n ∷ []) ∷ []
+... | nothing = false , ("Could not find the root model " ++ n) ∷ []
 ... | just m = true , generateModel p m
 
 checkAndGenerateCode : Maybe Project -> String -> Bool × (List String)

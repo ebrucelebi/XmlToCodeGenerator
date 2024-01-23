@@ -8,7 +8,6 @@ open import Data.String
 open import Data.Bool
 open import Data.Maybe
 open import Data.Nat
-open import Data.Vec hiding (reverse; toList)
 open import Relation.Nullary.Decidable
 
 appendToList : ∀{ℓ}{A : Set ℓ} → List A → A → List A
@@ -54,10 +53,6 @@ getElementAtIndex (x ∷ xs) (suc n) = getElementAtIndex xs n
 concatenateTwoList : ∀{ℓ}{A : Set ℓ} → List A -> List A → List A
 concatenateTwoList xs1 xs2 = xs1 Data.List.++ xs2
 
-concatenateStrings : List String -> String
-concatenateStrings [] = ""
-concatenateStrings (x ∷ xs) = x Data.String.++ (concatenateStrings xs) 
-
 _==ℕ_ : ℕ -> ℕ -> Bool
 _==ℕ_ n m = isYes (n Data.Nat.≟ m)
 
@@ -75,4 +70,7 @@ max (suc n) (suc m) = max n m
 join : List String -> String -> String
 join [] _ = ""
 join (x ∷ []) _ = x
-join (x ∷ xs) y = concatenateStrings (x ∷ y ∷ (join xs y) ∷ [])
+join (x ∷ xs) y = x Data.String.++ y Data.String.++ (join xs y)
+
+lastString : String -> Maybe Char
+lastString s = last (toList s)

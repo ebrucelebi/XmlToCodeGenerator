@@ -9,13 +9,13 @@ open import createDAG
 
 open import Data.Bool
 open import Data.String
-open import Data.List
+open import Data.List hiding (_++_)
 open import Data.Maybe
 open import Data.Product
 open import Data.Nat
 
 checkStructureDefElem : String -> String × Type -> List String
-checkStructureDefElem n (l , iNull) = concatenateStrings ("Type " ∷ n ∷ " label " ∷ l ∷ " is null." ∷ []) ∷ []
+checkStructureDefElem n (l , iNull) = ("Type " ++ n ++ " label " ++ l ++ " is null.") ∷ []
 checkStructureDefElem _ _ = []
 
 checkStructureDefElems : String -> List (String × Type) -> List String
@@ -23,9 +23,9 @@ checkStructureDefElems _ [] = []
 checkStructureDefElems n (lt ∷ xs) = concatenateTwoList (checkStructureDefElem n lt) (checkStructureDefElems n xs)
 
 checkType : Type -> List String
-checkType (iUserDefined n iNull) = concatenateStrings ("Type " ∷ n ∷ " is null." ∷ []) ∷ []
+checkType (iUserDefined n iNull) = ("Type " ++ n ++ " is null.") ∷ []
 checkType (iStructure n defElems) = checkStructureDefElems n defElems
-checkType (iArray n ds iNull) = concatenateStrings ("Type " ∷ n ∷ " element type is null." ∷ []) ∷ []
+checkType (iArray n ds iNull) = ("Type " ++ n ++ " element type is null.") ∷ []
 checkType _ = []
 
 checkTypes : List Type -> List String
@@ -102,19 +102,19 @@ checkInputConnections : ModelElement -> List String
 checkInputConnections m with getBaseModelProperties m
 ... | nothing = []
 ... | just (Properties n id inCons outCons) with checkInputConnectionCounts m
-... | false = concatenateStrings ("Input connection count is not correct for " ∷ n ∷ []) ∷ []
+... | false = ("Input connection count is not correct for " ++ n) ∷ []
 ... | true with contains inCons ""
 ... | false = []
-... | true = concatenateStrings ("There is an unconnected input point in " ∷ n ∷ []) ∷ []
+... | true = ("There is an unconnected input point in " ++ n) ∷ []
 
 checkOutputConnections : ModelElement -> List String
 checkOutputConnections m with getBaseModelProperties m
 ... | nothing = []
 ... | just (Properties n id inCons outCons) with checkOutputConnectionCounts m
-... | false = concatenateStrings ("Output connection count is not correct for " ∷ n ∷ []) ∷ []
+... | false = ("Output connection count is not correct for " ++ n) ∷ []
 ... | true with contains (collectOutConIds outCons) ""
 ... | false = []
-... | true = concatenateStrings ("There is an unconnected output point in " ∷ n ∷ []) ∷ []
+... | true = ("There is an unconnected output point in " ++ n) ∷ []
 
 checkModelElementsConnections : List ModelElement -> List String
 checkModelElementsConnections [] = []
@@ -126,13 +126,13 @@ checkForCyclic dag = containsDuplicateModelElement (DAGToList dag)
 
 checkModelDAG : ∀ {n} -> Model -> ModelDAG n -> List String
 checkModelDAG (Operation n inputs outputs subModels) dag with checkForCyclic dag
-... | true = concatenateStrings ("There is a cycle in " ∷ n ∷ []) ∷ []
+... | true = ("There is a cycle in " ++ n) ∷ []
 ... | false = []
 
 checkModel : Model -> List String
 checkModel (Operation n inputs outputs subModels) with checkModelElementsConnections (concatenate (inputs ∷ outputs ∷ subModels ∷ []))
 checkModel (Operation n inputs outputs subModels) | [] with createDAG (Operation n inputs outputs subModels)
-checkModel (Operation n inputs outputs subModels) | [] | nothing = concatenateStrings ("Could not create DAG for " ∷ n ∷ []) ∷ []
+checkModel (Operation n inputs outputs subModels) | [] | nothing = ("Could not create DAG for " ++ n) ∷ []
 checkModel m                                      | [] | just dag = checkModelDAG m dag
 checkModel (Operation n inputs outputs subModels) | l = l
 
