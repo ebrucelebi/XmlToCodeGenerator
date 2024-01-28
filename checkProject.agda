@@ -14,6 +14,10 @@ open import Data.Maybe
 open import Data.Product
 open import Data.Nat
 
+data CheckResult : Set where
+    Success : CheckResult
+    Error : List String -> CheckResult
+
 checkStructureDefElem : String -> String × Type -> List String
 checkStructureDefElem n (l , iNull) = ("Type " ++ n ++ " label " ++ l ++ " is null.") ∷ []
 checkStructureDefElem _ _ = []
@@ -140,11 +144,11 @@ checkModels : List Model -> List String
 checkModels [] = []
 checkModels (m ∷ ms) = concatenateTwoList (checkModel m) (checkModels ms)
 
-checkProject : Maybe Project -> Bool × (List String)
-checkProject nothing = false , ("Project load failed." ∷ [])
+checkProject : Maybe Project -> CheckResult
+checkProject nothing = Error ("Project load failed." ∷ [])
 checkProject (just (record {subModels = sms ; types = ts})) with checkTypes ts | checkModels sms
-... | [] | [] = true , []
-... | tErrors | mErrors = false , (concatenate (tErrors ∷ mErrors ∷ []))
+... | [] | [] = Success
+... | tErrors | mErrors = Error (concatenate (tErrors ∷ mErrors ∷ []))
 
 deneme : List String
 deneme = checkModel exampleModel
