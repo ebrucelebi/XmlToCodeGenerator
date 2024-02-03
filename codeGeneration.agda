@@ -31,195 +31,238 @@ data CodeGenerationResult : Set where
 data CodeSection : Set where
     Identifier : CodeSection
     Main : CodeSection
+    Declaration : CodeSection
+
+getOutputType : ∀ {n} -> Model -> ModelDAG n -> Type
+getOutputType _ ∅ = iNone
+getOutputType m (context (InputInstance _ sourceId) edges & dag) with findModelElementInModelWithID m sourceId
+... | just (Input _ _ type) = type
+... | _ = iNone
+getOutputType m (context (OutputInstance _ sourceId) edges & dag) with findModelElementInModelWithID m sourceId
+... | just (Output _ _ type) = type
+... | _ = iNone
+getOutputType m (context (Addition _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
+getOutputType m (context (Modulo _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
+getOutputType m (context (Multiplication _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
+getOutputType m (context (NumericCast _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e) -- todo: Fix after adding the cast type
+getOutputType m (context (PolymorphicDivision _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
+getOutputType m (context (Subtraction _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
+getOutputType m (context (UnaryMinus _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
+getOutputType m (context (LogicalAnd _) edges & dag) = iBool
+getOutputType m (context (LogicalNot _) edges & dag) = iBool
+getOutputType m (context (LogicalOr _) edges & dag) = iBool
+getOutputType m (context (LogicalSharp _) edges & dag) = iBool
+getOutputType m (context (LogicalXor _) edges & dag) = iBool
+getOutputType m (context (BitwiseAnd _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
+getOutputType m (context (BitwiseNot _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
+getOutputType m (context (BitwiseOr _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
+getOutputType m (context (BitwiseXor _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
+getOutputType m (context (LeftShift _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
+getOutputType m (context (RightShift _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
+getOutputType m (context (Different _) edges & dag) = iBool
+getOutputType m (context (Equal _) edges & dag) = iBool
+getOutputType m (context (GreaterThanEqual _) edges & dag) = iBool
+getOutputType m (context (LessThanEqual _) edges & dag) = iBool
+getOutputType m (context (StrictlyGreaterThan _) edges & dag) = iBool
+getOutputType m (context (StrictlyLessThan _) edges & dag) = iBool
+getOutputType _ _ = iNone
 
 mutual
-    generateEdges : ∀ {n} -> Project -> List ModelElement -> CodeSection -> List (ModelElement × Fin n) -> ModelDAG n -> (List String) × (List ModelElement)
-    generateEdges _ seen _ [] _ = ([] , seen)
-    generateEdges p seen _ (e ∷ xs) ∅ = ([] , seen)
-    generateEdges p seen section (e ∷ xs) (c & dag) with generateEdges p seen section xs (c & dag)
-    generateEdges p seen section (e ∷ xs) (c & dag) | (res1 , seen1) with e
-    generateEdges p seen section (e ∷ xs) (c & dag) | (res1 , seen1) | (_ , zero) with generateModelElement p seen1 section c dag
-    generateEdges p seen section (e ∷ xs) (c & dag) | (res1 , seen1) | (_ , zero) | (res2 , seen2) = (concatenateTwoList res1 res2 , seen2)
-    generateEdges p seen section (e ∷ xs) (c & dag) | (res1 , seen1) | (me , (suc m)) with generateEdges p seen1 section ((me , m) ∷ []) dag
-    generateEdges p seen section (e ∷ xs) (c & dag) | (res1 , seen1) | (me , (suc m)) | (res2 , seen2) = (concatenateTwoList res1 res2 , seen2)
+    generateEdges : ∀ {n} -> Project -> Model -> List ModelElement -> CodeSection -> List (ModelElement × Fin n) -> ModelDAG n -> (List String) × (List ModelElement)
+    generateEdges _ m seen _ [] _ = ([] , seen)
+    generateEdges p m seen _ (e ∷ xs) ∅ = ([] , seen)
+    generateEdges p m seen section (e ∷ xs) (c & dag) with generateEdges p m seen section xs (c & dag)
+    generateEdges p m seen section (e ∷ xs) (c & dag) | (res1 , seen1) with e
+    generateEdges p m seen section (e ∷ xs) (c & dag) | (res1 , seen1) | (_ , zero) with generateModelElement p m seen1 section c dag
+    generateEdges p m seen section (e ∷ xs) (c & dag) | (res1 , seen1) | (_ , zero) | (res2 , seen2) = (concatenateTwoList res1 res2 , seen2)
+    generateEdges p m seen section (e ∷ xs) (c & dag) | (res1 , seen1) | (me , (suc f)) with generateEdges p m seen1 section ((me , f) ∷ []) dag
+    generateEdges p m seen section (e ∷ xs) (c & dag) | (res1 , seen1) | (me , (suc f)) | (res2 , seen2) = (concatenateTwoList res1 res2 , seen2)
 
-    generateIdentifierEdge : ∀ {n} -> Project -> ModelElement × Fin n -> ModelDAG n -> String
-    generateIdentifierEdge p e dag with generateEdges p [] Identifier (e ∷ []) dag
+    generateIdentifierEdge : ∀ {n} -> Project -> Model -> ModelElement × Fin n -> ModelDAG n -> String
+    generateIdentifierEdge p m e dag with generateEdges p m [] Identifier (e ∷ []) dag
     ... | (x ∷ [] , _) = x
     ... | _ = ""
 
-    generateIdentifierAtEdge : ∀ {n} -> Project -> List (ModelElement × Fin n) -> ℕ -> ModelDAG n -> String
-    generateIdentifierAtEdge p [] n dag = ""
-    generateIdentifierAtEdge p (e ∷ es) zero dag = generateIdentifierEdge p e dag
-    generateIdentifierAtEdge p (e ∷ es) (suc n) dag = generateIdentifierAtEdge p es n dag
+    generateIdentifierAtEdge : ∀ {n} -> Project -> Model -> List (ModelElement × Fin n) -> ℕ -> ModelDAG n -> String
+    generateIdentifierAtEdge p m [] n dag = ""
+    generateIdentifierAtEdge p m (e ∷ es) zero dag = generateIdentifierEdge p m e dag
+    generateIdentifierAtEdge p m (e ∷ es) (suc n) dag = generateIdentifierAtEdge p m es n dag
     
-    generateIdentifierEdges : ∀ {n} -> Project -> List (ModelElement × Fin n) -> ModelDAG n -> List String
-    generateIdentifierEdges _ [] _ = []
-    generateIdentifierEdges p (e ∷ es) dag = (generateIdentifierEdge p e dag) ∷ (generateIdentifierEdges p es dag)
+    generateIdentifierEdges : ∀ {n} -> Project -> Model -> List (ModelElement × Fin n) -> ModelDAG n -> List String
+    generateIdentifierEdges _ m [] _ = []
+    generateIdentifierEdges p m (e ∷ es) dag = (generateIdentifierEdge p m e dag) ∷ (generateIdentifierEdges p m es dag)
 
-    generateIdentifierContext : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> String
-    generateIdentifierContext p c dag with generateModelElement p [] Identifier c dag
+    generateIdentifierContext : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> String
+    generateIdentifierContext p m c dag with generateModelElement p m [] Identifier c dag
     ... | (x ∷ [] , _) = x
     ... | _ = ""
 
-    generateOutputMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateOutputMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = " ++
-                                  (generateIdentifierAtEdge p edges 0 dag) ++ ";") ∷ []
+    generateOutputMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateOutputMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = " ++
+                                  (generateIdentifierAtEdge p m edges 0 dag) ++ ";") ∷ []
 
-    generateAdditionMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateAdditionMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = " ++
-                                  (join (generateIdentifierEdges p edges dag) " + ") ++ ";") ∷ []
+    generateAdditionMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateAdditionMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = " ++
+                                  (join (generateIdentifierEdges p m edges dag) " + ") ++ ";") ∷ []
 
-    generateMultiplicationMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateMultiplicationMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = " ++
-                                  (join (generateIdentifierEdges p edges dag) " * ") ++ ";") ∷ []
+    generateMultiplicationMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateMultiplicationMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = " ++
+                                  (join (generateIdentifierEdges p m edges dag) " * ") ++ ";") ∷ []
 
     -- TODO: Add cast type
-    generateNumericCastMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateNumericCastMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = " ++
-                                  (generateIdentifierAtEdge p edges 0 dag) ++ ";") ∷ []
+    generateNumericCastMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateNumericCastMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = " ++
+                                  (generateIdentifierAtEdge p m edges 0 dag) ++ ";") ∷ []
 
-    generatePolymorphicDivisionMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generatePolymorphicDivisionMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = " ++
-                                  (generateIdentifierAtEdge p edges 0 dag) ++ " / " ++ (generateIdentifierAtEdge p edges 1 dag) ++ ";") ∷ []
+    generatePolymorphicDivisionMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generatePolymorphicDivisionMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = " ++
+                                  (generateIdentifierAtEdge p m edges 0 dag) ++ " / " ++ (generateIdentifierAtEdge p m edges 1 dag) ++ ";") ∷ []
 
-    generateSubtractionMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateSubtractionMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = " ++
-                                  (generateIdentifierAtEdge p edges 0 dag) ++ " - " ++ (generateIdentifierAtEdge p edges 1 dag) ++ ";") ∷ []
+    generateSubtractionMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateSubtractionMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = " ++
+                                  (generateIdentifierAtEdge p m edges 0 dag) ++ " - " ++ (generateIdentifierAtEdge p m edges 1 dag) ++ ";") ∷ []
                                   
-    generateUnaryMinusMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateUnaryMinusMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = -" ++
-                                  (generateIdentifierAtEdge p edges 0 dag) ++ ";") ∷ []
+    generateUnaryMinusMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateUnaryMinusMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = -" ++
+                                  (generateIdentifierAtEdge p m edges 0 dag) ++ ";") ∷ []
 
-    generateLogicalAndMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateLogicalAndMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = " ++
-                                  (join (generateIdentifierEdges p edges dag) " && ") ++ ";") ∷ []
+    generateLogicalAndMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateLogicalAndMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = " ++
+                                  (join (generateIdentifierEdges p m edges dag) " && ") ++ ";") ∷ []
 
-    generateLogicalNorMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateLogicalNorMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = !(" ++
-                                  (generateIdentifierAtEdge p edges 0 dag) ++ " || " ++ (generateIdentifierAtEdge p edges 1 dag) ++ ");") ∷ []
+    generateLogicalNorMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateLogicalNorMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = !(" ++
+                                  (generateIdentifierAtEdge p m edges 0 dag) ++ " || " ++ (generateIdentifierAtEdge p m edges 1 dag) ++ ");") ∷ []
                                   
-    generateLogicalNotMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateLogicalNotMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = !" ++
-                                  (generateIdentifierAtEdge p edges 0 dag) ++ ";") ∷ []
+    generateLogicalNotMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateLogicalNotMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = !" ++
+                                  (generateIdentifierAtEdge p m edges 0 dag) ++ ";") ∷ []
 
-    generateLogicalOrMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateLogicalOrMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = " ++
-                                  (join (generateIdentifierEdges p edges dag) " || ") ++ ";") ∷ []
+    generateLogicalOrMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateLogicalOrMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = " ++
+                                  (join (generateIdentifierEdges p m edges dag) " || ") ++ ";") ∷ []
 
-    generateLogicalSharpMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateLogicalSharpMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = " ++
-                                  (join (generateIdentifierEdges p edges dag) " + ") ++ " <= 1;") ∷ []
+    generateLogicalSharpMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateLogicalSharpMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = " ++
+                                  (join (generateIdentifierEdges p m edges dag) " + ") ++ " <= 1;") ∷ []
 
-    generateLogicalXorMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateLogicalXorMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = " ++
-                                  (generateIdentifierAtEdge p edges 0 dag) ++ " ^ " ++ (generateIdentifierAtEdge p edges 1 dag) ++ ";") ∷ []
+    generateLogicalXorMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateLogicalXorMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = " ++
+                                  (generateIdentifierAtEdge p m edges 0 dag) ++ " ^ " ++ (generateIdentifierAtEdge p m edges 1 dag) ++ ";") ∷ []
 
-    generateBitwiseAndMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateBitwiseAndMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = " ++
-                                  (generateIdentifierAtEdge p edges 0 dag) ++ " & " ++ (generateIdentifierAtEdge p edges 1 dag) ++ ";") ∷ []
+    generateBitwiseAndMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateBitwiseAndMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = " ++
+                                  (generateIdentifierAtEdge p m edges 0 dag) ++ " & " ++ (generateIdentifierAtEdge p m edges 1 dag) ++ ";") ∷ []
 
-    generateBitwiseNotMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateBitwiseNotMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = ~" ++
-                                  (generateIdentifierAtEdge p edges 0 dag) ++ ";") ∷ []
+    generateBitwiseNotMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateBitwiseNotMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = ~" ++
+                                  (generateIdentifierAtEdge p m edges 0 dag) ++ ";") ∷ []
 
-    generateBitwiseOrMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateBitwiseOrMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = " ++
-                                  (generateIdentifierAtEdge p edges 0 dag) ++ " | " ++ (generateIdentifierAtEdge p edges 1 dag) ++ ";") ∷ []
+    generateBitwiseOrMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateBitwiseOrMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = " ++
+                                  (generateIdentifierAtEdge p m edges 0 dag) ++ " | " ++ (generateIdentifierAtEdge p m edges 1 dag) ++ ";") ∷ []
 
-    generateBitwiseXorMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateBitwiseXorMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = " ++
-                                  (generateIdentifierAtEdge p edges 0 dag) ++ " ^ " ++ (generateIdentifierAtEdge p edges 1 dag) ++ ";") ∷ []
+    generateBitwiseXorMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateBitwiseXorMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = " ++
+                                  (generateIdentifierAtEdge p m edges 0 dag) ++ " ^ " ++ (generateIdentifierAtEdge p m edges 1 dag) ++ ";") ∷ []
 
-    generateLeftShiftMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateLeftShiftMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = " ++
-                                  (generateIdentifierAtEdge p edges 0 dag) ++ " << " ++ (generateIdentifierAtEdge p edges 1 dag) ++ ";") ∷ []
+    generateLeftShiftMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateLeftShiftMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = " ++
+                                  (generateIdentifierAtEdge p m edges 0 dag) ++ " << " ++ (generateIdentifierAtEdge p m edges 1 dag) ++ ";") ∷ []
 
-    generateRightShiftMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateRightShiftMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = " ++
-                                  (generateIdentifierAtEdge p edges 0 dag) ++ " >> " ++ (generateIdentifierAtEdge p edges 1 dag) ++ ";") ∷ []
+    generateRightShiftMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateRightShiftMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = " ++
+                                  (generateIdentifierAtEdge p m edges 0 dag) ++ " >> " ++ (generateIdentifierAtEdge p m edges 1 dag) ++ ";") ∷ []
 
     -- TODO: After creating types header with compare functions, fix different code.
-    generateDifferentMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateDifferentMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = " ++
-                                  (generateIdentifierAtEdge p edges 0 dag) ++ " != " ++ (generateIdentifierAtEdge p edges 1 dag) ++ ";") ∷ []
+    generateDifferentMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateDifferentMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = " ++
+                                  (generateIdentifierAtEdge p m edges 0 dag) ++ " != " ++ (generateIdentifierAtEdge p m edges 1 dag) ++ ";") ∷ []
 
     -- TODO: After creating types header with compare functions, fix equal code.
-    generateEqualMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateEqualMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = " ++
-                                  (generateIdentifierAtEdge p edges 0 dag) ++ " == " ++ (generateIdentifierAtEdge p edges 1 dag) ++ ";") ∷ []
+    generateEqualMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateEqualMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = " ++
+                                  (generateIdentifierAtEdge p m edges 0 dag) ++ " == " ++ (generateIdentifierAtEdge p m edges 1 dag) ++ ";") ∷ []
 
-    generateGreaterThanEqualMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateGreaterThanEqualMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = " ++
-                                  (generateIdentifierAtEdge p edges 0 dag) ++ " >= " ++ (generateIdentifierAtEdge p edges 1 dag) ++ ";") ∷ []
+    generateGreaterThanEqualMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateGreaterThanEqualMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = " ++
+                                  (generateIdentifierAtEdge p m edges 0 dag) ++ " >= " ++ (generateIdentifierAtEdge p m edges 1 dag) ++ ";") ∷ []
                                   
-    generateLessThanEqualMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateLessThanEqualMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = " ++
-                                  (generateIdentifierAtEdge p edges 0 dag) ++ " <= " ++ (generateIdentifierAtEdge p edges 1 dag) ++ ";") ∷ []
+    generateLessThanEqualMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateLessThanEqualMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = " ++
+                                  (generateIdentifierAtEdge p m edges 0 dag) ++ " <= " ++ (generateIdentifierAtEdge p m edges 1 dag) ++ ";") ∷ []
                                   
-    generateStrictlyGreaterThanMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateStrictlyGreaterThanMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = " ++
-                                  (generateIdentifierAtEdge p edges 0 dag) ++ " > " ++ (generateIdentifierAtEdge p edges 1 dag) ++ ";") ∷ []
+    generateStrictlyGreaterThanMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateStrictlyGreaterThanMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = " ++
+                                  (generateIdentifierAtEdge p m edges 0 dag) ++ " > " ++ (generateIdentifierAtEdge p m edges 1 dag) ++ ";") ∷ []
                                   
-    generateStrictlyLessThanMain : ∀ {n} -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateStrictlyLessThanMain p (context me edges) dag = ((generateIdentifierContext p (context me edges) dag) ++ " = " ++
-                                  (generateIdentifierAtEdge p edges 0 dag) ++ " < " ++ (generateIdentifierAtEdge p edges 1 dag) ++ ";") ∷ []
+    generateStrictlyLessThanMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateStrictlyLessThanMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = " ++
+                                  (generateIdentifierAtEdge p m edges 0 dag) ++ " < " ++ (generateIdentifierAtEdge p m edges 1 dag) ++ ";") ∷ []
                                   
-    generateModelElementMain : ∀ {n} -> ModelElement -> Project -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateModelElementMain (OutputInstance _ _) p c dag = generateOutputMain p c dag
-    generateModelElementMain (Addition _) p c dag = generateAdditionMain p c dag
-    generateModelElementMain (Multiplication _) p c dag = generateMultiplicationMain p c dag
-    generateModelElementMain (InputInstance _ _) p c dag = []
-    generateModelElementMain (NumericCast _) p c dag = generateNumericCastMain p c dag
-    generateModelElementMain (PolymorphicDivision _) p c dag = generatePolymorphicDivisionMain p c dag
-    generateModelElementMain (Subtraction _) p c dag = generateSubtractionMain p c dag
-    generateModelElementMain (UnaryMinus _) p c dag = generateUnaryMinusMain p c dag
-    generateModelElementMain (LogicalAnd _) p c dag = generateLogicalAndMain p c dag
-    generateModelElementMain (LogicalNor _) p c dag = generateLogicalNorMain p c dag
-    generateModelElementMain (LogicalNot _) p c dag = generateLogicalNotMain p c dag
-    generateModelElementMain (LogicalOr _) p c dag = generateLogicalOrMain p c dag
-    generateModelElementMain (LogicalSharp _) p c dag = generateLogicalSharpMain p c dag
-    generateModelElementMain (LogicalXor _) p c dag = generateLogicalXorMain p c dag
-    generateModelElementMain (BitwiseAnd _) p c dag = generateBitwiseAndMain p c dag
-    generateModelElementMain (BitwiseNot _) p c dag = generateBitwiseNotMain p c dag
-    generateModelElementMain (BitwiseOr _) p c dag = generateBitwiseOrMain p c dag
-    generateModelElementMain (BitwiseXor _) p c dag = generateBitwiseXorMain p c dag
-    generateModelElementMain (LeftShift _) p c dag = generateLeftShiftMain p c dag
-    generateModelElementMain (RightShift _) p c dag = generateRightShiftMain p c dag
-    generateModelElementMain (Different _) p c dag = generateDifferentMain p c dag
-    generateModelElementMain (Equal _) p c dag = generateEqualMain p c dag
-    generateModelElementMain (GreaterThanEqual _) p c dag = generateGreaterThanEqualMain p c dag
-    generateModelElementMain (LessThanEqual _) p c dag = generateLessThanEqualMain p c dag
-    generateModelElementMain (StrictlyGreaterThan _) p c dag = generateStrictlyGreaterThanMain p c dag
-    generateModelElementMain (StrictlyLessThan _) p c dag = generateStrictlyLessThanMain p c dag
-    generateModelElementMain _ p c dag = []
+    generateModelElementMain : ∀ {n} -> ModelElement -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateModelElementMain (OutputInstance _ _) p m c dag = generateOutputMain p m c dag
+    generateModelElementMain (Addition _) p m c dag = generateAdditionMain p m c dag
+    generateModelElementMain (Multiplication _) p m c dag = generateMultiplicationMain p m c dag
+    generateModelElementMain (InputInstance _ _) p m c dag = []
+    generateModelElementMain (NumericCast _) p m c dag = generateNumericCastMain p m c dag
+    generateModelElementMain (PolymorphicDivision _) p m c dag = generatePolymorphicDivisionMain p m c dag
+    generateModelElementMain (Subtraction _) p m c dag = generateSubtractionMain p m c dag
+    generateModelElementMain (UnaryMinus _) p m c dag = generateUnaryMinusMain p m c dag
+    generateModelElementMain (LogicalAnd _) p m c dag = generateLogicalAndMain p m c dag
+    generateModelElementMain (LogicalNor _) p m c dag = generateLogicalNorMain p m c dag
+    generateModelElementMain (LogicalNot _) p m c dag = generateLogicalNotMain p m c dag
+    generateModelElementMain (LogicalOr _) p m c dag = generateLogicalOrMain p m c dag
+    generateModelElementMain (LogicalSharp _) p m c dag = generateLogicalSharpMain p m c dag
+    generateModelElementMain (LogicalXor _) p m c dag = generateLogicalXorMain p m c dag
+    generateModelElementMain (BitwiseAnd _) p m c dag = generateBitwiseAndMain p m c dag
+    generateModelElementMain (BitwiseNot _) p m c dag = generateBitwiseNotMain p m c dag
+    generateModelElementMain (BitwiseOr _) p m c dag = generateBitwiseOrMain p m c dag
+    generateModelElementMain (BitwiseXor _) p m c dag = generateBitwiseXorMain p m c dag
+    generateModelElementMain (LeftShift _) p m c dag = generateLeftShiftMain p m c dag
+    generateModelElementMain (RightShift _) p m c dag = generateRightShiftMain p m c dag
+    generateModelElementMain (Different _) p m c dag = generateDifferentMain p m c dag
+    generateModelElementMain (Equal _) p m c dag = generateEqualMain p m c dag
+    generateModelElementMain (GreaterThanEqual _) p m c dag = generateGreaterThanEqualMain p m c dag
+    generateModelElementMain (LessThanEqual _) p m c dag = generateLessThanEqualMain p m c dag
+    generateModelElementMain (StrictlyGreaterThan _) p m c dag = generateStrictlyGreaterThanMain p m c dag
+    generateModelElementMain (StrictlyLessThan _) p m c dag = generateStrictlyLessThanMain p m c dag
+    generateModelElementMain _ p m c dag = []
 
-    generateModelElement : ∀ {n} -> Project -> List ModelElement -> CodeSection -> Context ModelElement ModelElement n -> ModelDAG n -> (List String) × (List ModelElement)
-    generateModelElement p seen Identifier (context me edges) dag = ((getModelElementName me) ∷ [] , seen)
-    generateModelElement p seen Main (context me edges) dag with containsModelElement seen me
+    generateModelElement : ∀ {n} -> Project -> Model -> List ModelElement -> CodeSection -> Context ModelElement ModelElement n -> ModelDAG n -> (List String) × (List ModelElement)
+    generateModelElement p m seen Identifier (context me edges) dag = ((getModelElementName me) ∷ [] , seen)
+    generateModelElement p m seen Declaration (context me edges) dag with containsModelElement seen me
     ... | true = ([] , seen)
-    ... | false with generateEdges p seen Main edges dag
-    ... | (res , seen1) = (generateModelElementMain me p (context me edges) dag Data.List.++ res , me ∷ seen1)
+    ... | false with generateEdges p m seen Declaration edges dag
+    ... | (res , seen1) = ((getStringFromType (getOutputType m dag) ++ " " ++ (generateIdentifierContext p m (context me edges) dag) ++ ";")
+                                        ∷ res , me ∷ seen1)
+    generateModelElement p m seen Main (context me edges) dag with containsModelElement seen me
+    ... | true = ([] , seen)
+    ... | false with generateEdges p m seen Main edges dag
+    ... | (res , seen1) = (generateModelElementMain me p m (context me edges) dag Data.List.++ res , me ∷ seen1)
 
 -- Go over DAG and call generate Main code for the model element. Skip it if it is already generated (added to the seen).
 -- Later model elements might be generated before this function arrives to that model element because of the edges.
-generateModelElements : ∀ {n} -> Project -> List ModelElement -> CodeSection -> ModelDAG n -> (List String) × (List ModelElement)
-generateModelElements _ seen section ∅ = ([] , seen)
-generateModelElements p seen section ((context me edges) & dag) with containsModelElement seen me
-generateModelElements p seen section (c & dag) | true = generateModelElements p seen section dag
-generateModelElements p seen section (c & dag) | false with generateModelElement p seen section c dag
-...                                         | (res1 , seen1) with generateModelElements p seen1 section dag
+generateModelElements : ∀ {n} -> Project -> Model -> List ModelElement -> CodeSection -> ModelDAG n -> (List String) × (List ModelElement)
+generateModelElements _ m seen section ∅ = ([] , seen)
+generateModelElements p m seen section ((context me edges) & dag) with containsModelElement seen me
+generateModelElements p m seen section (c & dag) | true = generateModelElements p m seen section dag
+generateModelElements p m seen section (c & dag) | false with generateModelElement p m seen section c dag
+...                                         | (res1 , seen1) with generateModelElements p m seen1 section dag
 ...                                         | (res2 , seen2) = (concatenateTwoList (Data.List.reverse res1) res2 , seen2)
 
-generateModelSource : ∀ {n} -> Project -> String -> ModelDAG n -> GeneratedFile
-generateModelSource p n dag with generateModelElements p [] Main dag
-... | (mainContent , _) = File (n ++ ".c") (encapsulateBraces mainContent)
+generateModelSource : ∀ {n} -> Project -> Model -> String -> ModelDAG n -> GeneratedFile
+generateModelSource p m n dag with generateModelElements p m [] Main dag | generateModelElements p m [] Declaration dag
+... | (mainContent , _) | (declarationContent , _) = File (n ++ ".c") (
+    ("#include \"" ++ n ++ ".h") ∷ "" ∷
+    ("void " ++ n ++ "Main(i_" ++ n ++ "* inputs, o_" ++ n ++ "* outputs)") ∷
+    (encapsulateBraces (declarationContent Data.List.++ [""] Data.List.++ mainContent)))
 
 -- Create DAG and start the code generation for the model elements in the order.
 generateModel : Project -> Model -> CodeGenerationResult
 generateModel p (Operation n ins outs sms) with (createDAG (Operation n ins outs sms))
 ... | nothing = GenerationError ("Could not generate DAG for" ++ n)
-... | just dag = Success (generateModelSource p n dag ∷ [])
+... | just dag = Success (generateModelSource p (Operation n ins outs sms) n dag ∷ [])
 
 -- To generate a code for the project, code generation should have a root model to start.
 generateCode : Project -> String -> CodeGenerationResult

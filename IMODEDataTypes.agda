@@ -48,6 +48,26 @@ getType "float32" = iFloat32
 getType "float64" = iFloat64
 getType _ = iNone
 
+getStringFromType : Type -> String
+getStringFromType iNull = "_null"
+getStringFromType iBool = "bool"
+getStringFromType iChar = "char"
+getStringFromType iInt8 = "int8"
+getStringFromType iInt16 = "int16"
+getStringFromType iInt32 = "int32"
+getStringFromType iInt64 = "int64"
+getStringFromType iUInt8 = "uint8"
+getStringFromType iUInt16 = "uint16"
+getStringFromType iUInt32 = "uint32"
+getStringFromType iUInt64 = "uint64"
+getStringFromType iFloat32 = "float32"
+getStringFromType iFloat64 = "float64"
+getStringFromType (iStructure n _)  = n
+getStringFromType (iArray n _ _)  = n
+getStringFromType (iEnum n _)  = n
+getStringFromType (iUserDefined n _)  = n
+getStringFromType _ = ""
+
 data IOType : Set where
   IO_None : IOType
   Input : IOType
