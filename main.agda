@@ -12,7 +12,7 @@ open import Data.List
 open import Data.Product
 open import Data.Maybe
 
-main : Bool × (List String)
+main : CodeGenerationResult
 main = checkAndGenerateCode readIMODEFiles "logicModel1"
 
 deneme : Maybe Model
