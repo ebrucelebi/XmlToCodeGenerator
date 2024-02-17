@@ -33,39 +33,39 @@ data CodeSection : Set where
     Main : CodeSection
     Declaration : CodeSection
 
-getOutputType : ∀ {n} -> Model -> ModelDAG n -> Type
-getOutputType _ ∅ = iNone
-getOutputType m (context (InputInstance _ sourceId) edges & dag) with findModelElementInModelWithID m sourceId
+getOutputType : ∀ {n} -> ℕ -> Model -> ModelDAG n -> Type
+getOutputType _ _ ∅ = iNone
+getOutputType i m (context (InputInstance _ sourceId) edges & dag) with findModelElementInModelWithID m sourceId
 ... | just (Input _ _ type) = type
 ... | _ = iNone
-getOutputType m (context (OutputInstance _ sourceId) edges & dag) with findModelElementInModelWithID m sourceId
+getOutputType i m (context (OutputInstance _ sourceId) edges & dag) with findModelElementInModelWithID m sourceId
 ... | just (Output _ _ type) = type
 ... | _ = iNone
-getOutputType m (context (Addition _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
-getOutputType m (context (Modulo _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
-getOutputType m (context (Multiplication _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
-getOutputType m (context (NumericCast _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e) -- todo: Fix after adding the cast type
-getOutputType m (context (PolymorphicDivision _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
-getOutputType m (context (Subtraction _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
-getOutputType m (context (UnaryMinus _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
-getOutputType m (context (LogicalAnd _) edges & dag) = iBool
-getOutputType m (context (LogicalNot _) edges & dag) = iBool
-getOutputType m (context (LogicalOr _) edges & dag) = iBool
-getOutputType m (context (LogicalSharp _) edges & dag) = iBool
-getOutputType m (context (LogicalXor _) edges & dag) = iBool
-getOutputType m (context (BitwiseAnd _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
-getOutputType m (context (BitwiseNot _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
-getOutputType m (context (BitwiseOr _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
-getOutputType m (context (BitwiseXor _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
-getOutputType m (context (LeftShift _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
-getOutputType m (context (RightShift _) (e ∷ es) & dag) = getOutputType m (getEdgeDestination dag e)
-getOutputType m (context (Different _) edges & dag) = iBool
-getOutputType m (context (Equal _) edges & dag) = iBool
-getOutputType m (context (GreaterThanEqual _) edges & dag) = iBool
-getOutputType m (context (LessThanEqual _) edges & dag) = iBool
-getOutputType m (context (StrictlyGreaterThan _) edges & dag) = iBool
-getOutputType m (context (StrictlyLessThan _) edges & dag) = iBool
-getOutputType _ _ = iNone
+getOutputType (suc i) m (context (Addition _) (e ∷ es) & dag) = getOutputType i m (getEdgeDestination dag e)
+getOutputType (suc i) m (context (Modulo _) (e ∷ es) & dag) = getOutputType i m (getEdgeDestination dag e)
+getOutputType (suc i) m (context (Multiplication _) (e ∷ es) & dag) = getOutputType i m (getEdgeDestination dag e)
+getOutputType (suc i) m (context (NumericCast _) (e ∷ es) & dag) = getOutputType i m (getEdgeDestination dag e) -- todo: Fix after adding the cast type
+getOutputType (suc i) m (context (PolymorphicDivision _) (e ∷ es) & dag) = getOutputType i m (getEdgeDestination dag e)
+getOutputType (suc i) m (context (Subtraction _) (e ∷ es) & dag) = getOutputType i m (getEdgeDestination dag e)
+getOutputType (suc i) m (context (UnaryMinus _) (e ∷ es) & dag) = getOutputType i m (getEdgeDestination dag e)
+getOutputType i m (context (LogicalAnd _) edges & dag) = iBool
+getOutputType i m (context (LogicalNot _) edges & dag) = iBool
+getOutputType i m (context (LogicalOr _) edges & dag) = iBool
+getOutputType i m (context (LogicalSharp _) edges & dag) = iBool
+getOutputType i m (context (LogicalXor _) edges & dag) = iBool
+getOutputType (suc i) m (context (BitwiseAnd _) (e ∷ es) & dag) = getOutputType i m (getEdgeDestination dag e)
+getOutputType (suc i) m (context (BitwiseNot _) (e ∷ es) & dag) = getOutputType i m (getEdgeDestination dag e)
+getOutputType (suc i) m (context (BitwiseOr _) (e ∷ es) & dag) = getOutputType i m (getEdgeDestination dag e)
+getOutputType (suc i) m (context (BitwiseXor _) (e ∷ es) & dag) = getOutputType i m (getEdgeDestination dag e)
+getOutputType (suc i) m (context (LeftShift _) (e ∷ es) & dag) = getOutputType i m (getEdgeDestination dag e)
+getOutputType (suc i) m (context (RightShift _) (e ∷ es) & dag) = getOutputType i m (getEdgeDestination dag e)
+getOutputType i m (context (Different _) edges & dag) = iBool
+getOutputType i m (context (Equal _) edges & dag) = iBool
+getOutputType i m (context (GreaterThanEqual _) edges & dag) = iBool
+getOutputType i m (context (LessThanEqual _) edges & dag) = iBool
+getOutputType i m (context (StrictlyGreaterThan _) edges & dag) = iBool
+getOutputType i m (context (StrictlyLessThan _) edges & dag) = iBool
+getOutputType _ _ _ = iNone
 
 mutual
     generateEdges : ∀ {n} -> Project -> Model -> List ModelElement -> CodeSection -> List (ModelElement × Fin n) -> ModelDAG n -> (List String) × (List ModelElement)
@@ -199,12 +199,15 @@ mutual
     generateStrictlyLessThanMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
     generateStrictlyLessThanMain p m (context me edges) dag = ((generateIdentifierContext p m (context me edges) dag) ++ " = " ++
                                   (generateIdentifierAtEdge p m edges 0 dag) ++ " < " ++ (generateIdentifierAtEdge p m edges 1 dag) ++ ";") ∷ []
-                                  
+    
+    generateInputMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
+    generateInputMain _ _ _ _ = []
+
     generateModelElementMain : ∀ {n} -> ModelElement -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List String
     generateModelElementMain (OutputInstance _ _) p m c dag = generateOutputMain p m c dag
     generateModelElementMain (Addition _) p m c dag = generateAdditionMain p m c dag
     generateModelElementMain (Multiplication _) p m c dag = generateMultiplicationMain p m c dag
-    generateModelElementMain (InputInstance _ _) p m c dag = []
+    generateModelElementMain (InputInstance _ _) p m c dag = generateInputMain p m c dag
     generateModelElementMain (NumericCast _) p m c dag = generateNumericCastMain p m c dag
     generateModelElementMain (PolymorphicDivision _) p m c dag = generatePolymorphicDivisionMain p m c dag
     generateModelElementMain (Subtraction _) p m c dag = generateSubtractionMain p m c dag
@@ -231,10 +234,10 @@ mutual
 
     generateModelElement : ∀ {n} -> Project -> Model -> List ModelElement -> CodeSection -> Context ModelElement ModelElement n -> ModelDAG n -> (List String) × (List ModelElement)
     generateModelElement p m seen Identifier (context me edges) dag = ((getModelElementName me) ∷ [] , seen)
-    generateModelElement p m seen Declaration (context me edges) dag with containsModelElement seen me
+    generateModelElement{n} p m seen Declaration (context me edges) dag with containsModelElement seen me
     ... | true = ([] , seen)
     ... | false with generateEdges p m seen Declaration edges dag
-    ... | (res , seen1) = ((getStringFromType (getOutputType m dag) ++ " " ++ (generateIdentifierContext p m (context me edges) dag) ++ ";")
+    ... | (res , seen1) = ((getStringFromType (getOutputType n m ((context me edges) & dag)) ++ " " ++ (generateIdentifierContext p m (context me edges) dag) ++ ";")
                                         ∷ res , me ∷ seen1)
     generateModelElement p m seen Main (context me edges) dag with containsModelElement seen me
     ... | true = ([] , seen)
@@ -254,7 +257,7 @@ generateModelElements p m seen section (c & dag) | false with generateModelEleme
 generateModelSource : ∀ {n} -> Project -> Model -> String -> ModelDAG n -> GeneratedFile
 generateModelSource p m n dag with generateModelElements p m [] Main dag | generateModelElements p m [] Declaration dag
 ... | (mainContent , _) | (declarationContent , _) = File (n ++ ".c") (
-    ("#include \"" ++ n ++ ".h") ∷ "" ∷
+    ("#include \"" ++ n ++ ".h\"") ∷ "" ∷
     ("void " ++ n ++ "Main(i_" ++ n ++ "* inputs, o_" ++ n ++ "* outputs)") ∷
     (encapsulateBraces (declarationContent Data.List.++ [""] Data.List.++ mainContent)))
 
