@@ -98,173 +98,149 @@ mutual
     ... | x ∷ [] = x
     ... | _ = ""
     
-    generateInputMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateInputMain _ _ _ _ = Variable "" ∷ []
+    generateInputMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateInputMain _ _ _ _ = []
 
-    generateOutputMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateOutputMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                               Assign
-                                                               (Variable (generateIdentifierAtEdge p m edges 0 dag)) ∷ []
+    generateOutputMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateOutputMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                              (Variable (generateIdentifierAtEdge p m edges 0 dag)) ∷ []
 
-    generateAdditionMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateAdditionMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                                 Assign
-                                                                 (joinToExpression (generateIdentifierEdges p m edges dag) Addition) ∷ []
+    generateAdditionMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateAdditionMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                (joinToExpression (generateIdentifierEdges p m edges dag) Addition) ∷ []
 
-    generateMultiplicationMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateMultiplicationMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                                       Assign
-                                                                       (joinToExpression (generateIdentifierEdges p m edges dag) Multiplication) ∷ []
+    generateMultiplicationMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateMultiplicationMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                      (joinToExpression (generateIdentifierEdges p m edges dag) Multiplication) ∷ []
 
     -- TODO: Add cast type
-    generateNumericCastMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateNumericCastMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                               Assign
-                                                               (Variable (generateIdentifierAtEdge p m edges 0 dag)) ∷ []
+    generateNumericCastMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateNumericCastMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                   (Variable (generateIdentifierAtEdge p m edges 0 dag)) ∷ []
 
-    generatePolymorphicDivisionMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generatePolymorphicDivisionMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                                            Assign
-                                                                            (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
+    generatePolymorphicDivisionMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generatePolymorphicDivisionMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                           (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
                                                                                        Division
                                                                                        (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
 
-    generateSubtractionMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateSubtractionMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                                    Assign
-                                                                    (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
+    generateSubtractionMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateSubtractionMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                   (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
                                                                                Subtraction
                                                                                (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
                                   
-    generateUnaryMinusMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateUnaryMinusMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                                    Assign
-                                                                    (RightExpression Minus
-                                                                                    (Variable (generateIdentifierAtEdge p m edges 0 dag))) ∷ []
+    generateUnaryMinusMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateUnaryMinusMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                  (RightExpression Minus
+                                                                                   (Variable (generateIdentifierAtEdge p m edges 0 dag))) ∷ []
 
-    generateLogicalAndMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateLogicalAndMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                                   Assign
-                                                                   (joinToExpression (generateIdentifierEdges p m edges dag) LogicalAnd) ∷ []
+    generateLogicalAndMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateLogicalAndMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                  (joinToExpression (generateIdentifierEdges p m edges dag) LogicalAnd) ∷ []
 
-    generateLogicalNorMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateLogicalNorMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag)) 
-                                                                   Assign (RightExpression LogicalNot
-                                                                                           (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
-                                                                                                       LogicalOr
-                                                                                                       (Variable (generateIdentifierAtEdge p m edges 1 dag)))) ∷ []
+    generateLogicalNorMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateLogicalNorMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                  (RightExpression LogicalNot
+                                                                                   (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
+                                                                                               LogicalOr
+                                                                                               (Variable (generateIdentifierAtEdge p m edges 1 dag)))) ∷ []
                                   
-    generateLogicalNotMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateLogicalNotMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                                    Assign
-                                                                    (RightExpression LogicalNot
-                                                                                    (Variable (generateIdentifierAtEdge p m edges 0 dag))) ∷ []
+    generateLogicalNotMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateLogicalNotMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                  (RightExpression LogicalNot
+                                                                                   (Variable (generateIdentifierAtEdge p m edges 0 dag))) ∷ []
 
-    generateLogicalOrMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateLogicalOrMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                                   Assign
-                                                                   (joinToExpression (generateIdentifierEdges p m edges dag) LogicalOr) ∷ []
+    generateLogicalOrMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateLogicalOrMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                 (joinToExpression (generateIdentifierEdges p m edges dag) LogicalOr) ∷ []
 
-    generateLogicalSharpMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateLogicalSharpMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                                     Assign
-                                                                     (Expression (joinToExpression (generateIdentifierEdges p m edges dag) Addition)
-                                                                                 LessThanEqual
-                                                                                 (Variable "1")) ∷ []
+    generateLogicalSharpMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateLogicalSharpMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                    (Expression (joinToExpression (generateIdentifierEdges p m edges dag) Addition)
+                                                                                LessThanEqual
+                                                                                (Variable "1")) ∷ []
 
-    generateLogicalXorMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateLogicalXorMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                                    Assign
-                                                                    (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
-                                                                               LogicalXor
-                                                                               (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
+    generateLogicalXorMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateLogicalXorMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                  (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
+                                                                              LogicalXor
+                                                                              (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
 
-    generateBitwiseAndMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateBitwiseAndMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                                    Assign
-                                                                    (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
-                                                                               BitwiseAnd
-                                                                               (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
+    generateBitwiseAndMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateBitwiseAndMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                  (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
+                                                                              BitwiseAnd
+                                                                              (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
 
-    generateBitwiseNotMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateBitwiseNotMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                                    Assign
-                                                                    (RightExpression BitwiseNot
-                                                                                    (Variable (generateIdentifierAtEdge p m edges 0 dag))) ∷ []
+    generateBitwiseNotMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateBitwiseNotMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                  (RightExpression BitwiseNot
+                                                                                   (Variable (generateIdentifierAtEdge p m edges 0 dag))) ∷ []
 
-    generateBitwiseOrMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateBitwiseOrMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                                    Assign
-                                                                    (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
-                                                                               BitwiseOr
-                                                                               (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
+    generateBitwiseOrMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateBitwiseOrMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                 (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
+                                                                             BitwiseOr
+                                                                             (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
 
-    generateBitwiseXorMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateBitwiseXorMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                                    Assign
-                                                                    (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
-                                                                               BitwiseXor
-                                                                               (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
+    generateBitwiseXorMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateBitwiseXorMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                  (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
+                                                                              BitwiseXor
+                                                                              (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
 
-    generateLeftShiftMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateLeftShiftMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                                    Assign
-                                                                    (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
-                                                                               LeftShift
-                                                                               (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
+    generateLeftShiftMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateLeftShiftMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                 (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
+                                                                             LeftShift
+                                                                             (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
 
-    generateRightShiftMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateRightShiftMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                                    Assign
-                                                                    (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
-                                                                               RightShift
-                                                                               (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
+    generateRightShiftMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateRightShiftMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                  (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
+                                                                              RightShift
+                                                                              (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
 
     -- TODO: After creating types header with compare functions, fix different code.
-    generateDifferentMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateDifferentMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                                    Assign
-                                                                    (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
-                                                                               Different
-                                                                               (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
+    generateDifferentMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateDifferentMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                 (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
+                                                                             Different
+                                                                             (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
 
     -- TODO: After creating types header with compare functions, fix equal code.
-    generateEqualMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateEqualMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                                    Assign
-                                                                    (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
-                                                                               Equal
-                                                                               (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
+    generateEqualMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateEqualMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                             (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
+                                                                         Equal
+                                                                         (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
 
-    generateGreaterThanEqualMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateGreaterThanEqualMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                                    Assign
-                                                                    (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
-                                                                               GreaterThanEqual
-                                                                               (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
+    generateGreaterThanEqualMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateGreaterThanEqualMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                        (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
+                                                                                    GreaterThanEqual
+                                                                                    (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
                                   
-    generateLessThanEqualMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateLessThanEqualMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                                    Assign
-                                                                    (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
-                                                                               LessThanEqual
-                                                                               (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
+    generateLessThanEqualMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateLessThanEqualMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                     (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
+                                                                                 LessThanEqual
+                                                                                 (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
                                   
-    generateStrictlyGreaterThanMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateStrictlyGreaterThanMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                                    Assign
-                                                                    (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
-                                                                               StrictlyGreaterThan
-                                                                               (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
+    generateStrictlyGreaterThanMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateStrictlyGreaterThanMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                           (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
+                                                                                       StrictlyGreaterThan
+                                                                                       (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
                                   
-    generateStrictlyLessThanMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
-    generateStrictlyLessThanMain p m (context me edges) dag = Expression (Variable (generateIdentifierContext p m (context me edges) dag))
-                                                                    Assign
-                                                                    (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
-                                                                               StrictlyLessThan
-                                                                               (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
+    generateStrictlyLessThanMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateStrictlyLessThanMain p m (context me edges) dag = Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                        (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
+                                                                                    StrictlyLessThan
+                                                                                    (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
 
-    generateModelElementMain : ∀ {n} -> ModelElement -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List Code
+    generateModelElementMain : ∀ {n} -> ModelElement -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
     generateModelElementMain (OutputInstance _ _) p m c dag = generateOutputMain p m c dag
     generateModelElementMain (Addition _) p m c dag = generateAdditionMain p m c dag
     generateModelElementMain (Multiplication _) p m c dag = generateMultiplicationMain p m c dag
@@ -296,7 +272,7 @@ mutual
     generateModelElement : ∀ {n} -> Project -> Model -> CodeSection -> Context ModelElement ModelElement n -> ModelDAG n -> List String
     generateModelElement    p m Identifier  (context me edges) dag = (getModelElementName me) ∷ []
     generateModelElement{n} p m Declaration c                  dag = (getStringFromType (getOutputType n m (c & dag)) ++ " " ++ (generateIdentifierContext p m c dag) ++ ";") ∷ []
-    generateModelElement    p m Main        (context me edges) dag = codeListToString (generateModelElementMain me p m (context me edges) dag)
+    generateModelElement    p m Main        (context me edges) dag = statementListToString (generateModelElementMain me p m (context me edges) dag)
 
 -- Go over DAG and call generate section code for the model element.
 -- DAG is already ordered so that all necessary codes for a model element are generated before its own code.

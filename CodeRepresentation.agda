@@ -2,15 +2,17 @@
 
 module CodeRepresentation where
 
+open import HoareLogic
+
 open import Data.String
 open import Data.List hiding (_++_)
+open import Relation.Binary.PropositionalEquality
 
 data Oper : Set where
     Addition : Oper
     Subtraction : Oper
     Multiplication : Oper
     Division : Oper
-    Assign : Oper
     Minus : Oper
     LogicalAnd : Oper
     LogicalNot : Oper
@@ -35,6 +37,9 @@ data Code : Set where
     LeftExpression : Code -> Oper -> Code
     RightExpression : Oper -> Code -> Code
 
+data StatementType : Set where
+    Statement : String -> Code -> StatementType
+
 joinToExpression : List String -> Oper -> Code
 joinToExpression [] _ = Variable "" -- Should not come here
 joinToExpression (x ∷ []) _ = Variable x
@@ -45,7 +50,6 @@ operationToString Addition = "+"
 operationToString Subtraction = "-"
 operationToString Multiplication = "*"
 operationToString Division = "/"
-operationToString Assign = "="
 operationToString Minus = "-"
 operationToString LogicalAnd = "&&"
 operationToString LogicalNot = "!"
@@ -70,7 +74,21 @@ codeToString (Expression l o r) = codeToString l ++ " " ++ operationToString o +
 codeToString (LeftExpression l o) = codeToString l ++ " " ++ operationToString o
 codeToString (RightExpression o r) = operationToString o ++ " " ++ codeToString r
 
-codeListToString : List Code -> List String
-codeListToString [] = []
-codeListToString (x ∷ xs) = codeToString x ∷ codeListToString xs
+statementListToString : List StatementType -> List String
+statementListToString [] = []
+statementListToString ((Statement v c) ∷ xs) = (v ++ " = " ++ codeToString c ++ ";") ∷ statementListToString xs
 
+codeToExp : Code -> Exp
+codeToExp (Variable x) = var x
+codeToExp (Expression c1 Addition c2) = (codeToExp c1) + (codeToExp c2)
+codeToExp (Expression c1 Subtraction c2) = (codeToExp c1) - (codeToExp c2)
+codeToExp (Expression c1 Multiplication c2) = (codeToExp c1) * (codeToExp c2)
+codeToExp (Expression c1 Division c2) = (codeToExp c1) / (codeToExp c2)
+codeToExp _ = const 0
+
+statementToAnnotation : Annotation -> StatementType -> Annotation
+statementToAnnotation false _ = false
+statementToAnnotation a (Statement x c) = (var x) := (codeToExp c)
+
+deneme : StatementType
+deneme = Statement "Addition1" (Expression (Variable "Input1") Addition (Variable "Input2"))
