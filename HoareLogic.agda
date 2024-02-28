@@ -32,13 +32,16 @@ data Exp : Set where
     const_ : ℕ -> Exp
     var_ : String -> Exp
 
+infixr 5 _∧_
+infixr 6 _:=_
 data Annotation : Set where
+    test : String -> Annotation
     true : Annotation
     false : Annotation
     Defined_ : Var -> Annotation
     _:=_ : Var -> Exp -> Annotation
     _∧_ : Annotation -> Annotation -> Annotation
-    _∨_ : Annotation -> Annotation -> Annotation
+    -- _∨_ : Annotation -> Annotation -> Annotation
 
 a : Annotation
 a = ((var "x") := (const 2)) ∧ ((var "y") := (const 1))

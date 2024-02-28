@@ -8,14 +8,15 @@ open import ModelDAG
 open import createDAG
 open import checkProject
 open import CodeRepresentation
+open import HoareLogic
 
 open import Data.String
 open import Data.Maybe
-open import Data.Bool
+open import Data.Bool hiding (_∧_)
 open import Data.Product
 open import Data.List hiding (concat; _++_)
-open import Data.Fin hiding (join)
-open import Data.Nat
+open import Data.Fin hiding (join; _+_)
+open import Data.Nat hiding (_+_; _*_; _^_; _>_; _<_)
 open import Data.Graph.Acyclic
 
 record GeneratedFile : Set where
@@ -280,6 +281,10 @@ generateModelElements : ∀ {n} -> Project -> Model -> CodeSection -> ModelDAG n
 generateModelElements _ _ _ ∅ = []
 generateModelElements p m section (c & dag) = concatenateTwoList (generateModelElements p m section dag) (generateModelElement p m section c dag) 
 
+generateModelElementsStatementList : ∀ {n} -> Project -> Model -> ModelDAG n -> List StatementType
+generateModelElementsStatementList _ _ ∅ = []
+generateModelElementsStatementList p m ((context me edges) & dag) = concatenateTwoList (generateModelElementsStatementList p m dag) (generateModelElementMain me p m (context me edges) dag)
+
 generateModelSource : ∀ {n} -> Project -> Model -> String -> ModelDAG n -> GeneratedFile
 generateModelSource p m n dag with generateModelElements p m Main dag | generateModelElements p m Declaration dag
 ... | mainContent | declarationContent = File (n ++ ".c") (
@@ -293,6 +298,17 @@ generateModel : Project -> Model -> CodeGenerationResult
 generateModel p (Operation n ins outs sms) with (createDAG (Operation n ins outs sms))
 ... | nothing = GenerationError ("Could not generate DAG for" ++ n)
 ... | just dag = Success (generateModelSource p (Operation n ins outs sms) n dag ∷ [])
+
+getInputsAnnotation : List ModelElement -> Annotation
+getInputsAnnotation [] = true
+getInputsAnnotation ((Input n _ _) ∷ []) = Defined (var n)
+getInputsAnnotation ((Input n _ _) ∷ xs) = (Defined (var n)) ∧ getInputsAnnotation xs
+getInputsAnnotation _ = false
+
+generateModelCodeAnnotation : Project -> Model -> Maybe Annotation
+generateModelCodeAnnotation p (Operation n ins outs sms) with (createDAG (Operation n ins outs sms))
+... | nothing = nothing
+... | just dag = just (statementListToAnnotation (getInputsAnnotation ins) (generateModelElementsStatementList p (Operation n ins outs sms) dag))
 
 -- To generate a code for the project, code generation should have a root model to start.
 generateCode : Project -> String -> CodeGenerationResult
@@ -308,3 +324,6 @@ checkAndGenerateCode p n with checkProject p | p
 
 denemeGen : CodeGenerationResult
 denemeGen = generateModel (project "" [] [] [] []) doubleOutputModel
+
+denemeAnn : Maybe Annotation
+denemeAnn = generateModelCodeAnnotation (project "" [] [] [] []) doubleOutputModel
