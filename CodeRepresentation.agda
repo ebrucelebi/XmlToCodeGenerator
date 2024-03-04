@@ -8,6 +8,7 @@ open import Data.Bool hiding (_∧_)
 open import Data.String
 open import Data.Maybe
 open import Data.List hiding (_++_)
+open import Data.Vec hiding (_++_)
 open import Relation.Binary.PropositionalEquality
 
 data Oper : Set where
@@ -40,6 +41,7 @@ data Code : Set where
     RightExpression : Oper -> Code -> Code
 
 data StatementType : Set where
+    EmptyStatement : StatementType
     Statement : String -> Code -> StatementType
 
 joinToExpression : List String -> Oper -> Code
@@ -76,23 +78,27 @@ codeToString (Expression l o r) = codeToString l ++ " " ++ operationToString o +
 codeToString (LeftExpression l o) = codeToString l ++ " " ++ operationToString o
 codeToString (RightExpression o r) = operationToString o ++ " " ++ codeToString r
 
+statementToString : StatementType -> String
+statementToString EmptyStatement = ""
+statementToString (Statement v c) = (v ++ " = " ++ codeToString c ++ ";")
+
 statementListToString : List StatementType -> List String
 statementListToString [] = []
-statementListToString ((Statement v c) ∷ xs) = (v ++ " = " ++ codeToString c ++ ";") ∷ statementListToString xs
+statementListToString (x ∷ xs) = statementToString x ∷ statementListToString xs
 
-codeToExp : Code -> Exp
-codeToExp (Variable x) = var x
-codeToExp (Expression c1 Addition c2) = (codeToExp c1) + (codeToExp c2)
-codeToExp (Expression c1 Subtraction c2) = (codeToExp c1) - (codeToExp c2)
-codeToExp (Expression c1 Multiplication c2) = (codeToExp c1) * (codeToExp c2)
-codeToExp (Expression c1 Division c2) = (codeToExp c1) / (codeToExp c2)
-codeToExp _ = const 0
+codeToAnnotation : Code -> Annotation
+codeToAnnotation (Variable x) = var x
+codeToAnnotation (Expression c1 Addition c2) = (codeToAnnotation c1) + (codeToAnnotation c2)
+codeToAnnotation (Expression c1 Subtraction c2) = (codeToAnnotation c1) - (codeToAnnotation c2)
+codeToAnnotation (Expression c1 Multiplication c2) = (codeToAnnotation c1) * (codeToAnnotation c2)
+codeToAnnotation (Expression c1 Division c2) = (codeToAnnotation c1) / (codeToAnnotation c2)
+codeToAnnotation _ = const 0
 
-replaceVar : Annotation -> Var -> Maybe Exp
+replaceVar : Condition -> Var -> Maybe Annotation
 replaceVar (Defined (var x)) (var v) with x Data.String.== v
 ... | true = just (var x)
 ... | false = nothing
-replaceVar ((var x) := e) (var v) with x Data.String.== v
+replaceVar ((var x) :=: e) (var v) with x Data.String.== v
 ... | true = just e
 ... | false = nothing
 replaceVar (a1 ∧ a2) v with replaceVar a1 v
@@ -100,7 +106,7 @@ replaceVar (a1 ∧ a2) v with replaceVar a1 v
 ... | nothing = replaceVar a2 v
 replaceVar _ _ = nothing
 
-replaceVars : Annotation -> Exp -> Maybe Exp
+replaceVars : Condition -> Annotation -> Maybe Annotation
 replaceVars a (var v) = replaceVar a (var v)
 replaceVars a (e1 + e2) with replaceVars a e1 | replaceVars a e2
 ... | just e1' | just e2' = just (e1' + e2')
@@ -110,19 +116,28 @@ replaceVars a (e1 * e2) with replaceVars a e1 | replaceVars a e2
 ... | _ | _ = nothing
 replaceVars _ e = nothing
 
-statementToAnnotation : Annotation -> StatementType -> Annotation
-statementToAnnotation false _ = false
-statementToAnnotation a (Statement x c) with replaceVars a (codeToExp c)
-... | just e = (var x) := e
-... | nothing = test "2"
+statementToCondition : Condition -> StatementType -> Condition
+statementToCondition false _ = false
+statementToCondition a EmptyStatement = a
+statementToCondition a (Statement x c) with replaceVars a (codeToAnnotation c)
+... | just e = (var x) :=: e
+... | nothing = false
 
-statementListToAnnotation : Annotation -> List StatementType -> Annotation
-statementListToAnnotation false _ = test "1"
-statementListToAnnotation a [] = a
-statementListToAnnotation a (x ∷ xs) = statementListToAnnotation (a ∧ (statementToAnnotation a x)) xs
+statementListToCondition : Condition -> List StatementType -> Condition
+statementListToCondition a [] = a
+statementListToCondition a (x ∷ xs) = statementListToCondition (a ∧ (statementToCondition a x)) xs
 
-testAnn : Annotation
-testAnn = Defined (var "In1") ∧ Defined (var "In2") ∧ (var "Input1") := (var "In1") + (var "In2")
+statementListToHoareTriplets : Condition -> List StatementType -> List (HoareTriplet String)
+statementListToHoareTriplets a [] = (< a > (statementToString EmptyStatement) < false >) ∷ [] -- Should not come here
+statementListToHoareTriplets a (x ∷ []) = let pC = (a ∧ (statementToCondition a x)) in 
+                                    < a > (statementToString x) < pC > ∷ []
+statementListToHoareTriplets a (x ∷ xs) = let pC = (a ∧ (statementToCondition a x)) in 
+                                    < a > (statementToString x) < pC > ∷ (statementListToHoareTriplets pC xs)
+
+testAnn : Condition
+testAnn = Defined (var "In1") ∧
+          Defined (var "In2") ∧
+          (var "Input1") :=: (var "In1") + (var "In2")
 
 exp : Code
 exp = Expression (Variable "Input1") Addition (Variable "In2")
@@ -130,11 +145,11 @@ exp = Expression (Variable "Input1") Addition (Variable "In2")
 denemeState : StatementType
 denemeState = Statement "Addition1" exp
 
-deneme : Annotation
-deneme = statementListToAnnotation testAnn (denemeState ∷ [])
+deneme : List (HoareTriplet String)
+deneme = statementListToHoareTriplets testAnn (denemeState ∷ [])
 
-deneme2 : Maybe Exp
-deneme2 = replaceVars testAnn (codeToExp exp)
+deneme2 : Maybe Annotation
+deneme2 = replaceVars testAnn (codeToAnnotation exp)
 
-deneme3 : Maybe Exp
+deneme3 : Maybe Annotation
 deneme3 = replaceVars testAnn ((var "Input1") + (var "In2"))  

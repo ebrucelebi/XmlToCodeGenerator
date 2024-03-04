@@ -2,46 +2,69 @@
 
 module HoareLogic where
 
+open import Data.List
+open import Data.Bool hiding (_<_; _∧_)
 open import Data.Nat hiding (_+_; _*_; _^_; _>_; _<_)
 open import Data.String hiding (_==_; _<_)
 
 data Var : Set where
     var_ : String -> Var
 
-data Exp : Set where
-    _+_ : Exp -> Exp -> Exp
-    _-_ : Exp -> Exp -> Exp
-    _*_ : Exp -> Exp -> Exp
-    _/_ : Exp -> Exp -> Exp
-    -_ : Exp -> Exp
-    _&&_ : Exp -> Exp -> Exp
-    !_ : Exp -> Exp
-    _||_ : Exp -> Exp -> Exp
-    _^_ : Exp -> Exp -> Exp
-    _&_ : Exp -> Exp -> Exp
-    ~_ : Exp -> Exp
-    _|b_ : Exp -> Exp -> Exp
-    _<<_ : Exp -> Exp -> Exp
-    _>>_ : Exp -> Exp -> Exp
-    _!=_ : Exp -> Exp -> Exp
-    _==_ : Exp -> Exp -> Exp
-    _>=_ : Exp -> Exp -> Exp
-    _<=_ : Exp -> Exp -> Exp
-    _>_ : Exp -> Exp -> Exp
-    _<_ : Exp -> Exp -> Exp
-    const_ : ℕ -> Exp
-    var_ : String -> Exp
+data Annotation : Set where
+    _+_ : Annotation -> Annotation -> Annotation
+    _-_ : Annotation -> Annotation -> Annotation
+    _*_ : Annotation -> Annotation -> Annotation
+    _/_ : Annotation -> Annotation -> Annotation
+    -_ : Annotation -> Annotation
+    _&&_ : Annotation -> Annotation -> Annotation
+    !_ : Annotation -> Annotation
+    _||_ : Annotation -> Annotation -> Annotation
+    _^_ : Annotation -> Annotation -> Annotation
+    _&_ : Annotation -> Annotation -> Annotation
+    ~_ : Annotation -> Annotation
+    _|b_ : Annotation -> Annotation -> Annotation
+    _<<_ : Annotation -> Annotation -> Annotation
+    _>>_ : Annotation -> Annotation -> Annotation
+    _!=_ : Annotation -> Annotation -> Annotation
+    _==_ : Annotation -> Annotation -> Annotation
+    _>=_ : Annotation -> Annotation -> Annotation
+    _<=_ : Annotation -> Annotation -> Annotation
+    _>_ : Annotation -> Annotation -> Annotation
+    _<_ : Annotation -> Annotation -> Annotation
+    const_ : ℕ -> Annotation
+    var_ : String -> Annotation
 
 infixr 5 _∧_
-infixr 6 _:=_
-data Annotation : Set where
-    test : String -> Annotation
-    true : Annotation
-    false : Annotation
-    Defined_ : Var -> Annotation
-    _:=_ : Var -> Exp -> Annotation
-    _∧_ : Annotation -> Annotation -> Annotation
-    -- _∨_ : Annotation -> Annotation -> Annotation
+infixr 6 _:=:_
+data Condition : Set where
+    test : String -> Condition
+    true : Condition
+    false : Condition
+    Defined_ : Var -> Condition
+    _:=:_ : Var -> Annotation -> Condition -- Equality predicate
+    _∧_ : Condition -> Condition -> Condition
+    -- _∨_ : Condition -> Condition -> Condition
 
-a : Annotation
-a = ((var "x") := (const 2)) ∧ ((var "y") := (const 1))
+data HoareTriplet {a} (A : Set a): Set a where
+    <_>_<_> : Condition -> A -> Condition -> HoareTriplet A
+
+containsVar : List Var -> Var -> Bool
+containsVar [] _ = false
+containsVar ((var x) ∷ xs) (var y) with x Data.String.== y
+... | true = true
+... | false = containsVar xs (var y)
+
+weaken : Condition -> List Var -> Condition
+weaken (v :=: a) vs with containsVar vs v
+... | true = (v :=: a)
+... | false = true
+weaken (c1 ∧ c2) vs with weaken c1 vs | weaken c2 vs
+... | false | wc2 = false
+... | wc1 | false = false
+... | true | wc2 = wc2
+... | wc1 | true = wc1
+... | wc1 | wc2 = wc1 ∧ wc2
+weaken c _ = c
+
+a : Condition
+a = ((var "x") :=: (const 2)) ∧ ((var "y") :=: (const 1))

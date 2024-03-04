@@ -17,7 +17,7 @@ open import Data.Product
 open import Data.List hiding (concat; _++_)
 open import Data.Fin hiding (join; _+_)
 open import Data.Nat hiding (_+_; _*_; _^_; _>_; _<_)
-open import Data.Graph.Acyclic
+open import Data.Graph.Acyclic hiding(weaken)
 
 record GeneratedFile : Set where
     constructor File
@@ -299,16 +299,29 @@ generateModel p (Operation n ins outs sms) with (createDAG (Operation n ins outs
 ... | nothing = GenerationError ("Could not generate DAG for" ++ n)
 ... | just dag = Success (generateModelSource p (Operation n ins outs sms) n dag ∷ [])
 
-getInputsAnnotation : List ModelElement -> Annotation
-getInputsAnnotation [] = true
-getInputsAnnotation ((Input n _ _) ∷ []) = Defined (var n)
-getInputsAnnotation ((Input n _ _) ∷ xs) = (Defined (var n)) ∧ getInputsAnnotation xs
-getInputsAnnotation _ = false
+getInputsCondition : List ModelElement -> Condition
+getInputsCondition [] = true
+getInputsCondition ((Input n _ _) ∷ []) = Defined (var n)
+getInputsCondition ((Input n _ _) ∷ xs) = (Defined (var n)) ∧ getInputsCondition xs
+getInputsCondition _ = false
 
-generateModelCodeAnnotation : Project -> Model -> Maybe Annotation
-generateModelCodeAnnotation p (Operation n ins outs sms) with (createDAG (Operation n ins outs sms))
+getOutputVars : List ModelElement -> List Var
+getOutputVars ((Output n _ _) ∷ xs) = (var n) ∷ getOutputVars xs
+getOutputVars _ = []
+
+generateModelCodeCondition : Project -> Model -> Maybe Condition
+generateModelCodeCondition p (Operation n ins outs sms) with (createDAG (Operation n ins outs sms))
 ... | nothing = nothing
-... | just dag = just (statementListToAnnotation (getInputsAnnotation ins) (generateModelElementsStatementList p (Operation n ins outs sms) dag))
+... | just dag = just (
+    weaken 
+        (statementListToCondition (getInputsCondition ins)
+                                  (generateModelElementsStatementList p (Operation n ins outs sms) dag))
+        (getOutputVars outs))
+
+generateModelCodeHoareTriplets : Project -> Model -> Maybe (List (HoareTriplet String))
+generateModelCodeHoareTriplets p (Operation n ins outs sms) with (createDAG (Operation n ins outs sms))
+... | nothing = nothing
+... | just dag = just (statementListToHoareTriplets (getInputsCondition ins) (generateModelElementsStatementList p (Operation n ins outs sms) dag))
 
 -- To generate a code for the project, code generation should have a root model to start.
 generateCode : Project -> String -> CodeGenerationResult
@@ -325,5 +338,8 @@ checkAndGenerateCode p n with checkProject p | p
 denemeGen : CodeGenerationResult
 denemeGen = generateModel (project "" [] [] [] []) doubleOutputModel
 
-denemeAnn : Maybe Annotation
-denemeAnn = generateModelCodeAnnotation (project "" [] [] [] []) doubleOutputModel
+denemeHoare : Maybe (List (HoareTriplet String))
+denemeHoare = generateModelCodeHoareTriplets (project "" [] [] [] []) doubleOutputModel
+
+denemeCond : Maybe Condition
+denemeCond = generateModelCodeCondition (project "" [] [] [] []) doubleOutputModel
