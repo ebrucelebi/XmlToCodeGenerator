@@ -94,28 +94,6 @@ codeToAnnotation (Expression c1 Multiplication c2) = (codeToAnnotation c1) * (co
 codeToAnnotation (Expression c1 Division c2) = (codeToAnnotation c1) / (codeToAnnotation c2)
 codeToAnnotation _ = const 0
 
-replaceVar : Condition -> Var -> Maybe Annotation
-replaceVar (Defined (var x)) (var v) with x Data.String.== v
-... | true = just (var x)
-... | false = nothing
-replaceVar ((var x) :=: e) (var v) with x Data.String.== v
-... | true = just e
-... | false = nothing
-replaceVar (a1 ∧ a2) v with replaceVar a1 v
-... | just e1 = just e1
-... | nothing = replaceVar a2 v
-replaceVar _ _ = nothing
-
-replaceVars : Condition -> Annotation -> Maybe Annotation
-replaceVars a (var v) = replaceVar a (var v)
-replaceVars a (e1 + e2) with replaceVars a e1 | replaceVars a e2
-... | just e1' | just e2' = just (e1' + e2')
-... | _ | _ = nothing
-replaceVars a (e1 * e2) with replaceVars a e1 | replaceVars a e2
-... | just e1' | just e2' = just (e1' * e2')
-... | _ | _ = nothing
-replaceVars _ e = nothing
-
 statementToCondition : Condition -> StatementType -> Condition
 statementToCondition false _ = false
 statementToCondition a EmptyStatement = a

@@ -18,6 +18,7 @@ open import Data.List hiding (concat; _++_)
 open import Data.Fin hiding (join; _+_)
 open import Data.Nat hiding (_+_; _*_; _^_; _>_; _<_)
 open import Data.Graph.Acyclic hiding(weaken)
+open import Agda.Builtin.Equality
 
 record GeneratedFile : Set where
     constructor File
@@ -323,6 +324,36 @@ generateModelCodeHoareTriplets p (Operation n ins outs sms) with (createDAG (Ope
 ... | nothing = nothing
 ... | just dag = just (statementListToHoareTriplets (getInputsCondition ins) (generateModelElementsStatementList p (Operation n ins outs sms) dag))
 
+
+generateAdditionAnnotation : List String -> Annotation
+generateAdditionAnnotation [] = var ""
+generateAdditionAnnotation (x ∷ []) = var x
+generateAdditionAnnotation (x ∷ xs) = (var x) + generateAdditionAnnotation xs
+
+generateMultiplicationAnnotation : List String -> Annotation
+generateMultiplicationAnnotation [] = var ""
+generateMultiplicationAnnotation (x ∷ []) = var x
+generateMultiplicationAnnotation (x ∷ xs) = (var x) * generateMultiplicationAnnotation xs
+
+generateModelElementAnnotation : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> Annotation
+generateModelElementAnnotation p m (context (Addition (Properties n _ _ _)) edges) dag = generateAdditionAnnotation (generateIdentifierEdges p m edges dag)
+generateModelElementAnnotation p m (context (Multiplication (Properties n _ _ _)) edges) dag = generateMultiplicationAnnotation (generateIdentifierEdges p m edges dag)
+generateModelElementAnnotation p m (context (OutputInstance (Properties n _ _ _) _) edges) dag = (var (generateIdentifierAtEdge p m edges 0 dag))
+generateModelElementAnnotation _ _ _ _ = var ""
+
+generateAnnotation : ∀ {n} -> Project -> Model -> ModelDAG n -> Condition
+generateAnnotation p m ∅ = true
+generateAnnotation p m ((context (InputInstance (Properties n _ _ _) _) edges) & dag) = generateAnnotation p m dag ∧ Defined (var n)
+generateAnnotation p m ((context me edges) & dag) with generateAnnotation p m dag
+... | c with replaceVars c (generateModelElementAnnotation p m (context me edges) dag)
+... | nothing = false
+... | just a = c ∧ (var (getModelElementName me )) :=: a
+
+generateModelDAGAnnotations : Project -> Model -> Maybe Condition
+generateModelDAGAnnotations p (Operation n ins outs sms) with (createDAG (Operation n ins outs sms))
+... | nothing = nothing
+... | just dag = just (weaken (generateAnnotation p (Operation n ins outs sms) dag) (getOutputVars outs))
+
 -- To generate a code for the project, code generation should have a root model to start.
 generateCode : Project -> String -> CodeGenerationResult
 generateCode p n with findModelInProjectWithName p n
@@ -341,5 +372,16 @@ denemeGen = generateModel (project "" [] [] [] []) doubleOutputModel
 denemeHoare : Maybe (List (HoareTriplet String))
 denemeHoare = generateModelCodeHoareTriplets (project "" [] [] [] []) doubleOutputModel
 
-denemeCond : Maybe Condition
-denemeCond = generateModelCodeCondition (project "" [] [] [] []) doubleOutputModel
+denemeCodeCond : Maybe Condition
+denemeCodeCond = generateModelCodeCondition (project "" [] [] [] []) doubleOutputModel
+
+denemeDAGCond : Maybe Condition
+denemeDAGCond = generateModelDAGAnnotations (project "" [] [] [] []) doubleOutputModel
+
+checkResult : Bool
+checkResult with denemeCodeCond | denemeDAGCond
+... | just c1 | just c2 = c1 ≟C c2
+... | _ | _ = false 
+
+testHoare : checkResult ≡ true
+testHoare = refl
