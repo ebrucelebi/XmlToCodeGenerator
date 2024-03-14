@@ -106,11 +106,11 @@ statementListToCondition a [] = a
 statementListToCondition a (x ∷ xs) = statementListToCondition (a ∧ (statementToCondition a x)) xs
 
 statementListToHoareTriplets : Condition -> List StatementType -> List (HoareTriplet String)
-statementListToHoareTriplets a [] = (< a > (statementToString EmptyStatement) < false >) ∷ [] -- Should not come here
+statementListToHoareTriplets a [] = (⟪ a ⟫ (statementToString EmptyStatement) ⟪ false ⟫) ∷ [] -- Should not come here
 statementListToHoareTriplets a (x ∷ []) = let pC = (a ∧ (statementToCondition a x)) in 
-                                    < a > (statementToString x) < pC > ∷ []
+                                    ⟪ a ⟫ (statementToString x) ⟪ pC ⟫ ∷ []
 statementListToHoareTriplets a (x ∷ xs) = let pC = (a ∧ (statementToCondition a x)) in 
-                                    < a > (statementToString x) < pC > ∷ (statementListToHoareTriplets pC xs)
+                                    ⟪ a ⟫ (statementToString x) ⟪ pC ⟫ ∷ (statementListToHoareTriplets pC xs)
 
 testAnn : Condition
 testAnn = Defined (var "In1") ∧

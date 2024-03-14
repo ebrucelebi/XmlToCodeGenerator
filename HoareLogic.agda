@@ -2,6 +2,8 @@
 
 module HoareLogic where
 
+open import utility
+
 open import Data.List
 open import Data.Maybe
 open import Data.Bool hiding (_<_; _∧_)
@@ -13,17 +15,17 @@ data Var : Set where
     var_ : String -> Var
 
 data Annotation : Set where
-    _+_ : Annotation -> Annotation -> Annotation
-    _-_ : Annotation -> Annotation -> Annotation
-    _*_ : Annotation -> Annotation -> Annotation
-    _/_ : Annotation -> Annotation -> Annotation
-    -_ : Annotation -> Annotation
+    _+_  : Annotation -> Annotation -> Annotation
+    _-_  : Annotation -> Annotation -> Annotation
+    _*_  : Annotation -> Annotation -> Annotation
+    _/_  : Annotation -> Annotation -> Annotation
+    -_   : Annotation -> Annotation
     _&&_ : Annotation -> Annotation -> Annotation
-    !_ : Annotation -> Annotation
+    !_   : Annotation -> Annotation
     _||_ : Annotation -> Annotation -> Annotation
-    _^_ : Annotation -> Annotation -> Annotation
-    _&_ : Annotation -> Annotation -> Annotation
-    ~_ : Annotation -> Annotation
+    _^_  : Annotation -> Annotation -> Annotation
+    _&_  : Annotation -> Annotation -> Annotation
+    ~_   : Annotation -> Annotation
     _|b_ : Annotation -> Annotation -> Annotation
     _<<_ : Annotation -> Annotation -> Annotation
     _>>_ : Annotation -> Annotation -> Annotation
@@ -31,8 +33,8 @@ data Annotation : Set where
     _==_ : Annotation -> Annotation -> Annotation
     _>=_ : Annotation -> Annotation -> Annotation
     _<=_ : Annotation -> Annotation -> Annotation
-    _>_ : Annotation -> Annotation -> Annotation
-    _<_ : Annotation -> Annotation -> Annotation
+    _>_  : Annotation -> Annotation -> Annotation
+    _<_  : Annotation -> Annotation -> Annotation
     const_ : ℕ -> Annotation
     var_ : String -> Annotation
 
@@ -48,7 +50,32 @@ data Condition : Set where
     -- _∨_ : Condition -> Condition -> Condition
 
 data HoareTriplet {a} (A : Set a): Set a where
-    <_>_<_> : Condition -> A -> Condition -> HoareTriplet A
+    ⟪_⟫_⟪_⟫ : Condition -> A -> Condition -> HoareTriplet A
+
+_≟A_ : Annotation -> Annotation -> Bool
+_≟A_ (const n1) (const n2) = n1 ==ℕ n2
+_≟A_ (var v1) (var v2) = v1 Data.String.== v2
+_≟A_ (_+_  a1 a2) (_+_  a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
+_≟A_ (_-_  a1 a2) (_-_  a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
+_≟A_ (_*_  a1 a2) (_*_  a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
+_≟A_ (_/_  a1 a2) (_/_  a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
+_≟A_ (-_   a1)    (-_   a3)    = (a1 ≟A a3)
+_≟A_ (_&&_ a1 a2) (_&&_ a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
+_≟A_ (!_   a1)    (!_   a3)    = (a1 ≟A a3)
+_≟A_ (_||_ a1 a2) (_||_ a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
+_≟A_ (_^_  a1 a2) (_^_  a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
+_≟A_ (_&_  a1 a2) (_&_  a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
+_≟A_ (~_   a1)    (~_   a3)    = (a1 ≟A a3)
+_≟A_ (_|b_ a1 a2) (_|b_ a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
+_≟A_ (_<<_ a1 a2) (_<<_ a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
+_≟A_ (_>>_ a1 a2) (_>>_ a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
+_≟A_ (_!=_ a1 a2) (_!=_ a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
+_≟A_ (_==_ a1 a2) (_==_ a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
+_≟A_ (_>=_ a1 a2) (_>=_ a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
+_≟A_ (_<=_ a1 a2) (_<=_ a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
+_≟A_ (_>_  a1 a2) (_>_  a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
+_≟A_ (_<_  a1 a2) (_<_  a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
+_≟A_ _ _ = false
 
 infix 4 _≟C_
 _≟C_ : Condition -> Condition -> Bool
@@ -57,6 +84,7 @@ false               ≟C false                = true
 Defined (var n1)    ≟C Defined (var n2)     = n1 Data.String.== n2
 (c1 ∧ c2)           ≟C c3                   = (c1 ≟C c3) Data.Bool.∨ (c2 ≟C c3)
 c1                  ≟C (c2 ∧ c3)            = (c1 ≟C c2) Data.Bool.∨ (c1 ≟C c3)
+(var n1) :=: a1     ≟C (var n2) :=: a2      = (n1 Data.String.== n2) Data.Bool.∧ (a1 ≟A a2)
 _                   ≟C _                    = false
 
 containsVar : List Var -> Var -> Bool
