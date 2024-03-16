@@ -32,10 +32,11 @@ mutual
     ... | true = just (me ∷ []) -- Cycle
     ... | false with getBaseModelProperties me -- It should have properties if it is not a connection.
     ... | nothing = nothing -- Should not come here. If that's the case load is wrong.
-    ... | just (Properties _ _ [] _) = just (me ∷ []) -- No input connections. Path ends here.
-    ... | just (Properties _ _ inConIds _) with findModelElementsInModelWithID m inConIds -- Find model elements ofinput connections
-    ... | nothing = nothing
-    ... | just inCons with topologicalListAlt m (me ∷ seen) n inCons -- Continue to the path with input connections.
+    ... | just (Properties _ _ [] _ []) = just (me ∷ []) -- No input connections. Path ends here.
+    ... | just (Properties _ _ inConIds _ condConIds) with findModelElementsInModelWithID m condConIds | findModelElementsInModelWithID m inConIds -- Find model elements ofinput connections
+    ... | nothing | _ = nothing
+    ... | _ | nothing = nothing
+    ... | just inCons | just condCons with topologicalListAlt m (me ∷ seen) n (inCons Data.List.++ condCons) -- Continue to the path with input connections.
     ... | nothing = nothing
     ... | just ts = just (me ∷ ts) -- Add current model at the beginning of the order.
 
@@ -86,10 +87,11 @@ addEdges m ((context me l) & dag) with addEdges m dag
 ... | nothing = nothing
 ... | just newDag with getBaseModelProperties me
 ... | nothing = nothing
-... | just (Properties _ _ [] _) = just ((context me l) & newDag)
-... | just (Properties _ _ inConIds _) with findModelElementsInModelWithID m inConIds
-... | nothing = nothing
-... | just inCons with createEdges m inCons dag
+... | just (Properties _ _ [] _ []) = just ((context me l) & newDag)
+... | just (Properties _ _ inConIds _ condConIds) with findModelElementsInModelWithID m condConIds | findModelElementsInModelWithID m inConIds -- Find model elements ofinput connections
+... | nothing | _ = nothing
+... | _ | nothing = nothing
+... | just inCons | just condCons with createEdges m (inCons Data.List.++ condCons) dag
 ... | nothing = nothing
 ... | just es  = just ((context me es) & newDag)
 

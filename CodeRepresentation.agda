@@ -43,6 +43,7 @@ data Code : Set where
 data StatementType : Set where
     EmptyStatement : StatementType
     Statement : String -> Code -> StatementType
+    IfStatement : Code -> List StatementType -> List StatementType -> StatementType
 
 joinToExpression : List String -> Oper -> Code
 joinToExpression [] _ = Variable "" -- Should not come here
@@ -78,13 +79,25 @@ codeToString (Expression l o r) = codeToString l ++ " " ++ operationToString o +
 codeToString (LeftExpression l o) = codeToString l ++ " " ++ operationToString o
 codeToString (RightExpression o r) = operationToString o ++ " " ++ codeToString r
 
-statementToString : StatementType -> String
-statementToString EmptyStatement = ""
-statementToString (Statement v c) = (v ++ " = " ++ codeToString c ++ ";")
+indent : List String -> List String
+indent [] = []
+indent (x ∷ xs) = ("    " Data.String.++ x) ∷ indent xs
 
-statementListToString : List StatementType -> List String
-statementListToString [] = []
-statementListToString (x ∷ xs) = statementToString x ∷ statementListToString xs
+encapsulateBraces : List String -> List String
+encapsulateBraces l = ("{" ∷ indent l) Data.List.++ ("}" ∷ [])
+
+mutual
+    statementToString : StatementType -> List String
+    statementToString EmptyStatement = "" ∷ []
+    statementToString (IfStatement c t f) = (("if (" ++ (codeToString c) ++ ")") ∷
+                                            (encapsulateBraces (statementListToString t))) Data.List.++
+                                            ("else" ∷
+                                            (encapsulateBraces (statementListToString f)))
+    statementToString (Statement v c) = (v ++ " = " ++ codeToString c ++ ";") ∷ []
+
+    statementListToString : List StatementType -> List String
+    statementListToString [] = []
+    statementListToString (x ∷ xs) = statementToString x Data.List.++ statementListToString xs
 
 codeToAnnotation : Code -> Annotation
 codeToAnnotation (Variable x) = var x
@@ -100,12 +113,13 @@ statementToCondition a EmptyStatement = a
 statementToCondition a (Statement x c) with replaceVars a (codeToAnnotation c)
 ... | just e = (var x) :=: e
 ... | nothing = false
+statementToCondition a (IfStatement _ _ _) = false
 
 statementListToCondition : Condition -> List StatementType -> Condition
 statementListToCondition a [] = a
 statementListToCondition a (x ∷ xs) = statementListToCondition (a ∧ (statementToCondition a x)) xs
 
-statementListToHoareTriplets : Condition -> List StatementType -> List (HoareTriplet String)
+statementListToHoareTriplets : Condition -> List StatementType -> List (HoareTriplet (List String))
 statementListToHoareTriplets a [] = (⟪ a ⟫ (statementToString EmptyStatement) ⟪ false ⟫) ∷ [] -- Should not come here
 statementListToHoareTriplets a (x ∷ []) = let pC = (a ∧ (statementToCondition a x)) in 
                                     ⟪ a ⟫ (statementToString x) ⟪ pC ⟫ ∷ []
@@ -123,7 +137,7 @@ exp = Expression (Variable "Input1") Addition (Variable "In2")
 denemeState : StatementType
 denemeState = Statement "Addition1" exp
 
-deneme : List (HoareTriplet String)
+deneme : List (HoareTriplet (List String))
 deneme = statementListToHoareTriplets testAnn (denemeState ∷ [])
 
 deneme2 : Maybe Annotation

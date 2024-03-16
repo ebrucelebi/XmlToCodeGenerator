@@ -6,6 +6,7 @@
         <model path="hasCycle.mdlx" hash=""/>
         <model path="hasCycle2.mdlx" hash=""/>
         <model path="doubleOutput.mdlx" hash=""/>
+        <model path="ifExample.mdlx" hash=""/>
     </submodels>
     <types path="Types.typx"/>
     <constants path="Constants.constx"/>
@@ -16,6 +17,6 @@
     <configurations>
         <configuration path="ExampleIMODESave.confx"/>
     </configurations>
-    <version modifiedVer="0.011.6701" createdVer="0.011.6701"/>
+    <version createdVer="0.011.6701" modifiedVer="0.011.6701"/>
     <requirement reqCounter="0"/>
 </project>

@@ -124,6 +124,16 @@ createProject : Maybe String -> Maybe (List Type) ->  Maybe (List Interface) -> 
 createProject (just n) (just ts) (just is) (just cs) (just fs) = just record { name = n ; subModels = fs ; types = ts ; interfaces = is ; constants = cs}
 createProject _ _ _ _ _ = nothing
 
+readCondConnectionIds : List XmlElement -> Maybe (List String)
+readCondConnectionIds [] = just []
+readCondConnectionIds ((Element "conditionConnection" as _) ∷ xs) with readCondConnectionIds xs | getAttributeValue as "connectedTo"
+... | just condConIds | just id = just (id ∷ condConIds)
+... | _ | _ = nothing
+readCondConnectionIds _ = nothing
+
+readCondConnections : Maybe XmlElement -> Maybe (List String)
+readCondConnections (just (Element "conditionConnections" _ es)) = readCondConnectionIds es
+readCondConnections _ = nothing
 
 readInputConnectionIds : List XmlElement -> Maybe (List String)
 readInputConnectionIds [] = just []
@@ -152,8 +162,8 @@ readOutputConnections _ = nothing
 
 
 createBasicOpModelElement : String -> String -> String -> List XmlElement -> Maybe ModelElement
-createBasicOpModelElement hash n id es with readInputConnections (getElement es "inputConnections") | readOutputConnections (getElement es "outputConnections")
-... | just inCons | just outCons with Properties n id inCons outCons
+createBasicOpModelElement hash n id es with readInputConnections (getElement es "inputConnections") | readOutputConnections (getElement es "outputConnections") | readCondConnections (getElement es "conditionConnections")
+... | just inCons | just outCons | just condCons with Properties n id inCons outCons condCons
 ... | p with hash
 ... | "955ca6d568f93954497d59e165f9fa9b" = just (Addition p)
 ... | "f8806a128e6f1a8d41cfa9b5f0f38f82" = just (Modulo p)
@@ -180,8 +190,9 @@ createBasicOpModelElement hash n id es with readInputConnections (getElement es 
 ... | "e2cdc9d4a7472ccc00f1700972004d71" = just (LessThanEqual p)
 ... | "c43404828b6fb52b32bbfe69adde0b63" = just (StrictlyGreaterThan p)
 ... | "10c8829be556be2c9869269b7d3782c2" = just (StrictlyLessThan p)
+... | "4fa6a2c3bb81b810e11c467a111b4a7a" = just (If p)
 ... | _ = nothing
-createBasicOpModelElement hash n id es | _ | _ = nothing
+createBasicOpModelElement hash n id es | _ | _ | _ = nothing
 
 
 createInput : String -> String -> List XmlElement -> Maybe ModelElement
@@ -193,7 +204,7 @@ createInput n id es | just e | just (Element _ as _) with getAttributeValue as "
 createInput n id es | just e | _ = nothing
 createInput n id es | nothing with getElement es "copyOf"
 createInput n id es | nothing | just (Element _ as _) with getAttributeValue as "value" | readOutputConnections (getElement es "outputConnections")
-...                                                   | just sourceId | just outCons = just (InputInstance (Properties n id [] outCons) sourceId)
+...                                                   | just sourceId | just outCons = just (InputInstance (Properties n id [] outCons []) sourceId)
 ...                                                   | _ | _ = nothing
 createInput n id es | nothing | _ = nothing
 
@@ -207,7 +218,7 @@ createOutput n id es | just e | just (Element _ as _) with getAttributeValue as 
 createOutput n id es | just e | _ = nothing
 createOutput n id es | nothing with getElement es "copyOf"
 createOutput n id es | nothing | just (Element _ as _) with getAttributeValue as "value" | readInputConnections (getElement es "inputConnections")
-...                                                    | just sourceId | just inCons = just (OutputInstance (Properties n id inCons []) sourceId)
+...                                                    | just sourceId | just inCons = just (OutputInstance (Properties n id inCons [] []) sourceId)
 ...                                                    | _ | _ = nothing
 createOutput n id es | nothing | _ = nothing
 
@@ -218,7 +229,6 @@ createConnection n id es with getElement es "startOperation" | getElement es "en
 ... | just startOpId | just endOpId = just (Connection n id startOpId endOpId)
 ... | _ | _ = nothing
 createConnection n id e | _ | _ = nothing
-
 
 createModelElement : XmlElement -> Maybe ModelElement
 createModelElement (Element "model" as es) with getAttributeValue as "name" | getAttributeValue as "id"

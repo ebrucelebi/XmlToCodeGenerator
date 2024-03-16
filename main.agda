@@ -15,7 +15,7 @@ open import Data.Maybe
 main : CodeGenerationResult
 main = checkAndGenerateCode readIMODEFiles "logicModel1"
 
-deneme : Maybe Model
-deneme with readIMODEFiles
+deneme : String -> Maybe Model
+deneme s with readIMODEFiles
 ... | nothing = nothing
-... | just p = findModelInProjectWithName p "doubleOutput"
+... | just p = findModelInProjectWithName p s

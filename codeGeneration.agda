@@ -68,6 +68,7 @@ getOutputType i m (context (GreaterThanEqual _) edges & dag) = iBool
 getOutputType i m (context (LessThanEqual _) edges & dag) = iBool
 getOutputType i m (context (StrictlyGreaterThan _) edges & dag) = iBool
 getOutputType i m (context (StrictlyLessThan _) edges & dag) = iBool
+getOutputType (suc i) m (context (If _) (e1 ∷ e2 ∷ es) & dag) = getOutputType i m (getEdgeDestination dag e2) -- e1 is condition
 getOutputType _ _ _ = iNone
 
 mutual
@@ -241,6 +242,13 @@ mutual
                                                                         (Expression (Variable (generateIdentifierAtEdge p m edges 0 dag))
                                                                                     StrictlyLessThan
                                                                                     (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ []
+                                  
+    generateIfMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateIfMain p m (context me edges) dag = IfStatement (Variable (generateIdentifierAtEdge p m edges 0 dag))
+                                                            ((Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                        (Variable (generateIdentifierAtEdge p m edges 1 dag))) ∷ [])
+                                                            ((Statement (generateIdentifierContext p m (context me edges) dag)
+                                                                        (Variable (generateIdentifierAtEdge p m edges 2 dag))) ∷ []) ∷ []
 
     generateModelElementMain : ∀ {n} -> ModelElement -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
     generateModelElementMain (OutputInstance _ _) p m c dag = generateOutputMain p m c dag
@@ -269,12 +277,15 @@ mutual
     generateModelElementMain (LessThanEqual _) p m c dag = generateLessThanEqualMain p m c dag
     generateModelElementMain (StrictlyGreaterThan _) p m c dag = generateStrictlyGreaterThanMain p m c dag
     generateModelElementMain (StrictlyLessThan _) p m c dag = generateStrictlyLessThanMain p m c dag
+    generateModelElementMain (If _) p m c dag = generateIfMain p m c dag
     generateModelElementMain _ p m c dag = []
 
     generateModelElement : ∀ {n} -> Project -> Model -> CodeSection -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateModelElement    p m Identifier  (context me edges) dag = (getModelElementName me) ∷ []
-    generateModelElement{n} p m Declaration c                  dag = (getStringFromType (getOutputType n m (c & dag)) ++ " " ++ (generateIdentifierContext p m c dag) ++ ";") ∷ []
-    generateModelElement    p m Main        (context me edges) dag = statementListToString (generateModelElementMain me p m (context me edges) dag)
+    generateModelElement    p m Identifier  (context me edges)                   dag = (getModelElementName me) ∷ []
+    generateModelElement{n} p m Declaration (context (InputInstance _ _) edges)  dag = []
+    generateModelElement{n} p m Declaration (context (OutputInstance _ _) edges) dag = []
+    generateModelElement{n} p m Declaration c                                    dag = (getStringFromType (getOutputType n m (c & dag)) ++ " " ++ (generateIdentifierContext p m c dag) ++ ";") ∷ []
+    generateModelElement    p m Main        (context me edges)                   dag = statementListToString (generateModelElementMain me p m (context me edges) dag)
 
 -- Go over DAG and call generate section code for the model element.
 -- DAG is already ordered so that all necessary codes for a model element are generated before its own code.
@@ -319,7 +330,7 @@ generateModelCodeCondition p (Operation n ins outs sms) with (createDAG (Operati
                                   (generateModelElementsStatementList p (Operation n ins outs sms) dag))
         (getOutputVars outs))
 
-generateModelCodeHoareTriplets : Project -> Model -> Maybe (List (HoareTriplet String))
+generateModelCodeHoareTriplets : Project -> Model -> Maybe (List (HoareTriplet (List String)))
 generateModelCodeHoareTriplets p (Operation n ins outs sms) with (createDAG (Operation n ins outs sms))
 ... | nothing = nothing
 ... | just dag = just (statementListToHoareTriplets (getInputsCondition ins) (generateModelElementsStatementList p (Operation n ins outs sms) dag))
@@ -336,14 +347,14 @@ generateMultiplicationAnnotation (x ∷ []) = var x
 generateMultiplicationAnnotation (x ∷ xs) = (var x) * generateMultiplicationAnnotation xs
 
 generateModelElementAnnotation : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> Annotation
-generateModelElementAnnotation p m (context (Addition (Properties n _ _ _)) edges) dag = generateAdditionAnnotation (generateIdentifierEdges p m edges dag)
-generateModelElementAnnotation p m (context (Multiplication (Properties n _ _ _)) edges) dag = generateMultiplicationAnnotation (generateIdentifierEdges p m edges dag)
-generateModelElementAnnotation p m (context (OutputInstance (Properties n _ _ _) _) edges) dag = (var (generateIdentifierAtEdge p m edges 0 dag))
+generateModelElementAnnotation p m (context (Addition (Properties n _ _ _ _)) edges) dag = generateAdditionAnnotation (generateIdentifierEdges p m edges dag)
+generateModelElementAnnotation p m (context (Multiplication (Properties n _ _ _ _)) edges) dag = generateMultiplicationAnnotation (generateIdentifierEdges p m edges dag)
+generateModelElementAnnotation p m (context (OutputInstance (Properties n _ _ _ _) _) edges) dag = (var (generateIdentifierAtEdge p m edges 0 dag))
 generateModelElementAnnotation _ _ _ _ = var ""
 
 generateAnnotation : ∀ {n} -> Project -> Model -> ModelDAG n -> Condition
 generateAnnotation p m ∅ = true
-generateAnnotation p m ((context (InputInstance (Properties n _ _ _) _) edges) & dag) = generateAnnotation p m dag ∧ Defined (var n)
+generateAnnotation p m ((context (InputInstance (Properties n _ _ _ _) _) edges) & dag) = generateAnnotation p m dag ∧ Defined (var n)
 generateAnnotation p m ((context me edges) & dag) with generateAnnotation p m dag
 ... | c with replaceVars c (generateModelElementAnnotation p m (context me edges) dag)
 ... | nothing = false
@@ -369,7 +380,10 @@ checkAndGenerateCode p n with checkProject p | p
 denemeGen : CodeGenerationResult
 denemeGen = generateModel (project "" [] [] [] []) doubleOutputModel
 
-denemeHoare : Maybe (List (HoareTriplet String))
+denemeGen2 : CodeGenerationResult
+denemeGen2 = generateModel (project "" [] [] [] []) ifExample
+
+denemeHoare : Maybe (List (HoareTriplet (List String)))
 denemeHoare = generateModelCodeHoareTriplets (project "" [] [] [] []) doubleOutputModel
 
 denemeCodeCond : Maybe Condition
