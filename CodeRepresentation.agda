@@ -4,7 +4,7 @@ module CodeRepresentation where
 
 open import HoareLogic
 
-open import Data.Bool hiding (_∧_)
+open import Data.Bool hiding (_∧_; _∨_)
 open import Data.String
 open import Data.Maybe
 open import Data.List hiding (_++_)
@@ -105,19 +105,23 @@ codeToAnnotation (Expression c1 Addition c2) = (codeToAnnotation c1) + (codeToAn
 codeToAnnotation (Expression c1 Subtraction c2) = (codeToAnnotation c1) - (codeToAnnotation c2)
 codeToAnnotation (Expression c1 Multiplication c2) = (codeToAnnotation c1) * (codeToAnnotation c2)
 codeToAnnotation (Expression c1 Division c2) = (codeToAnnotation c1) / (codeToAnnotation c2)
+codeToAnnotation (Expression c1 StrictlyGreaterThan c2) = (codeToAnnotation c1) > (codeToAnnotation c2)
 codeToAnnotation _ = const 0
 
-statementToCondition : Condition -> StatementType -> Condition
-statementToCondition false _ = false
-statementToCondition a EmptyStatement = a
-statementToCondition a (Statement x c) with replaceVars a (codeToAnnotation c)
-... | just e = (var x) :=: e
-... | nothing = false
-statementToCondition a (IfStatement _ _ _) = false
+mutual
+    statementToCondition : Condition -> StatementType -> Condition
+    statementToCondition false _ = false
+    statementToCondition a EmptyStatement = a
+    statementToCondition a (Statement x c) with replaceVars a (codeToAnnotation c)
+    ... | just e = (var x) :=: e
+    ... | nothing = false
+    statementToCondition a (IfStatement c t f) with replaceVars a (codeToAnnotation c)
+    ... | just cc = (statementListToCondition a (cc :=: true) t) ∨ (statementListToCondition a (cc :=: false) f)
+    ... | nothing = false
 
-statementListToCondition : Condition -> List StatementType -> Condition
-statementListToCondition a [] = a
-statementListToCondition a (x ∷ xs) = statementListToCondition (a ∧ (statementToCondition a x)) xs
+    statementListToCondition : Condition -> Condition -> List StatementType -> Condition
+    statementListToCondition a1 a2 [] = a2
+    statementListToCondition a1 a2 (x ∷ xs) = let a3 = (statementToCondition a1 x) in statementListToCondition (a1 ∧ a3) (a2 ∧ a3) xs
 
 statementListToHoareTriplets : Condition -> List StatementType -> List (HoareTriplet (List String))
 statementListToHoareTriplets a [] = (⟪ a ⟫ (statementToString EmptyStatement) ⟪ false ⟫) ∷ [] -- Should not come here
@@ -145,3 +149,23 @@ deneme2 = replaceVars testAnn (codeToAnnotation exp)
 
 deneme3 : Maybe Annotation
 deneme3 = replaceVars testAnn ((var "Input1") + (var "In2"))  
+
+denemeIf : List StatementType
+denemeIf = (Statement "Addition6"
+ (Expression (Variable "Input1") Addition (Variable "Input2"))
+ ∷
+ Statement "Subtraction1"
+ (Expression (Variable "Input1") Subtraction (Variable "Input2"))
+ ∷
+ Statement "StrictlyGreaterThan1"
+ (Expression (Variable "Input1") StrictlyGreaterThan
+  (Variable "Input2"))
+ ∷
+ IfStatement (Variable "StrictlyGreaterThan1")
+ (Statement "If1" (Variable "Subtraction1") ∷ [])
+ (Statement "If1" (Variable "Addition6") ∷ [])
+ ∷ Statement "Output" (Variable "If1") ∷ [])
+
+denemeIfCond : Condition
+denemeIfCond = statementListToCondition ((Defined (var "Input1")) ∧ (Defined (var "Input2"))) ((Defined (var "Input1")) ∧ (Defined (var "Input2"))) denemeIf
+  

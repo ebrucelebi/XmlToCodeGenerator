@@ -326,7 +326,7 @@ generateModelCodeCondition p (Operation n ins outs sms) with (createDAG (Operati
 ... | nothing = nothing
 ... | just dag = just (
     weaken 
-        (statementListToCondition (getInputsCondition ins)
+        (statementListToCondition (getInputsCondition ins) (getInputsCondition ins)
                                   (generateModelElementsStatementList p (Operation n ins outs sms) dag))
         (getOutputVars outs))
 
@@ -388,6 +388,9 @@ denemeHoare = generateModelCodeHoareTriplets (project "" [] [] [] []) doubleOutp
 
 denemeCodeCond : Maybe Condition
 denemeCodeCond = generateModelCodeCondition (project "" [] [] [] []) doubleOutputModel
+
+-- denemeCodeCond2 : Maybe (List StatementType)
+-- denemeCodeCond2 = generateModelCodeCondition (project "" [] [] [] []) ifExample
 
 denemeDAGCond : Maybe Condition
 denemeDAGCond = generateModelDAGAnnotations (project "" [] [] [] []) doubleOutputModel

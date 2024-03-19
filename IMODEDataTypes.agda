@@ -427,12 +427,12 @@ ifExample = (Operation "ifExample"
   Input "Input2" "1710592245120_18" iInt16 ∷ [])
  (Output "Output" "1710592289986_12" iInt16 ∷ [])
  (InputInstance
-  (Properties "_Copy0Input1" "1710592239427_15" []
+  (Properties "Input1" "1710592239427_15" []
    ((0 , "1710592252981_21") ∷ []) [])
   "1710592239485_16"
   ∷
   InputInstance
-  (Properties "_Copy0Input2" "1710592245044_17" []
+  (Properties "Input2" "1710592245044_17" []
    ((0 , "1710592253797_22") ∷ []) [])
   "1710592245120_18"
   ∷
@@ -456,12 +456,12 @@ ifExample = (Operation "ifExample"
   "1710592255112_1"
   ∷
   InputInstance
-  (Properties "Input1_1" "1710592265198_19" []
+  (Properties "Input1" "1710592265198_19" []
    ((0 , "1710592279296_27") ∷ []) [])
   "1710592239485_16"
   ∷
   InputInstance
-  (Properties "Input2_1" "1710592266085_20" []
+  (Properties "Input2" "1710592266085_20" []
    ((0 , "1710592279930_28") ∷ []) [])
   "1710592245120_18"
   ∷
@@ -471,12 +471,12 @@ ifExample = (Operation "ifExample"
    ((0 , "1710592275621_26") ∷ []) [])
   ∷
   InputInstance
-  (Properties "Input1_1" "1710592272301_21" []
+  (Properties "Input1" "1710592272301_21" []
    ((0 , "1710592273829_24") ∷ []) [])
   "1710592239485_16"
   ∷
   InputInstance
-  (Properties "Input2_1" "1710592273211_22" []
+  (Properties "Input2" "1710592273211_22" []
    ((0 , "1710592274553_25") ∷ []) [])
   "1710592245120_18"
   ∷
@@ -504,7 +504,7 @@ ifExample = (Operation "ifExample"
   "1710592255112_1"
   ∷
   OutputInstance
-  (Properties "_Copy0Output" "1710592289927_11"
+  (Properties "Output" "1710592289927_11"
    ("1710592290399_30" ∷ []) [] [])
   "1710592289986_12"
   ∷

@@ -6,7 +6,7 @@ open import utility
 
 open import Data.List
 open import Data.Maybe
-open import Data.Bool hiding (_<_; _∧_)
+open import Data.Bool hiding (_<_; _∧_; _∨_)
 open import Data.Nat hiding (_+_; _*_; _^_; _>_; _<_)
 open import Data.String hiding (_==_; _<_)
 open import Agda.Builtin.Equality
@@ -37,6 +37,8 @@ data Annotation : Set where
     _<_  : Annotation -> Annotation -> Annotation
     const_ : ℕ -> Annotation
     var_ : String -> Annotation
+    true : Annotation
+    false : Annotation
 
 infixr 5 _∧_
 infixr 6 _:=:_
@@ -45,9 +47,9 @@ data Condition : Set where
     true : Condition
     false : Condition
     Defined_ : Var -> Condition
-    _:=:_ : Var -> Annotation -> Condition -- Equality predicate
+    _:=:_ : Annotation -> Annotation -> Condition -- Equality predicate
     _∧_ : Condition -> Condition -> Condition
-    -- _∨_ : Condition -> Condition -> Condition
+    _∨_ : Condition -> Condition -> Condition
 
 data HoareTriplet {a} (A : Set a): Set a where
     ⟪_⟫_⟪_⟫ : Condition -> A -> Condition -> HoareTriplet A
@@ -84,14 +86,10 @@ false               ≟C false                = true
 Defined (var n1)    ≟C Defined (var n2)     = n1 Data.String.== n2
 (c1 ∧ c2)           ≟C c3                   = (c1 ≟C c3) Data.Bool.∨ (c2 ≟C c3)
 c1                  ≟C (c2 ∧ c3)            = (c1 ≟C c2) Data.Bool.∨ (c1 ≟C c3)
-(var n1) :=: a1     ≟C (var n2) :=: a2      = (n1 Data.String.== n2) Data.Bool.∧ (a1 ≟A a2)
+(c1 ∨ c2)           ≟C c3                   = (c1 ≟C c3) Data.Bool.∨ (c2 ≟C c3)
+c1                  ≟C (c2 ∨ c3)            = (c1 ≟C c2) Data.Bool.∨ (c1 ≟C c3)
+a1 :=: a2           ≟C a3 :=: a4            = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
 _                   ≟C _                    = false
-
-containsVar : List Var -> Var -> Bool
-containsVar [] _ = false
-containsVar ((var x) ∷ xs) (var y) with x Data.String.== y
-... | true = true
-... | false = containsVar xs (var y)
 
 replaceVar : Condition -> Var -> Maybe Annotation
 replaceVar (Defined (var x)) (var v) with x Data.String.== v
@@ -113,12 +111,25 @@ replaceVars a (e1 + e2) with replaceVars a e1 | replaceVars a e2
 replaceVars a (e1 * e2) with replaceVars a e1 | replaceVars a e2
 ... | just e1' | just e2' = just (e1' * e2')
 ... | _ | _ = nothing
+replaceVars a (e1 - e2) with replaceVars a e1 | replaceVars a e2
+... | just e1' | just e2' = just (e1' - e2')
+... | _ | _ = nothing
+replaceVars a (e1 > e2) with replaceVars a e1 | replaceVars a e2
+... | just e1' | just e2' = just (e1' > e2')
+... | _ | _ = nothing
 replaceVars _ e = nothing
 
+shouldRemove : (varListToNotRemove : List Var) -> Annotation -> Bool
+shouldRemove [] _ = true
+shouldRemove ((var x) ∷ xs) (var y) with x Data.String.== y
+... | false = false
+... | true = shouldRemove xs (var y)
+shouldRemove _ y = false -- It is not a signle variable at the left side. Do not remove.
+
 weaken : Condition -> List Var -> Condition
-weaken (v :=: a) vs with containsVar vs v
-... | true = (v :=: a)
-... | false = true
+weaken (v :=: a) vs with shouldRemove vs v
+... | false = (v :=: a)
+... | true = true
 weaken (c1 ∧ c2) vs with weaken c1 vs | weaken c2 vs
 ... | false | wc2 = false
 ... | wc1 | false = false
