@@ -111,61 +111,18 @@ codeToAnnotation _ = const 0
 mutual
     statementToCondition : Condition -> StatementType -> Condition
     statementToCondition false _ = false
-    statementToCondition a EmptyStatement = a
-    statementToCondition a (Statement x c) with replaceVars a (codeToAnnotation c)
-    ... | just e = (var x) :=: e
-    ... | nothing = false
-    statementToCondition a (IfStatement c t f) with replaceVars a (codeToAnnotation c)
-    ... | just cc = (statementListToCondition a (cc :=: true) t) ∨ (statementListToCondition a (cc :=: false) f)
-    ... | nothing = false
+    statementToCondition a EmptyStatement = true
+    statementToCondition a (Statement x c) = (var x) :=: codeToAnnotation c
+    statementToCondition a (IfStatement c t f) = let cc = codeToAnnotation c in
+     (statementListToCondition a (cc :=: true) t) ∨ (statementListToCondition a (cc :=: false) f)
 
     statementListToCondition : Condition -> Condition -> List StatementType -> Condition
     statementListToCondition a1 a2 [] = a2
-    statementListToCondition a1 a2 (x ∷ xs) = let a3 = (statementToCondition a1 x) in statementListToCondition (a1 ∧ a3) (a2 ∧ a3) xs
+    statementListToCondition a1 a2 (x ∷ xs) = let a3 = (replaceVarsInNewCondition a1 (statementToCondition a1 x)) in statementListToCondition (a1 ∧ a3) (a2 ∧ a3) xs
 
 statementListToHoareTriplets : Condition -> List StatementType -> List (HoareTriplet (List String))
 statementListToHoareTriplets a [] = (⟪ a ⟫ (statementToString EmptyStatement) ⟪ false ⟫) ∷ [] -- Should not come here
-statementListToHoareTriplets a (x ∷ []) = let pC = (a ∧ (statementToCondition a x)) in 
+statementListToHoareTriplets a (x ∷ []) = let pC = (a ∧ replaceVarsInNewCondition a (statementToCondition a x)) in 
                                     ⟪ a ⟫ (statementToString x) ⟪ pC ⟫ ∷ []
-statementListToHoareTriplets a (x ∷ xs) = let pC = (a ∧ (statementToCondition a x)) in 
+statementListToHoareTriplets a (x ∷ xs) = let pC = (a ∧ replaceVarsInNewCondition a (statementToCondition a x)) in 
                                     ⟪ a ⟫ (statementToString x) ⟪ pC ⟫ ∷ (statementListToHoareTriplets pC xs)
-
-testAnn : Condition
-testAnn = Defined (var "In1") ∧
-          Defined (var "In2") ∧
-          (var "Input1") :=: (var "In1") + (var "In2")
-
-exp : Code
-exp = Expression (Variable "Input1") Addition (Variable "In2")
-
-denemeState : StatementType
-denemeState = Statement "Addition1" exp
-
-deneme : List (HoareTriplet (List String))
-deneme = statementListToHoareTriplets testAnn (denemeState ∷ [])
-
-deneme2 : Maybe Annotation
-deneme2 = replaceVars testAnn (codeToAnnotation exp)
-
-deneme3 : Maybe Annotation
-deneme3 = replaceVars testAnn ((var "Input1") + (var "In2"))  
-
-denemeIf : List StatementType
-denemeIf = (Statement "Addition6"
- (Expression (Variable "Input1") Addition (Variable "Input2"))
- ∷
- Statement "Subtraction1"
- (Expression (Variable "Input1") Subtraction (Variable "Input2"))
- ∷
- Statement "StrictlyGreaterThan1"
- (Expression (Variable "Input1") StrictlyGreaterThan
-  (Variable "Input2"))
- ∷
- IfStatement (Variable "StrictlyGreaterThan1")
- (Statement "If1" (Variable "Subtraction1") ∷ [])
- (Statement "If1" (Variable "Addition6") ∷ [])
- ∷ Statement "Output" (Variable "If1") ∷ [])
-
-denemeIfCond : Condition
-denemeIfCond = statementListToCondition ((Defined (var "Input1")) ∧ (Defined (var "Input2"))) ((Defined (var "Input1")) ∧ (Defined (var "Input2"))) denemeIf
-  

@@ -12,10 +12,10 @@ open import HoareLogic
 
 open import Data.String
 open import Data.Maybe
-open import Data.Bool hiding (_∧_)
+open import Data.Bool hiding (_∧_; _∨_)
 open import Data.Product
 open import Data.List hiding (concat; _++_)
-open import Data.Fin hiding (join; _+_)
+open import Data.Fin hiding (join; _+_; _-_;_>_; _<_)
 open import Data.Nat hiding (_+_; _*_; _^_; _>_; _<_)
 open import Data.Graph.Acyclic hiding(weaken)
 open import Agda.Builtin.Equality
@@ -317,9 +317,10 @@ getInputsCondition ((Input n _ _) ∷ []) = Defined (var n)
 getInputsCondition ((Input n _ _) ∷ xs) = (Defined (var n)) ∧ getInputsCondition xs
 getInputsCondition _ = false
 
-getOutputVars : List ModelElement -> List Var
-getOutputVars ((Output n _ _) ∷ xs) = (var n) ∷ getOutputVars xs
-getOutputVars _ = []
+getIOVars : List ModelElement -> List Var
+getIOVars ((Output n _ _) ∷ xs) = (var n) ∷ getIOVars xs
+getIOVars ((Input n _ _) ∷ xs) = (var n) ∷ getIOVars xs
+getIOVars _ = []
 
 generateModelCodeCondition : Project -> Model -> Maybe Condition
 generateModelCodeCondition p (Operation n ins outs sms) with (createDAG (Operation n ins outs sms))
@@ -328,7 +329,7 @@ generateModelCodeCondition p (Operation n ins outs sms) with (createDAG (Operati
     weaken 
         (statementListToCondition (getInputsCondition ins) (getInputsCondition ins)
                                   (generateModelElementsStatementList p (Operation n ins outs sms) dag))
-        (getOutputVars outs))
+        (getIOVars (ins Data.List.++ outs)))
 
 generateModelCodeHoareTriplets : Project -> Model -> Maybe (List (HoareTriplet (List String)))
 generateModelCodeHoareTriplets p (Operation n ins outs sms) with (createDAG (Operation n ins outs sms))
@@ -346,24 +347,33 @@ generateMultiplicationAnnotation [] = var ""
 generateMultiplicationAnnotation (x ∷ []) = var x
 generateMultiplicationAnnotation (x ∷ xs) = (var x) * generateMultiplicationAnnotation xs
 
-generateModelElementAnnotation : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> Annotation
-generateModelElementAnnotation p m (context (Addition (Properties n _ _ _ _)) edges) dag = generateAdditionAnnotation (generateIdentifierEdges p m edges dag)
-generateModelElementAnnotation p m (context (Multiplication (Properties n _ _ _ _)) edges) dag = generateMultiplicationAnnotation (generateIdentifierEdges p m edges dag)
-generateModelElementAnnotation p m (context (OutputInstance (Properties n _ _ _ _) _) edges) dag = (var (generateIdentifierAtEdge p m edges 0 dag))
-generateModelElementAnnotation _ _ _ _ = var ""
+generateModelElementCondition : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> Condition
+generateModelElementCondition p m (context (Addition (Properties n _ _ _ _)) edges) dag =
+    (var n) :=: generateAdditionAnnotation (generateIdentifierEdges p m edges dag)
+generateModelElementCondition p m (context (Multiplication (Properties n _ _ _ _)) edges) dag =
+    (var n) :=: generateMultiplicationAnnotation (generateIdentifierEdges p m edges dag)
+generateModelElementCondition p m (context (Subtraction (Properties n _ _ _ _)) edges) dag =
+    (var n) :=: (var (generateIdentifierAtEdge p m edges 0 dag)) - (var (generateIdentifierAtEdge p m edges 1 dag))
+generateModelElementCondition p m (context (StrictlyGreaterThan (Properties n _ _ _ _)) edges) dag =
+    (var n) :=: (var (generateIdentifierAtEdge p m edges 0 dag)) > (var (generateIdentifierAtEdge p m edges 1 dag))
+generateModelElementCondition p m (context (OutputInstance (Properties n _ _ _ _) _) edges) dag =
+    (var n) :=: (var (generateIdentifierAtEdge p m edges 0 dag))
+generateModelElementCondition p m (context (If (Properties n _ _ _ _)) edges) dag = let cond = (var (generateIdentifierAtEdge p m edges 0 dag)) in
+    (((cond :=: true) ∧ (var n) :=: var (generateIdentifierAtEdge p m edges 1 dag)) ∨
+     ((cond :=: false) ∧ (var n) :=: var (generateIdentifierAtEdge p m edges 2 dag)))
+generateModelElementCondition _ _ _ _ = false
 
-generateAnnotation : ∀ {n} -> Project -> Model -> ModelDAG n -> Condition
-generateAnnotation p m ∅ = true
-generateAnnotation p m ((context (InputInstance (Properties n _ _ _ _) _) edges) & dag) = generateAnnotation p m dag ∧ Defined (var n)
-generateAnnotation p m ((context me edges) & dag) with generateAnnotation p m dag
-... | c with replaceVars c (generateModelElementAnnotation p m (context me edges) dag)
-... | nothing = false
-... | just a = c ∧ (var (getModelElementName me )) :=: a
+generateCondition : ∀ {n} -> Project -> Model -> ModelDAG n -> Condition
+generateCondition p m ∅ = true
+generateCondition p m ((context (InputInstance (Properties n _ _ _ _) _) edges) & dag) = generateCondition p m dag ∧ Defined (var n)
+generateCondition p m ((context me edges) & dag) = let c = generateCondition p m dag in
+    c ∧ replaceVarsInNewCondition c (generateModelElementCondition p m (context me edges) dag)
 
-generateModelDAGAnnotations : Project -> Model -> Maybe Condition
-generateModelDAGAnnotations p (Operation n ins outs sms) with (createDAG (Operation n ins outs sms))
+generateModelDAGCondition : Project -> Model -> Maybe Condition
+generateModelDAGCondition p (Operation n ins outs sms) with (createDAG (Operation n ins outs sms))
 ... | nothing = nothing
-... | just dag = just (weaken (generateAnnotation p (Operation n ins outs sms) dag) (getOutputVars outs))
+... | just dag = just (weaken
+    (generateCondition p (Operation n ins outs sms) dag) (getIOVars (ins Data.List.++ outs)))
 
 -- To generate a code for the project, code generation should have a root model to start.
 generateCode : Project -> String -> CodeGenerationResult
@@ -389,16 +399,31 @@ denemeHoare = generateModelCodeHoareTriplets (project "" [] [] [] []) doubleOutp
 denemeCodeCond : Maybe Condition
 denemeCodeCond = generateModelCodeCondition (project "" [] [] [] []) doubleOutputModel
 
--- denemeCodeCond2 : Maybe (List StatementType)
--- denemeCodeCond2 = generateModelCodeCondition (project "" [] [] [] []) ifExample
+denemeCodeCond2 : Maybe Condition
+denemeCodeCond2 = generateModelCodeCondition (project "" [] [] [] []) ifExample
+
+denemeHoare2 : Maybe (List (HoareTriplet (List String)))
+denemeHoare2 = generateModelCodeHoareTriplets (project "" [] [] [] []) ifExample
 
 denemeDAGCond : Maybe Condition
-denemeDAGCond = generateModelDAGAnnotations (project "" [] [] [] []) doubleOutputModel
+denemeDAGCond = generateModelDAGCondition (project "" [] [] [] []) doubleOutputModel
+
+denemeDAGCond2 : Maybe Condition
+denemeDAGCond2 = generateModelDAGCondition (project "" [] [] [] []) ifExample
 
 checkResult : Bool
 checkResult with denemeCodeCond | denemeDAGCond
 ... | just c1 | just c2 = c1 ≟C c2
-... | _ | _ = false 
+... | _ | _ = false
+
+checkResult2 : Bool
+checkResult2 with denemeCodeCond2 | denemeDAGCond2
+... | just c1 | just c2 = c1 ≟C c2
+... | _ | _ = false
 
 testHoare : checkResult ≡ true
 testHoare = refl
+
+testHoare2 : checkResult2 ≡ true
+testHoare2 = refl
+ 

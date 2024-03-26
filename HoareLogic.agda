@@ -8,7 +8,7 @@ open import Data.List
 open import Data.Maybe
 open import Data.Bool hiding (_<_; _∧_; _∨_)
 open import Data.Nat hiding (_+_; _*_; _^_; _>_; _<_)
-open import Data.String hiding (_==_; _<_)
+open import Data.String hiding (_==_; _<_; _++_)
 open import Agda.Builtin.Equality
 
 data Var : Set where
@@ -55,6 +55,8 @@ data HoareTriplet {a} (A : Set a): Set a where
     ⟪_⟫_⟪_⟫ : Condition -> A -> Condition -> HoareTriplet A
 
 _≟A_ : Annotation -> Annotation -> Bool
+_≟A_ false false = true
+_≟A_ true true = true
 _≟A_ (const n1) (const n2) = n1 ==ℕ n2
 _≟A_ (var v1) (var v2) = v1 Data.String.== v2
 _≟A_ (_+_  a1 a2) (_+_  a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
@@ -84,59 +86,86 @@ _≟C_ : Condition -> Condition -> Bool
 true                ≟C true                 = true
 false               ≟C false                = true
 Defined (var n1)    ≟C Defined (var n2)     = n1 Data.String.== n2
-(c1 ∧ c2)           ≟C c3                   = (c1 ≟C c3) Data.Bool.∨ (c2 ≟C c3)
-c1                  ≟C (c2 ∧ c3)            = (c1 ≟C c2) Data.Bool.∨ (c1 ≟C c3)
-(c1 ∨ c2)           ≟C c3                   = (c1 ≟C c3) Data.Bool.∨ (c2 ≟C c3)
-c1                  ≟C (c2 ∨ c3)            = (c1 ≟C c2) Data.Bool.∨ (c1 ≟C c3)
+(c1 ∧ c2)           ≟C (c3 ∧ c4)            = (c1 ≟C c3) Data.Bool.∧ (c2 ≟C c4)
+(c1 ∨ c2)           ≟C (c3 ∨ c4)            = (c1 ≟C c3) Data.Bool.∧ (c2 ≟C c4)
 a1 :=: a2           ≟C a3 :=: a4            = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
 _                   ≟C _                    = false
 
-replaceVar : Condition -> Var -> Maybe Annotation
-replaceVar (Defined (var x)) (var v) with x Data.String.== v
-... | true = just (var x)
+findConditionForVar : Condition -> Var -> Maybe Condition
+findConditionForVar (Defined (var v1)) (var v2) with v1 Data.String.== v2
+... | true = just (Defined (var v1))
 ... | false = nothing
-replaceVar ((var x) :=: e) (var v) with x Data.String.== v
-... | true = just e
+findConditionForVar ((var v1) :=: a) (var v2) with v1 Data.String.== v2
+... | true = just ((var v1) :=: a)
 ... | false = nothing
-replaceVar (a1 ∧ a2) v with replaceVar a1 v
-... | just e1 = just e1
-... | nothing = replaceVar a2 v
-replaceVar _ _ = nothing
-
-replaceVars : Condition -> Annotation -> Maybe Annotation
-replaceVars a (var v) = replaceVar a (var v)
-replaceVars a (e1 + e2) with replaceVars a e1 | replaceVars a e2
-... | just e1' | just e2' = just (e1' + e2')
-... | _ | _ = nothing
-replaceVars a (e1 * e2) with replaceVars a e1 | replaceVars a e2
-... | just e1' | just e2' = just (e1' * e2')
-... | _ | _ = nothing
-replaceVars a (e1 - e2) with replaceVars a e1 | replaceVars a e2
-... | just e1' | just e2' = just (e1' - e2')
-... | _ | _ = nothing
-replaceVars a (e1 > e2) with replaceVars a e1 | replaceVars a e2
-... | just e1' | just e2' = just (e1' > e2')
-... | _ | _ = nothing
-replaceVars _ e = nothing
-
-shouldRemove : (varListToNotRemove : List Var) -> Annotation -> Bool
-shouldRemove [] _ = true
-shouldRemove ((var x) ∷ xs) (var y) with x Data.String.== y
-... | false = false
-... | true = shouldRemove xs (var y)
-shouldRemove _ y = false -- It is not a signle variable at the left side. Do not remove.
+findConditionForVar (c1 ∧ c2) v with findConditionForVar c1 v
+... | just c = just c
+... | nothing with findConditionForVar c2 v
+... | just c = just c
+... | nothing = nothing
+findConditionForVar (c1 ∨ c2) v with findConditionForVar c1 v
+... | just c = just (c1 ∨ c2)
+... | nothing with findConditionForVar c2 v
+... | just c = just (c1 ∨ c2)
+... | nothing = nothing
+findConditionForVar _ _ = nothing
 
 weaken : Condition -> List Var -> Condition
-weaken (v :=: a) vs with shouldRemove vs v
-... | false = (v :=: a)
-... | true = true
-weaken (c1 ∧ c2) vs with weaken c1 vs | weaken c2 vs
-... | false | wc2 = false
-... | wc1 | false = false
-... | true | wc2 = wc2
-... | wc1 | true = wc1
-... | wc1 | wc2 = wc1 ∧ wc2
-weaken c _ = c
+weaken c [] = true
+weaken c (v ∷ []) with findConditionForVar c v
+... | nothing = true
+... | just c1 = c1
+weaken c (v ∷ vs) with findConditionForVar c v
+... | nothing = weaken c vs
+... | just c1 = c1 ∧ weaken c vs
 
-a : Condition
-a = ((var "x") :=: (const 2)) ∧ ((var "y") :=: (const 1))
+replaceVarInAnnotation : Annotation -> Var -> Annotation -> Annotation
+replaceVarInAnnotation (var v1) (var v2) a with v1 Data.String.== v2
+... | true = a
+... | false = (var v1)
+replaceVarInAnnotation (_+_  a1 a2) v a3 = replaceVarInAnnotation a1 v a3 + replaceVarInAnnotation a2 v a3
+replaceVarInAnnotation (_-_  a1 a2) v a3 = replaceVarInAnnotation a1 v a3 - replaceVarInAnnotation a2 v a3
+replaceVarInAnnotation (_*_  a1 a2) v a3 = replaceVarInAnnotation a1 v a3 * replaceVarInAnnotation a2 v a3
+replaceVarInAnnotation (_/_  a1 a2) v a3 = replaceVarInAnnotation a1 v a3 / replaceVarInAnnotation a2 v a3
+replaceVarInAnnotation (-_   a1)    v a3 = - replaceVarInAnnotation a1 v a3 
+replaceVarInAnnotation (_&&_ a1 a2) v a3 = replaceVarInAnnotation a1 v a3 && replaceVarInAnnotation a2 v a3
+replaceVarInAnnotation (!_   a1)    v a3 = ! replaceVarInAnnotation a1 v a3 
+replaceVarInAnnotation (_||_ a1 a2) v a3 = replaceVarInAnnotation a1 v a3 || replaceVarInAnnotation a2 v a3
+replaceVarInAnnotation (_^_  a1 a2) v a3 = replaceVarInAnnotation a1 v a3 ^ replaceVarInAnnotation a2 v a3
+replaceVarInAnnotation (_&_  a1 a2) v a3 = replaceVarInAnnotation a1 v a3 & replaceVarInAnnotation a2 v a3
+replaceVarInAnnotation (~_   a1)    v a3 = ~ replaceVarInAnnotation a1 v a3 
+replaceVarInAnnotation (_|b_ a1 a2) v a3 = replaceVarInAnnotation a1 v a3 |b replaceVarInAnnotation a2 v a3
+replaceVarInAnnotation (_<<_ a1 a2) v a3 = replaceVarInAnnotation a1 v a3 << replaceVarInAnnotation a2 v a3
+replaceVarInAnnotation (_>>_ a1 a2) v a3 = replaceVarInAnnotation a1 v a3 >> replaceVarInAnnotation a2 v a3
+replaceVarInAnnotation (_!=_ a1 a2) v a3 = replaceVarInAnnotation a1 v a3 != replaceVarInAnnotation a2 v a3
+replaceVarInAnnotation (_==_ a1 a2) v a3 = replaceVarInAnnotation a1 v a3 == replaceVarInAnnotation a2 v a3
+replaceVarInAnnotation (_>=_ a1 a2) v a3 = replaceVarInAnnotation a1 v a3 >= replaceVarInAnnotation a2 v a3
+replaceVarInAnnotation (_<=_ a1 a2) v a3 = replaceVarInAnnotation a1 v a3 <= replaceVarInAnnotation a2 v a3
+replaceVarInAnnotation (_>_  a1 a2) v a3 = replaceVarInAnnotation a1 v a3 > replaceVarInAnnotation a2 v a3
+replaceVarInAnnotation (_<_  a1 a2) v a3 = replaceVarInAnnotation a1 v a3 < replaceVarInAnnotation a2 v a3
+replaceVarInAnnotation a _ _ = a
+
+replaceVarsInNewAnnotation : Condition -> Annotation -> Annotation
+replaceVarsInNewAnnotation (Defined (var v1)) a = a
+replaceVarsInNewAnnotation ((var v1) :=: a1) a2 = replaceVarInAnnotation a2 (var v1) a1
+-- replaceVarsInNewAnnotation ((a1 :=: true ∧ c1) ∨ (a2 :=: false ∧ c2)) a3 with replaceVarsInNewAnnotation c1 a3 | replaceVarsInNewAnnotation c2 a3
+-- ... | c13 | c23 with c13 ≟A c3 | c23 ≟A c3
+-- ... | true | true = a3
+-- ... | _ | _ = (a1 :=: true ∧ c13) ∨ (a2 :=: false ∧ c23)
+replaceVarsInNewAnnotation (c1 ∧ c2) a3 = replaceVarsInNewAnnotation c1 (replaceVarsInNewAnnotation c2 a3)
+-- replaceVarsInNewAnnotation preC ((a1 :=: true ∧ c1) ∨ (a2 :=: false ∧ c2)) = (a1 :=: true ∧ replaceVarsInNewCondition preC c1) ∨ (a2 :=: false ∧ replaceVarsInNewCondition preC c2)
+replaceVarsInNewAnnotation _ a = a
+
+replaceVarsInNewCondition : Condition -> Condition -> Condition
+replaceVarsInNewCondition true c = c
+replaceVarsInNewCondition (Defined (var v1)) c = c
+replaceVarsInNewCondition ((var v1) :=: a1) ((var v2) :=: a2) = (var v2) :=: replaceVarInAnnotation a2 (var v1) a1
+replaceVarsInNewCondition ((a1 :=: true ∧ c1) ∨ (a2 :=: false ∧ c2)) c3 with replaceVarsInNewCondition c1 c3 | replaceVarsInNewCondition c2 c3
+... | c13 | c23 with c13 ≟C c3 | c23 ≟C c3
+... | true | true = c3
+... | _ | _ = (a1 :=: true ∧ c13) ∨ (a2 :=: false ∧ c23)
+replaceVarsInNewCondition (c1 ∧ c2) c3 = replaceVarsInNewCondition c1 (replaceVarsInNewCondition c2 c3)
+replaceVarsInNewCondition preC ((a1 :=: true ∧ c1) ∨ (a2 :=: false ∧ c2)) =
+    (replaceVarsInNewAnnotation preC a1 :=: true ∧ replaceVarsInNewCondition preC c1) ∨
+    (replaceVarsInNewAnnotation preC a2 :=: false ∧ replaceVarsInNewCondition preC c2)
+replaceVarsInNewCondition _ _ = false
