@@ -387,37 +387,35 @@ checkAndGenerateCode p n with checkProject p | p
 ... | Success | nothing = GenerationError ("There is no project.")
 ... | Error errors | _ = CheckError errors
 
-denemeGen : CodeGenerationResult
-denemeGen = generateModel (project "" [] [] [] []) doubleOutputModel
+denemeGen : Model -> CodeGenerationResult
+denemeGen m = generateModel (project "" [] [] [] []) m
 
-denemeGen2 : CodeGenerationResult
-denemeGen2 = generateModel (project "" [] [] [] []) ifExample
+denemeHoare : Model -> Maybe (List (HoareTriplet (List String)))
+denemeHoare m = generateModelCodeHoareTriplets (project "" [] [] [] []) m
 
-denemeHoare : Maybe (List (HoareTriplet (List String)))
-denemeHoare = generateModelCodeHoareTriplets (project "" [] [] [] []) doubleOutputModel
+denemeCodeCond : Model -> Maybe Condition
+denemeCodeCond m = generateModelCodeCondition (project "" [] [] [] []) m
 
-denemeCodeCond : Maybe Condition
-denemeCodeCond = generateModelCodeCondition (project "" [] [] [] []) doubleOutputModel
-
-denemeCodeCond2 : Maybe Condition
-denemeCodeCond2 = generateModelCodeCondition (project "" [] [] [] []) ifExample
-
-denemeHoare2 : Maybe (List (HoareTriplet (List String)))
-denemeHoare2 = generateModelCodeHoareTriplets (project "" [] [] [] []) ifExample
-
-denemeDAGCond : Maybe Condition
-denemeDAGCond = generateModelDAGCondition (project "" [] [] [] []) doubleOutputModel
-
-denemeDAGCond2 : Maybe Condition
-denemeDAGCond2 = generateModelDAGCondition (project "" [] [] [] []) ifExample
+denemeDAGCond : Model -> Maybe Condition
+denemeDAGCond m = generateModelDAGCondition (project "" [] [] [] []) m
 
 checkResult : Bool
-checkResult with denemeCodeCond | denemeDAGCond
+checkResult with denemeCodeCond doubleOutputModel | denemeDAGCond doubleOutputModel
 ... | just c1 | just c2 = c1 ≟C c2
 ... | _ | _ = false
 
 checkResult2 : Bool
-checkResult2 with denemeCodeCond2 | denemeDAGCond2
+checkResult2 with denemeCodeCond ifExample | denemeDAGCond ifExample
+... | just c1 | just c2 = c1 ≟C c2
+... | _ | _ = false
+
+checkResult3 : Bool
+checkResult3 with denemeCodeCond ifExample2 | denemeDAGCond ifExample2
+... | just c1 | just c2 = c1 ≟C c2
+... | _ | _ = false
+
+checkResult4 : Bool
+checkResult4 with denemeCodeCond ifExample3 | denemeDAGCond ifExample3
 ... | just c1 | just c2 = c1 ≟C c2
 ... | _ | _ = false
 
@@ -426,4 +424,9 @@ testHoare = refl
 
 testHoare2 : checkResult2 ≡ true
 testHoare2 = refl
- 
+
+testHoare3 : checkResult3 ≡ true
+testHoare3 = refl
+
+testHoare4 : checkResult4 ≡ true
+testHoare4 = refl

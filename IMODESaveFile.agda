@@ -13,6 +13,8 @@ projectXmlString = "<project id=\"1696681038889_1\" name=\"ExampleIMODESave\">
         <model path=\"hasCycle2.mdlx\" hash=\"\"/>
         <model path=\"doubleOutput.mdlx\" hash=\"\"/>
         <model path=\"ifExample.mdlx\" hash=\"\"/>
+        <model path=\"ifExample2.mdlx\" hash=\"\"/>
+        <model path=\"ifExample3.mdlx\" hash=\"\"/>
     </submodels>
     <types path=\"Types.typx\"/>
     <constants path=\"Constants.constx\"/>
@@ -881,6 +883,657 @@ ifExample = "<model id=\"1710592227361_5\" tracedRequirements=\"\" hash=\"a67070
     <lookups/>
 </model>"
 
+ifExample2 : String
+ifExample2 = "<model projectFileName=\"ExampleIMODESave.prjx\" name=\"ifExample2\" hash=\"a67070cb51e7193b57ee8ad63c72b3f5\" description=\"\" tracedRequirements=\"\" id=\"1711548075517_6\">
+    <submodels>
+        <model visibility=\"1\" projectFileName=\"\" name=\"If1\" hash=\"4fa6a2c3bb81b810e11c467a111b4a7a\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548117930_3\">
+            <submodels/>
+            <ioDirection value=\"0\"/>
+            <center xCoord=\"-140.5\" yCoord=\"-26.5\"/>
+            <size height=\"73\" width=\"101\"/>
+            <inputConnections>
+                <inputConnection portOrder=\"0\" connectedTo=\"1711548158236_46\"/>
+                <inputConnection portOrder=\"1\" connectedTo=\"1711548157599_45\"/>
+            </inputConnections>
+            <outputConnections>
+                <outputConnection portOrder=\"0\" connectedTo=\"1711548153726_43\"/>
+                <outputConnection portOrder=\"0\" connectedTo=\"1711548227433_56\"/>
+            </outputConnections>
+            <conditionConnections>
+                <conditionConnection portOrder=\"0\" connectedTo=\"1711548123135_41\"/>
+            </conditionConnections>
+            <parameterConnections/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Connect41\" hash=\"c2459d3d1ef8a0b20f3e7125bae74582\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548123135_41\">
+            <submodels/>
+            <startOperation xCoord=\"-277\" connectedTo=\"1711548137457_35\" yCoord=\"-137\"/>
+            <endOperation xCoord=\"-140.5\" connectedTo=\"1711548117930_3\" yCoord=\"-63\"/>
+            <points>
+                <point xCoord=\"-277\" yCoord=\"-137\"/>
+                <point xCoord=\"-140.5\" yCoord=\"-137\"/>
+                <point xCoord=\"-140.5\" yCoord=\"-63\"/>
+            </points>
+            <type name=\"bool\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"If2\" hash=\"4fa6a2c3bb81b810e11c467a111b4a7a\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548125723_4\">
+            <submodels/>
+            <ioDirection value=\"0\"/>
+            <center xCoord=\"78\" yCoord=\"134.5\"/>
+            <size height=\"75\" width=\"102\"/>
+            <inputConnections>
+                <inputConnection portOrder=\"0\" connectedTo=\"1711548153726_43\"/>
+                <inputConnection portOrder=\"1\" connectedTo=\"1711548155675_44\"/>
+            </inputConnections>
+            <outputConnections>
+                <outputConnection portOrder=\"0\" connectedTo=\"1711548225982_55\"/>
+            </outputConnections>
+            <conditionConnections>
+                <conditionConnection portOrder=\"0\" connectedTo=\"1711548152108_42\"/>
+            </conditionConnections>
+            <parameterConnections/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Cond1\" hash=\"47652e68b75f740d7c4228759d31a8f5\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548137457_35\">
+            <submodels/>
+            <ioDirection value=\"0\"/>
+            <center xCoord=\"-307\" yCoord=\"-137\"/>
+            <size height=\"40\" width=\"60\"/>
+            <inputConnections/>
+            <outputConnections>
+                <outputConnection portOrder=\"0\" connectedTo=\"1711548123135_41\"/>
+            </outputConnections>
+            <conditionConnections/>
+            <parameterConnections/>
+            <copyOf value=\"1711548137505_36\"/>
+            <last last=\"0\"/>
+            <value value=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Cond2\" hash=\"47652e68b75f740d7c4228759d31a8f5\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548139256_37\">
+            <submodels/>
+            <ioDirection value=\"0\"/>
+            <center xCoord=\"3\" yCoord=\"53\"/>
+            <size height=\"40\" width=\"60\"/>
+            <inputConnections/>
+            <outputConnections>
+                <outputConnection portOrder=\"0\" connectedTo=\"1711548152108_42\"/>
+            </outputConnections>
+            <conditionConnections/>
+            <parameterConnections/>
+            <copyOf value=\"1711548139329_38\"/>
+            <last last=\"0\"/>
+            <value value=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Input1\" hash=\"47652e68b75f740d7c4228759d31a8f5\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548140806_39\">
+            <submodels/>
+            <ioDirection value=\"0\"/>
+            <center xCoord=\"-331\" yCoord=\"-56\"/>
+            <size height=\"40\" width=\"60\"/>
+            <inputConnections/>
+            <outputConnections>
+                <outputConnection portOrder=\"0\" connectedTo=\"1711548158236_46\"/>
+            </outputConnections>
+            <conditionConnections/>
+            <parameterConnections/>
+            <copyOf value=\"1711548140858_40\"/>
+            <last last=\"0\"/>
+            <value value=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Input2\" hash=\"47652e68b75f740d7c4228759d31a8f5\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548142356_41\">
+            <submodels/>
+            <ioDirection value=\"0\"/>
+            <center xCoord=\"-345\" yCoord=\"14\"/>
+            <size height=\"40\" width=\"60\"/>
+            <inputConnections/>
+            <outputConnections>
+                <outputConnection portOrder=\"0\" connectedTo=\"1711548157599_45\"/>
+            </outputConnections>
+            <conditionConnections/>
+            <parameterConnections/>
+            <copyOf value=\"1711548142405_42\"/>
+            <last last=\"0\"/>
+            <value value=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Input3\" hash=\"47652e68b75f740d7c4228759d31a8f5\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548144751_43\">
+            <submodels/>
+            <ioDirection value=\"0\"/>
+            <center xCoord=\"-117\" yCoord=\"152\"/>
+            <size height=\"40\" width=\"60\"/>
+            <inputConnections/>
+            <outputConnections>
+                <outputConnection portOrder=\"0\" connectedTo=\"1711548155675_44\"/>
+            </outputConnections>
+            <conditionConnections/>
+            <parameterConnections/>
+            <copyOf value=\"1711548144841_44\"/>
+            <last last=\"0\"/>
+            <value value=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Connect42\" hash=\"c2459d3d1ef8a0b20f3e7125bae74582\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548152108_42\">
+            <submodels/>
+            <startOperation xCoord=\"33\" connectedTo=\"1711548139256_37\" yCoord=\"53\"/>
+            <endOperation xCoord=\"78\" connectedTo=\"1711548125723_4\" yCoord=\"97\"/>
+            <points>
+                <point xCoord=\"33\" yCoord=\"53\"/>
+                <point xCoord=\"78\" yCoord=\"53\"/>
+                <point xCoord=\"78\" yCoord=\"97\"/>
+            </points>
+            <type name=\"bool\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Connect43\" hash=\"c2459d3d1ef8a0b20f3e7125bae74582\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548153726_43\">
+            <submodels/>
+            <startOperation xCoord=\"-90\" connectedTo=\"1711548117930_3\" yCoord=\"-26.5\"/>
+            <endOperation xCoord=\"27\" connectedTo=\"1711548125723_4\" yCoord=\"122\"/>
+            <points>
+                <point xCoord=\"-90\" yCoord=\"-26.5\"/>
+                <point xCoord=\"-61\" yCoord=\"-26.5\"/>
+                <point xCoord=\"-61\" yCoord=\"122\"/>
+                <point xCoord=\"27\" yCoord=\"122\"/>
+            </points>
+            <type name=\"int16\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Connect44\" hash=\"c2459d3d1ef8a0b20f3e7125bae74582\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548155675_44\">
+            <submodels/>
+            <startOperation xCoord=\"-87\" connectedTo=\"1711548144751_43\" yCoord=\"152\"/>
+            <endOperation xCoord=\"27\" connectedTo=\"1711548125723_4\" yCoord=\"147\"/>
+            <points>
+                <point xCoord=\"-87\" yCoord=\"152\"/>
+                <point xCoord=\"7\" yCoord=\"152\"/>
+                <point xCoord=\"7\" yCoord=\"147\"/>
+                <point xCoord=\"27\" yCoord=\"147\"/>
+            </points>
+            <type name=\"int16\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Connect45\" hash=\"c2459d3d1ef8a0b20f3e7125bae74582\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548157599_45\">
+            <submodels/>
+            <startOperation xCoord=\"-315\" connectedTo=\"1711548142356_41\" yCoord=\"14\"/>
+            <endOperation xCoord=\"-191\" connectedTo=\"1711548117930_3\" yCoord=\"-14.333333333333336\"/>
+            <points>
+                <point xCoord=\"-315\" yCoord=\"14\"/>
+                <point xCoord=\"-211\" yCoord=\"14\"/>
+                <point xCoord=\"-211\" yCoord=\"-14.333333333333336\"/>
+                <point xCoord=\"-191\" yCoord=\"-14.333333333333336\"/>
+            </points>
+            <type name=\"int16\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Connect46\" hash=\"c2459d3d1ef8a0b20f3e7125bae74582\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548158236_46\">
+            <submodels/>
+            <startOperation xCoord=\"-301\" connectedTo=\"1711548140806_39\" yCoord=\"-56\"/>
+            <endOperation xCoord=\"-191\" connectedTo=\"1711548117930_3\" yCoord=\"-38.66666666666667\"/>
+            <points>
+                <point xCoord=\"-301\" yCoord=\"-56\"/>
+                <point xCoord=\"-211\" yCoord=\"-56\"/>
+                <point xCoord=\"-211\" yCoord=\"-38.66666666666667\"/>
+                <point xCoord=\"-191\" yCoord=\"-38.66666666666667\"/>
+            </points>
+            <type name=\"int16\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Output_1\" hash=\"1deb5a48a4655393a18760b265134ef3\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548202968_17\">
+            <submodels/>
+            <ioDirection value=\"0\"/>
+            <center xCoord=\"393\" yCoord=\"50\"/>
+            <size height=\"40\" width=\"60\"/>
+            <inputConnections>
+                <inputConnection portOrder=\"0\" connectedTo=\"1711548230844_57\"/>
+            </inputConnections>
+            <outputConnections/>
+            <conditionConnections/>
+            <parameterConnections/>
+            <copyOf value=\"1711548075521_13\"/>
+            <last last=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Addition8\" hash=\"955ca6d568f93954497d59e165f9fa9b\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548224252_8\">
+            <submodels/>
+            <ioDirection value=\"0\"/>
+            <center xCoord=\"254\" yCoord=\"50\"/>
+            <size height=\"40\" width=\"60\"/>
+            <inputConnections>
+                <inputConnection portOrder=\"0\" connectedTo=\"1711548227433_56\"/>
+                <inputConnection portOrder=\"1\" connectedTo=\"1711548225982_55\"/>
+            </inputConnections>
+            <outputConnections>
+                <outputConnection portOrder=\"0\" connectedTo=\"1711548230844_57\"/>
+            </outputConnections>
+            <conditionConnections/>
+            <parameterConnections/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Connect55\" hash=\"c2459d3d1ef8a0b20f3e7125bae74582\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548225982_55\">
+            <submodels/>
+            <startOperation xCoord=\"129\" connectedTo=\"1711548125723_4\" yCoord=\"134.5\"/>
+            <endOperation xCoord=\"224\" connectedTo=\"1711548224252_8\" yCoord=\"56.66666666666667\"/>
+            <points>
+                <point xCoord=\"129\" yCoord=\"134.5\"/>
+                <point xCoord=\"188\" yCoord=\"134.5\"/>
+                <point xCoord=\"188\" yCoord=\"56.66666666666667\"/>
+                <point xCoord=\"224\" yCoord=\"56.66666666666667\"/>
+            </points>
+            <type name=\"int16\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Connect56\" hash=\"c2459d3d1ef8a0b20f3e7125bae74582\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548227433_56\">
+            <submodels/>
+            <startOperation xCoord=\"-90\" connectedTo=\"1711548117930_3\" yCoord=\"-26.5\"/>
+            <endOperation xCoord=\"224\" connectedTo=\"1711548224252_8\" yCoord=\"43.333333333333336\"/>
+            <points>
+                <point xCoord=\"-90\" yCoord=\"-26.5\"/>
+                <point xCoord=\"188\" yCoord=\"-26.5\"/>
+                <point xCoord=\"188\" yCoord=\"43.333333333333336\"/>
+                <point xCoord=\"224\" yCoord=\"43.333333333333336\"/>
+            </points>
+            <type name=\"int16\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Connect57\" hash=\"c2459d3d1ef8a0b20f3e7125bae74582\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548230844_57\">
+            <submodels/>
+            <startOperation xCoord=\"284\" connectedTo=\"1711548224252_8\" yCoord=\"50\"/>
+            <endOperation xCoord=\"363\" connectedTo=\"1711548202968_17\" yCoord=\"50\"/>
+            <points>
+                <point xCoord=\"284\" yCoord=\"50\"/>
+                <point xCoord=\"319\" yCoord=\"50\"/>
+                <point xCoord=\"319\" yCoord=\"50\"/>
+                <point xCoord=\"363\" yCoord=\"50\"/>
+            </points>
+            <type name=\"int16\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Cond1\" hash=\"47652e68b75f740d7c4228759d31a8f5\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548137505_36\">
+            <submodels/>
+            <type name=\"bool\"/>
+            <sourceInstance value=\"1\"/>
+            <last value=\"\"/>
+            <default value=\"\"/>
+            <value value=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Cond2\" hash=\"47652e68b75f740d7c4228759d31a8f5\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548139329_38\">
+            <submodels/>
+            <type name=\"bool\"/>
+            <sourceInstance value=\"1\"/>
+            <last value=\"\"/>
+            <default value=\"\"/>
+            <value value=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Input1\" hash=\"47652e68b75f740d7c4228759d31a8f5\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548140858_40\">
+            <submodels/>
+            <type name=\"int16\"/>
+            <sourceInstance value=\"1\"/>
+            <last value=\"\"/>
+            <default value=\"\"/>
+            <value value=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Input2\" hash=\"47652e68b75f740d7c4228759d31a8f5\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548142405_42\">
+            <submodels/>
+            <type name=\"int16\"/>
+            <sourceInstance value=\"1\"/>
+            <last value=\"\"/>
+            <default value=\"\"/>
+            <value value=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Input3\" hash=\"47652e68b75f740d7c4228759d31a8f5\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548144841_44\">
+            <submodels/>
+            <type name=\"int16\"/>
+            <sourceInstance value=\"1\"/>
+            <last value=\"\"/>
+            <default value=\"\"/>
+            <value value=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Output\" hash=\"1deb5a48a4655393a18760b265134ef3\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548075521_13\">
+            <submodels/>
+            <type name=\"int16\"/>
+            <sourceInstance value=\"1\"/>
+            <last value=\"\"/>
+            <default value=\"\"/>
+        </model>
+    </submodels>
+    <genericTypes/>
+    <sizeParameters/>
+    <startModels>
+        <startModel hash=\"1711548137505_36\"/>
+        <startModel hash=\"1711548139329_38\"/>
+        <startModel hash=\"1711548140858_40\"/>
+        <startModel hash=\"1711548142405_42\"/>
+        <startModel hash=\"1711548144841_44\"/>
+    </startModels>
+    <endModels>
+        <endModel hash=\"1711548075521_13\"/>
+    </endModels>
+    <inputSensors/>
+    <outputSensors/>
+    <locals/>
+    <lookups/>
+</model>"
+
+ifExample3 : String
+ifExample3 = "<model projectFileName=\"ExampleIMODESave.prjx\" name=\"ifExample3\" hash=\"a67070cb51e7193b57ee8ad63c72b3f5\" description=\"\" tracedRequirements=\"\" id=\"1711548209593_7\">
+    <submodels>
+        <model visibility=\"1\" projectFileName=\"\" name=\"If1\" hash=\"4fa6a2c3bb81b810e11c467a111b4a7a\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548209596_5\">
+            <submodels/>
+            <ioDirection value=\"0\"/>
+            <center xCoord=\"-140.5\" yCoord=\"-26.5\"/>
+            <size height=\"73\" width=\"101\"/>
+            <inputConnections>
+                <inputConnection portOrder=\"0\" connectedTo=\"1711548209598_53\"/>
+                <inputConnection portOrder=\"1\" connectedTo=\"1711548209598_52\"/>
+            </inputConnections>
+            <outputConnections>
+                <outputConnection portOrder=\"0\" connectedTo=\"1711548209598_50\"/>
+            </outputConnections>
+            <conditionConnections>
+                <conditionConnection portOrder=\"0\" connectedTo=\"1711548209596_48\"/>
+            </conditionConnections>
+            <parameterConnections/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Connect41\" hash=\"c2459d3d1ef8a0b20f3e7125bae74582\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548209596_48\">
+            <submodels/>
+            <startOperation xCoord=\"-277\" connectedTo=\"1711548209597_52\" yCoord=\"-137\"/>
+            <endOperation xCoord=\"-140.5\" connectedTo=\"1711548209596_5\" yCoord=\"-63\"/>
+            <points>
+                <point xCoord=\"-277\" yCoord=\"-137\"/>
+                <point xCoord=\"-140.5\" yCoord=\"-137\"/>
+                <point xCoord=\"-140.5\" yCoord=\"-63\"/>
+            </points>
+            <type name=\"bool\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"If2\" hash=\"4fa6a2c3bb81b810e11c467a111b4a7a\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548209596_6\">
+            <submodels/>
+            <ioDirection value=\"0\"/>
+            <center xCoord=\"-105\" yCoord=\"159.5\"/>
+            <size height=\"75\" width=\"102\"/>
+            <inputConnections>
+                <inputConnection portOrder=\"0\" connectedTo=\"1711548209598_51\"/>
+                <inputConnection portOrder=\"1\" connectedTo=\"1711548257535_58\"/>
+            </inputConnections>
+            <outputConnections>
+                <outputConnection portOrder=\"0\" connectedTo=\"1711548265539_59\"/>
+            </outputConnections>
+            <conditionConnections>
+                <conditionConnection portOrder=\"0\" connectedTo=\"1711548209598_49\"/>
+            </conditionConnections>
+            <parameterConnections/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Cond1\" hash=\"47652e68b75f740d7c4228759d31a8f5\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548209597_52\">
+            <submodels/>
+            <ioDirection value=\"0\"/>
+            <center xCoord=\"-307\" yCoord=\"-137\"/>
+            <size height=\"40\" width=\"60\"/>
+            <inputConnections/>
+            <outputConnections>
+                <outputConnection portOrder=\"0\" connectedTo=\"1711548209596_48\"/>
+            </outputConnections>
+            <conditionConnections/>
+            <parameterConnections/>
+            <copyOf value=\"1711548209594_47\"/>
+            <last last=\"0\"/>
+            <value value=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Cond2\" hash=\"47652e68b75f740d7c4228759d31a8f5\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548209597_53\">
+            <submodels/>
+            <ioDirection value=\"0\"/>
+            <center xCoord=\"-180\" yCoord=\"78\"/>
+            <size height=\"40\" width=\"60\"/>
+            <inputConnections/>
+            <outputConnections>
+                <outputConnection portOrder=\"0\" connectedTo=\"1711548209598_49\"/>
+            </outputConnections>
+            <conditionConnections/>
+            <parameterConnections/>
+            <copyOf value=\"1711548209594_48\"/>
+            <last last=\"0\"/>
+            <value value=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Input1\" hash=\"47652e68b75f740d7c4228759d31a8f5\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548209597_54\">
+            <submodels/>
+            <ioDirection value=\"0\"/>
+            <center xCoord=\"-331\" yCoord=\"-56\"/>
+            <size height=\"40\" width=\"60\"/>
+            <inputConnections/>
+            <outputConnections>
+                <outputConnection portOrder=\"0\" connectedTo=\"1711548209598_53\"/>
+            </outputConnections>
+            <conditionConnections/>
+            <parameterConnections/>
+            <copyOf value=\"1711548209595_49\"/>
+            <last last=\"0\"/>
+            <value value=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Input2\" hash=\"47652e68b75f740d7c4228759d31a8f5\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548209597_55\">
+            <submodels/>
+            <ioDirection value=\"0\"/>
+            <center xCoord=\"-345\" yCoord=\"14\"/>
+            <size height=\"40\" width=\"60\"/>
+            <inputConnections/>
+            <outputConnections>
+                <outputConnection portOrder=\"0\" connectedTo=\"1711548209598_52\"/>
+            </outputConnections>
+            <conditionConnections/>
+            <parameterConnections/>
+            <copyOf value=\"1711548209595_50\"/>
+            <last last=\"0\"/>
+            <value value=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Input3\" hash=\"47652e68b75f740d7c4228759d31a8f5\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548209598_56\">
+            <submodels/>
+            <ioDirection value=\"0\"/>
+            <center xCoord=\"-319\" yCoord=\"129\"/>
+            <size height=\"40\" width=\"60\"/>
+            <inputConnections/>
+            <outputConnections>
+                <outputConnection portOrder=\"0\" connectedTo=\"1711548209598_51\"/>
+            </outputConnections>
+            <conditionConnections/>
+            <parameterConnections/>
+            <copyOf value=\"1711548209595_51\"/>
+            <last last=\"0\"/>
+            <value value=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Connect42\" hash=\"c2459d3d1ef8a0b20f3e7125bae74582\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548209598_49\">
+            <submodels/>
+            <startOperation xCoord=\"-150\" connectedTo=\"1711548209597_53\" yCoord=\"78\"/>
+            <endOperation xCoord=\"-105\" connectedTo=\"1711548209596_6\" yCoord=\"122\"/>
+            <points>
+                <point xCoord=\"-150\" yCoord=\"78\"/>
+                <point xCoord=\"-105\" yCoord=\"78\"/>
+                <point xCoord=\"-105\" yCoord=\"122\"/>
+            </points>
+            <type name=\"bool\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Connect43\" hash=\"c2459d3d1ef8a0b20f3e7125bae74582\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548209598_50\">
+            <submodels/>
+            <startOperation xCoord=\"-90\" connectedTo=\"1711548209596_5\" yCoord=\"-26.5\"/>
+            <endOperation xCoord=\"78\" connectedTo=\"1711548249118_9\" yCoord=\"53.333333333333336\"/>
+            <points>
+                <point xCoord=\"-90\" yCoord=\"-26.5\"/>
+                <point xCoord=\"-61\" yCoord=\"-26.5\"/>
+                <point xCoord=\"-61\" yCoord=\"53.333333333333336\"/>
+                <point xCoord=\"78\" yCoord=\"53.333333333333336\"/>
+            </points>
+            <type name=\"int16\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Connect44\" hash=\"c2459d3d1ef8a0b20f3e7125bae74582\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548209598_51\">
+            <submodels/>
+            <startOperation xCoord=\"-289\" connectedTo=\"1711548209598_56\" yCoord=\"129\"/>
+            <endOperation xCoord=\"-156\" connectedTo=\"1711548209596_6\" yCoord=\"147\"/>
+            <points>
+                <point xCoord=\"-289\" yCoord=\"129\"/>
+                <point xCoord=\"-176\" yCoord=\"129\"/>
+                <point xCoord=\"-176\" yCoord=\"147\"/>
+                <point xCoord=\"-156\" yCoord=\"147\"/>
+            </points>
+            <type name=\"int16\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Connect45\" hash=\"c2459d3d1ef8a0b20f3e7125bae74582\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548209598_52\">
+            <submodels/>
+            <startOperation xCoord=\"-315\" connectedTo=\"1711548209597_55\" yCoord=\"14\"/>
+            <endOperation xCoord=\"-191\" connectedTo=\"1711548209596_5\" yCoord=\"-14.333333333333336\"/>
+            <points>
+                <point xCoord=\"-315\" yCoord=\"14\"/>
+                <point xCoord=\"-211\" yCoord=\"14\"/>
+                <point xCoord=\"-211\" yCoord=\"-14.333333333333336\"/>
+                <point xCoord=\"-191\" yCoord=\"-14.333333333333336\"/>
+            </points>
+            <type name=\"int16\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Connect46\" hash=\"c2459d3d1ef8a0b20f3e7125bae74582\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548209598_53\">
+            <submodels/>
+            <startOperation xCoord=\"-301\" connectedTo=\"1711548209597_54\" yCoord=\"-56\"/>
+            <endOperation xCoord=\"-191\" connectedTo=\"1711548209596_5\" yCoord=\"-38.66666666666667\"/>
+            <points>
+                <point xCoord=\"-301\" yCoord=\"-56\"/>
+                <point xCoord=\"-211\" yCoord=\"-56\"/>
+                <point xCoord=\"-211\" yCoord=\"-38.66666666666667\"/>
+                <point xCoord=\"-191\" yCoord=\"-38.66666666666667\"/>
+            </points>
+            <type name=\"int16\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Connect47\" hash=\"c2459d3d1ef8a0b20f3e7125bae74582\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548209598_54\">
+            <submodels/>
+            <startOperation xCoord=\"138\" connectedTo=\"1711548249118_9\" yCoord=\"60\"/>
+            <endOperation xCoord=\"273\" connectedTo=\"1711548209598_19\" yCoord=\"66\"/>
+            <points>
+                <point xCoord=\"138\" yCoord=\"60\"/>
+                <point xCoord=\"216\" yCoord=\"60\"/>
+                <point xCoord=\"216\" yCoord=\"66\"/>
+                <point xCoord=\"273\" yCoord=\"66\"/>
+            </points>
+            <type name=\"int16\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Output\" hash=\"1deb5a48a4655393a18760b265134ef3\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548209598_19\">
+            <submodels/>
+            <ioDirection value=\"0\"/>
+            <center xCoord=\"303\" yCoord=\"66\"/>
+            <size height=\"40\" width=\"60\"/>
+            <inputConnections>
+                <inputConnection portOrder=\"0\" connectedTo=\"1711548209598_54\"/>
+            </inputConnections>
+            <outputConnections/>
+            <conditionConnections/>
+            <parameterConnections/>
+            <copyOf value=\"1711548209596_18\"/>
+            <last last=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Addition9\" hash=\"955ca6d568f93954497d59e165f9fa9b\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548249118_9\">
+            <submodels/>
+            <ioDirection value=\"0\"/>
+            <center xCoord=\"108\" yCoord=\"60\"/>
+            <size height=\"40\" width=\"60\"/>
+            <inputConnections>
+                <inputConnection portOrder=\"0\" connectedTo=\"1711548209598_50\"/>
+                <inputConnection portOrder=\"1\" connectedTo=\"1711548265539_59\"/>
+            </inputConnections>
+            <outputConnections>
+                <outputConnection portOrder=\"0\" connectedTo=\"1711548209598_54\"/>
+            </outputConnections>
+            <conditionConnections/>
+            <parameterConnections/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Input4\" hash=\"47652e68b75f740d7c4228759d31a8f5\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548253401_57\">
+            <submodels/>
+            <ioDirection value=\"0\"/>
+            <center xCoord=\"-329\" yCoord=\"200\"/>
+            <size height=\"40\" width=\"60\"/>
+            <inputConnections/>
+            <outputConnections>
+                <outputConnection portOrder=\"0\" connectedTo=\"1711548257535_58\"/>
+            </outputConnections>
+            <conditionConnections/>
+            <parameterConnections/>
+            <copyOf value=\"1711548253444_58\"/>
+            <last last=\"0\"/>
+            <value value=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Connect58\" hash=\"c2459d3d1ef8a0b20f3e7125bae74582\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548257535_58\">
+            <submodels/>
+            <startOperation xCoord=\"-299\" connectedTo=\"1711548253401_57\" yCoord=\"200\"/>
+            <endOperation xCoord=\"-156\" connectedTo=\"1711548209596_6\" yCoord=\"172\"/>
+            <points>
+                <point xCoord=\"-299\" yCoord=\"200\"/>
+                <point xCoord=\"-176\" yCoord=\"200\"/>
+                <point xCoord=\"-176\" yCoord=\"172\"/>
+                <point xCoord=\"-156\" yCoord=\"172\"/>
+            </points>
+            <type name=\"int16\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Connect59\" hash=\"c2459d3d1ef8a0b20f3e7125bae74582\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548265539_59\">
+            <submodels/>
+            <startOperation xCoord=\"-54\" connectedTo=\"1711548209596_6\" yCoord=\"159.5\"/>
+            <endOperation xCoord=\"78\" connectedTo=\"1711548249118_9\" yCoord=\"66.66666666666667\"/>
+            <points>
+                <point xCoord=\"-54\" yCoord=\"159.5\"/>
+                <point xCoord=\"-34\" yCoord=\"159.5\"/>
+                <point xCoord=\"-34\" yCoord=\"66.66666666666667\"/>
+                <point xCoord=\"78\" yCoord=\"66.66666666666667\"/>
+            </points>
+            <type name=\"int16\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Cond1\" hash=\"47652e68b75f740d7c4228759d31a8f5\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548209594_47\">
+            <submodels/>
+            <type name=\"bool\"/>
+            <sourceInstance value=\"1\"/>
+            <last value=\"\"/>
+            <default value=\"\"/>
+            <value value=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Cond2\" hash=\"47652e68b75f740d7c4228759d31a8f5\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548209594_48\">
+            <submodels/>
+            <type name=\"bool\"/>
+            <sourceInstance value=\"1\"/>
+            <last value=\"\"/>
+            <default value=\"\"/>
+            <value value=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Input1\" hash=\"47652e68b75f740d7c4228759d31a8f5\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548209595_49\">
+            <submodels/>
+            <type name=\"int16\"/>
+            <sourceInstance value=\"1\"/>
+            <last value=\"\"/>
+            <default value=\"\"/>
+            <value value=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Input2\" hash=\"47652e68b75f740d7c4228759d31a8f5\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548209595_50\">
+            <submodels/>
+            <type name=\"int16\"/>
+            <sourceInstance value=\"1\"/>
+            <last value=\"\"/>
+            <default value=\"\"/>
+            <value value=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Input3\" hash=\"47652e68b75f740d7c4228759d31a8f5\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548209595_51\">
+            <submodels/>
+            <type name=\"int16\"/>
+            <sourceInstance value=\"1\"/>
+            <last value=\"\"/>
+            <default value=\"\"/>
+            <value value=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Input4\" hash=\"47652e68b75f740d7c4228759d31a8f5\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548253444_58\">
+            <submodels/>
+            <type name=\"int16\"/>
+            <sourceInstance value=\"1\"/>
+            <last value=\"\"/>
+            <default value=\"\"/>
+            <value value=\"0\"/>
+        </model>
+        <model visibility=\"1\" projectFileName=\"\" name=\"Output\" hash=\"1deb5a48a4655393a18760b265134ef3\" enable=\"1\" description=\"\" tracedRequirements=\"\" id=\"1711548209596_18\">
+            <submodels/>
+            <type name=\"int16\"/>
+            <sourceInstance value=\"1\"/>
+            <last value=\"\"/>
+            <default value=\"\"/>
+        </model>
+    </submodels>
+    <genericTypes/>
+    <sizeParameters/>
+    <startModels>
+        <startModel hash=\"1711548209594_47\"/>
+        <startModel hash=\"1711548209594_48\"/>
+        <startModel hash=\"1711548209595_49\"/>
+        <startModel hash=\"1711548209595_50\"/>
+        <startModel hash=\"1711548209595_51\"/>
+        <startModel hash=\"1711548253444_58\"/>
+    </startModels>
+    <endModels>
+        <endModel hash=\"1711548209596_18\"/>
+    </endModels>
+    <inputSensors/>
+    <outputSensors/>
+    <locals/>
+    <lookups/>
+</model>"
+
 modelXmlStrings : List String
 modelXmlStrings = "<model tracedRequirements=\"\" id=\"1696681108403_1\" name=\"logicModel1\" projectFileName=\"ExampleIMODESave.prjx\" description=\"\" hash=\"a67070cb51e7193b57ee8ad63c72b3f5\">
     <submodels>
@@ -1016,4 +1669,4 @@ modelXmlStrings = "<model tracedRequirements=\"\" id=\"1696681108403_1\" name=\"
     <outputSensors/>
     <locals/>
     <lookups/>
-</model>" ∷ modelStringThatHasCycle ∷ modelStringThatHasCycle2 ∷ doubleOutput ∷ ifExample ∷ []
+</model>" ∷ modelStringThatHasCycle ∷ modelStringThatHasCycle2 ∷ doubleOutput ∷ ifExample ∷ ifExample2 ∷ ifExample3 ∷ []

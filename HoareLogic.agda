@@ -164,8 +164,8 @@ replaceVarsInNewCondition ((a1 :=: true ∧ c1) ∨ (a2 :=: false ∧ c2)) c3 wi
 ... | c13 | c23 with c13 ≟C c3 | c23 ≟C c3
 ... | true | true = c3
 ... | _ | _ = (a1 :=: true ∧ c13) ∨ (a2 :=: false ∧ c23)
-replaceVarsInNewCondition (c1 ∧ c2) c3 = replaceVarsInNewCondition c1 (replaceVarsInNewCondition c2 c3)
 replaceVarsInNewCondition preC ((a1 :=: true ∧ c1) ∨ (a2 :=: false ∧ c2)) =
     (replaceVarsInNewAnnotation preC a1 :=: true ∧ replaceVarsInNewCondition preC c1) ∨
     (replaceVarsInNewAnnotation preC a2 :=: false ∧ replaceVarsInNewCondition preC c2)
+replaceVarsInNewCondition (c1 ∧ c2) c3 = replaceVarsInNewCondition c1 (replaceVarsInNewCondition c2 c3)
 replaceVarsInNewCondition _ _ = false
