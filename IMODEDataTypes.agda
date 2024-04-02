@@ -136,6 +136,7 @@ data ModelElement : Set where
   StrictlyGreaterThan : BaseModelElementProperties -> ModelElement
   StrictlyLessThan : BaseModelElementProperties -> ModelElement
   If : BaseModelElementProperties -> ModelElement
+  Previous : BaseModelElementProperties -> List String -> ModelElement
 
 data Model : Set where
   Operation : String -> (inputs : List ModelElement) -> (outputs : List ModelElement) -> (subModels : List ModelElement)-> Model
@@ -178,6 +179,7 @@ getBaseModelProperties (LessThanEqual p) = just p
 getBaseModelProperties (StrictlyGreaterThan p) = just p
 getBaseModelProperties (StrictlyLessThan p) = just p
 getBaseModelProperties (If p) = just p
+getBaseModelProperties (Previous p _) = just p
 getBaseModelProperties _ = nothing
 
 getModelElementName : ModelElement -> String
@@ -680,3 +682,30 @@ ifExample3 = (Operation "ifExample3"
   Connection "Connect59" "1711548265539_59" "1711548209596_6"
   "1711548249118_9"
   ∷ []))
+
+previousExample : Model
+previousExample = Operation "previous"
+ (Input "Input" "1711905183406_46" iInt16 ∷ [])
+ (Output "Output" "1711905218206_18" iInt16 ∷ [])
+ (InputInstance
+  (Properties "Input" "1711905183341_45" []
+   ((0 , "1711905204184_49") ∷ []) [])
+  "1711905183406_46"
+  ∷
+  Previous
+  (Properties "Previous1" "1711905202015_1" ("1711905204184_49" ∷ [])
+   ((0 , "1711905209522_50") ∷ []) [])
+  ("0" ∷ [])
+  ∷
+  Connection "Connect49" "1711905204184_49" "1711905183341_45"
+  "1711905202015_1"
+  ∷
+  Connection "Connect50" "1711905209522_50" "1711905202015_1"
+  "1711905218125_17"
+  ∷
+  OutputInstance
+  (Properties "Output" "1711905218125_17" ("1711905209522_50" ∷ [])
+   [] [])
+  "1711905218206_18"
+  ∷ [])
+  

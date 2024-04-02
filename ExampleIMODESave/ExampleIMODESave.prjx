@@ -9,6 +9,7 @@
         <model path="ifExample.mdlx" hash=""/>
         <model path="ifExample2.mdlx" hash=""/>
         <model path="ifExample3.mdlx" hash=""/>
+        <model path="previous.mdlx" hash=""/>
     </submodels>
     <types path="Types.typx"/>
     <constants path="Constants.constx"/>

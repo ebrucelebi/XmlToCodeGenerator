@@ -12,8 +12,8 @@ open import Data.List
 open import Data.Product
 open import Data.Maybe
 
-main : CodeGenerationResult
-main = checkAndGenerateCode readIMODEFiles "logicModel1"
+main : String -> CodeGenerationResult
+main n = checkGenerateAndVerify readIMODEFiles n
 
 getModel : String -> Maybe Model
 getModel s with readIMODEFiles

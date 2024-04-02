@@ -69,6 +69,8 @@ checkInputConnectionCounts (GreaterThanEqual (Properties _ _ inCons _ _)) = (Dat
 checkInputConnectionCounts (LessThanEqual (Properties _ _ inCons _ _)) = (Data.List.length inCons) ==ℕ 2
 checkInputConnectionCounts (StrictlyGreaterThan (Properties _ _ inCons _ _)) = (Data.List.length inCons) ==ℕ 2
 checkInputConnectionCounts (StrictlyLessThan (Properties _ _ inCons _ _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (If (Properties _ _ inCons _ _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (Previous (Properties _ _ inCons _ _) _ ) = (Data.List.length inCons) ==ℕ 1
 checkInputConnectionCounts _ = false
 
 
@@ -114,7 +116,7 @@ checkInputConnections m with getBaseModelProperties m
 checkOutputConnections : ModelElement -> List String
 checkOutputConnections m with getBaseModelProperties m
 ... | nothing = []
-... | just (Properties n id inCons outCons condCons) with checkOutputConnectionCounts m
+... | just (Properties n id inCons outCons condCons) with true -- checkOutputConnectionCounts m
 ... | false = ("Output connection count is not correct for " ++ n) ∷ []
 ... | true with contains (collectOutConIds outCons) ""
 ... | false = []

@@ -3,7 +3,7 @@
 module codeGeneration where
 
 open import utility
-open import IMODEDataTypes
+open import IMODEDataTypes hiding (Constant)
 open import ModelDAG
 open import createDAG
 open import checkProject
@@ -30,6 +30,7 @@ data CodeGenerationResult : Set where
     Success : List GeneratedFile -> CodeGenerationResult
     GenerationError : String -> CodeGenerationResult
     CheckError : List String -> CodeGenerationResult
+    VerifyError : CodeGenerationResult
 
 data CodeSection : Set where
     Identifier : CodeSection
@@ -69,6 +70,7 @@ getOutputType i m (context (LessThanEqual _) edges & dag) = iBool
 getOutputType i m (context (StrictlyGreaterThan _) edges & dag) = iBool
 getOutputType i m (context (StrictlyLessThan _) edges & dag) = iBool
 getOutputType (suc i) m (context (If _) (e1 ∷ e2 ∷ es) & dag) = getOutputType i m (getEdgeDestination dag e2) -- e1 is condition
+getOutputType (suc i) m (context (Previous _ _) (e ∷ es) & dag) = getOutputType i m (getEdgeDestination dag e)
 getOutputType _ _ _ = iNone
 
 mutual
@@ -250,6 +252,20 @@ mutual
                                                             ((Statement (generateIdentifierContext p m (context me edges) dag)
                                                                         (Variable (generateIdentifierAtEdge p m edges 2 dag))) ∷ []) ∷ []
 
+    generatePreviousMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generatePreviousMain p m (context (Previous pro (initValue ∷ [])) edges) dag = let me = (Previous pro (initValue ∷ [])) in
+        IfStatement (Expression (Constant "true")
+                                Equal
+                                (Variable "isInitialCycle"))
+                    ((Statement (generateIdentifierContext p m (context me edges) dag)
+                                (Constant initValue)) ∷ [])
+                    ((Statement (generateIdentifierContext p m (context me edges) dag)
+                                (Variable ((generateIdentifierContext p m (context me edges) dag) ++ "_mem"))) ∷ []) ∷
+        Statement ((generateIdentifierContext p m (context me edges) dag) ++ "_mem")
+                  (Variable (generateIdentifierAtEdge p m edges 0 dag))
+                                ∷ []
+    generatePreviousMain _ _ _ _ = []
+
     generateModelElementMain : ∀ {n} -> ModelElement -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
     generateModelElementMain (OutputInstance _ _) p m c dag = generateOutputMain p m c dag
     generateModelElementMain (Addition _) p m c dag = generateAdditionMain p m c dag
@@ -278,6 +294,7 @@ mutual
     generateModelElementMain (StrictlyGreaterThan _) p m c dag = generateStrictlyGreaterThanMain p m c dag
     generateModelElementMain (StrictlyLessThan _) p m c dag = generateStrictlyLessThanMain p m c dag
     generateModelElementMain (If _) p m c dag = generateIfMain p m c dag
+    generateModelElementMain (Previous _ _) p m c dag = generatePreviousMain p m c dag
     generateModelElementMain _ p m c dag = []
 
     generateModelElement : ∀ {n} -> Project -> Model -> CodeSection -> Context ModelElement ModelElement n -> ModelDAG n -> List String
@@ -322,12 +339,12 @@ getIOVars ((Output n _ _) ∷ xs) = (var n) ∷ getIOVars xs
 getIOVars ((Input n _ _) ∷ xs) = (var n) ∷ getIOVars xs
 getIOVars _ = []
 
-generateModelCodeCondition : Project -> Model -> Maybe Condition
-generateModelCodeCondition p (Operation n ins outs sms) with (createDAG (Operation n ins outs sms))
+generateModelCodeCondition : Project -> Model -> Condition -> Maybe Condition
+generateModelCodeCondition p (Operation n ins outs sms) preC with (createDAG (Operation n ins outs sms))
 ... | nothing = nothing
 ... | just dag = just (
     weaken 
-        (statementListToCondition (getInputsCondition ins) (getInputsCondition ins)
+        (statementListToCondition preC preC
                                   (generateModelElementsStatementList p (Operation n ins outs sms) dag))
         (getIOVars (ins Data.List.++ outs)))
 
@@ -387,6 +404,20 @@ checkAndGenerateCode p n with checkProject p | p
 ... | Success | nothing = GenerationError ("There is no project.")
 ... | Error errors | _ = CheckError errors
 
+checkGenerateAndVerify : Maybe Project -> String -> CodeGenerationResult
+checkGenerateAndVerify (just p) n with findModelInProjectWithName p n
+checkGenerateAndVerify (just p) n | just (Operation n2 ins outs sms) with checkModel (Operation n2 ins outs sms)
+checkGenerateAndVerify (just p) n | just (Operation n2 ins outs sms) | [] with getInputsCondition ins | generateModelDAGCondition p (Operation n2 ins outs sms)
+checkGenerateAndVerify (just p) n | just m                           | [] | preCondition | just postCondition with generateModelCodeCondition p m preCondition
+checkGenerateAndVerify (just p) n | just m                           | [] | preCondition | just postCondition | just codePostCondition with postCondition ≟C codePostCondition
+checkGenerateAndVerify (just p) n | just m                           | [] | preCondition | just postCondition | just codePostCondition | true = (generateCode p n) 
+checkGenerateAndVerify (just p) n | just m                           | [] | preCondition | just postCondition | just codePostCondition | false = VerifyError
+checkGenerateAndVerify (just p) n | just m                           | [] | preCondition | just postCondition | nothing = GenerationError ("Could not generate code post condition.")
+checkGenerateAndVerify (just p) n | just m                           | [] | preCondition | nothing = GenerationError ("Could not generate model post condition.")
+checkGenerateAndVerify (just p) n | just m                           | errors = CheckError errors
+checkGenerateAndVerify (just p) n | nothing = GenerationError ("Could not find the root model " ++ n)
+checkGenerateAndVerify nothing n = GenerationError ("There is no project.")
+
 denemeGen : Model -> CodeGenerationResult
 denemeGen m = generateModel (project "" [] [] [] []) m
 
@@ -394,7 +425,7 @@ denemeHoare : Model -> Maybe (List (HoareTriplet (List String)))
 denemeHoare m = generateModelCodeHoareTriplets (project "" [] [] [] []) m
 
 denemeCodeCond : Model -> Maybe Condition
-denemeCodeCond m = generateModelCodeCondition (project "" [] [] [] []) m
+denemeCodeCond (Operation n ins outs sms) = generateModelCodeCondition (project "" [] [] [] []) (Operation n ins outs sms) (getInputsCondition ins)
 
 denemeDAGCond : Model -> Maybe Condition
 denemeDAGCond m = generateModelDAGCondition (project "" [] [] [] []) m

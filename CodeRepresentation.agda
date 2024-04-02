@@ -35,6 +35,7 @@ data Oper : Set where
     StrictlyLessThan : Oper
 
 data Code : Set where
+    Constant : String -> Code
     Variable : String -> Code
     Expression : Code -> Oper -> Code -> Code
     LeftExpression : Code -> Oper -> Code
@@ -74,6 +75,7 @@ operationToString StrictlyGreaterThan = ">"
 operationToString StrictlyLessThan = "<"
 
 codeToString : Code -> String
+codeToString (Constant s) = s
 codeToString (Variable s) = s
 codeToString (Expression l o r) = codeToString l ++ " " ++ operationToString o ++ " " ++ codeToString r
 codeToString (LeftExpression l o) = codeToString l ++ " " ++ operationToString o
