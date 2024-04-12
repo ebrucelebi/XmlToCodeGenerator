@@ -4,8 +4,8 @@ module CodeRepresentation where
 
 open import HoareLogic
 
-open import Data.Bool hiding (_∧_; _∨_)
-open import Data.String
+open import Data.Bool hiding (_∧_; _∨_; _<_)
+open import Data.String hiding (_==_; _<_)
 open import Data.Maybe
 open import Data.List hiding (_++_)
 open import Data.Vec hiding (_++_)
@@ -102,13 +102,32 @@ mutual
     statementListToString (x ∷ xs) = statementToString x Data.List.++ statementListToString xs
 
 codeToAnnotation : Code -> Annotation
+codeToAnnotation (Constant "false") = false
+codeToAnnotation (Constant "true") = true
+codeToAnnotation (Constant s) = const s
 codeToAnnotation (Variable x) = var x
 codeToAnnotation (Expression c1 Addition c2) = (codeToAnnotation c1) + (codeToAnnotation c2)
 codeToAnnotation (Expression c1 Subtraction c2) = (codeToAnnotation c1) - (codeToAnnotation c2)
 codeToAnnotation (Expression c1 Multiplication c2) = (codeToAnnotation c1) * (codeToAnnotation c2)
 codeToAnnotation (Expression c1 Division c2) = (codeToAnnotation c1) / (codeToAnnotation c2)
+codeToAnnotation (RightExpression Minus c1) = - (codeToAnnotation c1)
+codeToAnnotation (Expression c1 LogicalAnd c2) = (codeToAnnotation c1) && (codeToAnnotation c2)
+codeToAnnotation (RightExpression LogicalNot c1) = ! (codeToAnnotation c1)
+codeToAnnotation (Expression c1 LogicalOr c2) = (codeToAnnotation c1) || (codeToAnnotation c2)
+codeToAnnotation (Expression c1 LogicalXor c2) = (codeToAnnotation c1) ^ (codeToAnnotation c2)
+codeToAnnotation (Expression c1 BitwiseAnd c2) = (codeToAnnotation c1) & (codeToAnnotation c2)
+codeToAnnotation (RightExpression BitwiseNot c1) = ~ (codeToAnnotation c1)
+codeToAnnotation (Expression c1 BitwiseOr c2) = (codeToAnnotation c1) |b (codeToAnnotation c2)
+codeToAnnotation (Expression c1 BitwiseXor c2) = (codeToAnnotation c1) ^ (codeToAnnotation c2)
+codeToAnnotation (Expression c1 LeftShift c2) = (codeToAnnotation c1) << (codeToAnnotation c2)
+codeToAnnotation (Expression c1 RightShift c2) = (codeToAnnotation c1) >> (codeToAnnotation c2)
+codeToAnnotation (Expression c1 Different c2) = (codeToAnnotation c1) != (codeToAnnotation c2)
+codeToAnnotation (Expression c1 Equal c2) = (codeToAnnotation c1) == (codeToAnnotation c2)
+codeToAnnotation (Expression c1 GreaterThanEqual c2) = (codeToAnnotation c1) >= (codeToAnnotation c2)
+codeToAnnotation (Expression c1 LessThanEqual c2) = (codeToAnnotation c1) <= (codeToAnnotation c2)
 codeToAnnotation (Expression c1 StrictlyGreaterThan c2) = (codeToAnnotation c1) > (codeToAnnotation c2)
-codeToAnnotation _ = const 0
+codeToAnnotation (Expression c1 StrictlyLessThan c2) = (codeToAnnotation c1) < (codeToAnnotation c2)
+codeToAnnotation _ = const "error"
 
 mutual
     statementToCondition : Condition -> StatementType -> Condition

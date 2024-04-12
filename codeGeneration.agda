@@ -10,7 +10,7 @@ open import checkProject
 open import CodeRepresentation
 open import HoareLogic
 
-open import Data.String
+open import Data.String hiding (_==_)
 open import Data.Maybe
 open import Data.Bool hiding (_∧_; _∨_)
 open import Data.Product
@@ -254,9 +254,7 @@ mutual
 
     generatePreviousMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
     generatePreviousMain p m (context (Previous pro (initValue ∷ [])) edges) dag = let me = (Previous pro (initValue ∷ [])) in
-        IfStatement (Expression (Constant "true")
-                                Equal
-                                (Variable "isInitialCycle"))
+        IfStatement (Variable "isInitialCycle")
                     ((Statement (generateIdentifierContext p m (context me edges) dag)
                                 (Constant initValue)) ∷ [])
                     ((Statement (generateIdentifierContext p m (context me edges) dag)
@@ -351,7 +349,7 @@ generateModelCodeCondition p (Operation n ins outs sms) preC with (createDAG (Op
 generateModelCodeHoareTriplets : Project -> Model -> Maybe (List (HoareTriplet (List String)))
 generateModelCodeHoareTriplets p (Operation n ins outs sms) with (createDAG (Operation n ins outs sms))
 ... | nothing = nothing
-... | just dag = just (statementListToHoareTriplets (getInputsCondition ins) (generateModelElementsStatementList p (Operation n ins outs sms) dag))
+... | just dag = just (statementListToHoareTriplets (Defined (var "isInitialCycle") ∧ (getInputsCondition ins)) (generateModelElementsStatementList p (Operation n ins outs sms) dag))
 
 
 generateAdditionAnnotation : List String -> Annotation
@@ -408,7 +406,7 @@ checkGenerateAndVerify : Maybe Project -> String -> CodeGenerationResult
 checkGenerateAndVerify (just p) n with findModelInProjectWithName p n
 checkGenerateAndVerify (just p) n | just (Operation n2 ins outs sms) with checkModel (Operation n2 ins outs sms)
 checkGenerateAndVerify (just p) n | just (Operation n2 ins outs sms) | [] with getInputsCondition ins | generateModelDAGCondition p (Operation n2 ins outs sms)
-checkGenerateAndVerify (just p) n | just m                           | [] | preCondition | just postCondition with generateModelCodeCondition p m preCondition
+checkGenerateAndVerify (just p) n | just m                           | [] | preCondition | just postCondition with generateModelCodeCondition p m (Defined (var "isInitialCycle") ∧ preCondition)
 checkGenerateAndVerify (just p) n | just m                           | [] | preCondition | just postCondition | just codePostCondition with postCondition ≟C codePostCondition
 checkGenerateAndVerify (just p) n | just m                           | [] | preCondition | just postCondition | just codePostCondition | true = (generateCode p n) 
 checkGenerateAndVerify (just p) n | just m                           | [] | preCondition | just postCondition | just codePostCondition | false = VerifyError
@@ -425,7 +423,8 @@ denemeHoare : Model -> Maybe (List (HoareTriplet (List String)))
 denemeHoare m = generateModelCodeHoareTriplets (project "" [] [] [] []) m
 
 denemeCodeCond : Model -> Maybe Condition
-denemeCodeCond (Operation n ins outs sms) = generateModelCodeCondition (project "" [] [] [] []) (Operation n ins outs sms) (getInputsCondition ins)
+denemeCodeCond (Operation n ins outs sms) = generateModelCodeCondition (project "" [] [] [] []) (Operation n ins outs sms)
+    (Defined (var "isInitialCycle") ∧ (getInputsCondition ins))
 
 denemeDAGCond : Model -> Maybe Condition
 denemeDAGCond m = generateModelDAGCondition (project "" [] [] [] []) m

@@ -35,7 +35,7 @@ data Annotation : Set where
     _<=_ : Annotation -> Annotation -> Annotation
     _>_  : Annotation -> Annotation -> Annotation
     _<_  : Annotation -> Annotation -> Annotation
-    const_ : ℕ -> Annotation
+    const_ : String -> Annotation
     var_ : String -> Annotation
     true : Annotation
     false : Annotation
@@ -57,7 +57,7 @@ data HoareTriplet {a} (A : Set a): Set a where
 _≟A_ : Annotation -> Annotation -> Bool
 _≟A_ false false = true
 _≟A_ true true = true
-_≟A_ (const n1) (const n2) = n1 ==ℕ n2
+_≟A_ (const s1) (const s2) = s1 Data.String.== s2
 _≟A_ (var v1) (var v2) = v1 Data.String.== v2
 _≟A_ (_+_  a1 a2) (_+_  a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
 _≟A_ (_-_  a1 a2) (_-_  a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
