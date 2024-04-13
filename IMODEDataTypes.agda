@@ -137,6 +137,7 @@ data ModelElement : Set where
   StrictlyLessThan : BaseModelElementProperties -> ModelElement
   If : BaseModelElementProperties -> ModelElement
   Previous : BaseModelElementProperties -> List String -> ModelElement
+  Textual : BaseModelElementProperties -> String -> ModelElement
 
 data Model : Set where
   Operation : String -> (inputs : List ModelElement) -> (outputs : List ModelElement) -> (subModels : List ModelElement)-> Model
@@ -180,6 +181,7 @@ getBaseModelProperties (StrictlyGreaterThan p) = just p
 getBaseModelProperties (StrictlyLessThan p) = just p
 getBaseModelProperties (If p) = just p
 getBaseModelProperties (Previous p _) = just p
+getBaseModelProperties (Textual p _) = just p
 getBaseModelProperties _ = nothing
 
 getModelElementName : ModelElement -> String
@@ -238,6 +240,11 @@ findEndModels [] = []
 findEndModels (x ∷ xs) with getBaseModelProperties x
 ... | just (Properties _ _ _ [] _) = x ∷ findEndModels xs
 ... | _ = findEndModels xs
+
+findPreviousModels : List ModelElement -> List ModelElement
+findPreviousModels [] = []
+findPreviousModels ((Previous p v) ∷ xs) = (Previous p v) ∷ findPreviousModels xs
+findPreviousModels (x ∷ xs) = findPreviousModels xs
 
 findNonConnectionModelElementCountAlt : List ModelElement -> ℕ
 findNonConnectionModelElementCountAlt [] = zero
@@ -707,5 +714,41 @@ previousExample = Operation "previous"
   (Properties "Output" "1711905218125_17" ("1711905209522_50" ∷ [])
    [] [])
   "1711905218206_18"
+  ∷ [])
+  
+previousCycle : Model
+previousCycle = Operation "previousCycle" []
+ (Output "Output" "1713010148490_28" iInt16 ∷ [])
+ (OutputInstance
+  (Properties "Output" "1713010148462_27" ("1713010169932_75" ∷ [])
+   [] [])
+  "1713010148490_28"
+  ∷
+  Previous
+  (Properties "Previous1" "1713010155494_6" ("1713010171125_76" ∷ [])
+   ((0 , "1713010160524_73") ∷ []) [])
+  ("0" ∷ [])
+  ∷
+  Addition
+  (Properties "Addition1" "1713010159611_11"
+   ("1713010160524_73" ∷ "1713010165756_74" ∷ [])
+   ((0 , "1713010169932_75") ∷ (0 , "1713010171125_76") ∷ []) [])
+  ∷
+  Connection "Connect73" "1713010160524_73" "1713010155494_6"
+  "1713010159611_11"
+  ∷
+  Textual
+  (Properties "Textual1" "1713010163528_1" []
+   ((0 , "1713010165756_74") ∷ []) [])
+  "1"
+  ∷
+  Connection "Connect74" "1713010165756_74" "1713010163528_1"
+  "1713010159611_11"
+  ∷
+  Connection "Connect75" "1713010169932_75" "1713010159611_11"
+  "1713010148462_27"
+  ∷
+  Connection "Connect76" "1713010171125_76" "1713010159611_11"
+  "1713010155494_6"
   ∷ [])
   

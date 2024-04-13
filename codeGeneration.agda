@@ -253,16 +253,23 @@ mutual
                                                                         (Variable (generateIdentifierAtEdge p m edges 2 dag))) ∷ []) ∷ []
 
     generatePreviousMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
-    generatePreviousMain p m (context (Previous pro (initValue ∷ [])) edges) dag = let me = (Previous pro (initValue ∷ [])) in
+    generatePreviousMain p m (context (Previous pro (initValue ∷ [])) []) dag = let me = (Previous pro (initValue ∷ [])) in
         IfStatement (Variable "isInitialCycle")
-                    ((Statement (generateIdentifierContext p m (context me edges) dag)
+                    ((Statement (generateIdentifierContext p m (context me []) dag)
                                 (Constant initValue)) ∷ [])
-                    ((Statement (generateIdentifierContext p m (context me edges) dag)
-                                (Variable ((generateIdentifierContext p m (context me edges) dag) ++ "_mem"))) ∷ []) ∷
+                    ((Statement (generateIdentifierContext p m (context me []) dag)
+                                (Variable ((generateIdentifierContext p m (context me []) dag) ++ "_mem"))) ∷ [])
+                                ∷ []
+    generatePreviousMain p m (context (Previous pro (initValue ∷ [])) edges) dag = let me = (Previous pro (initValue ∷ [])) in
         Statement ((generateIdentifierContext p m (context me edges) dag) ++ "_mem")
                   (Variable (generateIdentifierAtEdge p m edges 0 dag))
                                 ∷ []
     generatePreviousMain _ _ _ _ = []
+
+    generateTextualMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
+    generateTextualMain p m (context (Textual pro text) edges) dag = Statement (generateIdentifierContext p m (context (Textual pro text) edges) dag)
+                                                              (Constant text) ∷ []
+    generateTextualMain _ _ _ _ = []
 
     generateModelElementMain : ∀ {n} -> ModelElement -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
     generateModelElementMain (OutputInstance _ _) p m c dag = generateOutputMain p m c dag
@@ -293,27 +300,53 @@ mutual
     generateModelElementMain (StrictlyLessThan _) p m c dag = generateStrictlyLessThanMain p m c dag
     generateModelElementMain (If _) p m c dag = generateIfMain p m c dag
     generateModelElementMain (Previous _ _) p m c dag = generatePreviousMain p m c dag
+    generateModelElementMain (Textual _ _) p m c dag = generateTextualMain p m c dag
     generateModelElementMain _ p m c dag = []
 
     generateModelElement : ∀ {n} -> Project -> Model -> CodeSection -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateModelElement    p m Identifier  (context me edges)                   dag = (getModelElementName me) ∷ []
-    generateModelElement{n} p m Declaration (context (InputInstance _ _) edges)  dag = []
-    generateModelElement{n} p m Declaration (context (OutputInstance _ _) edges) dag = []
-    generateModelElement{n} p m Declaration c                                    dag = (getStringFromType (getOutputType n m (c & dag)) ++ " " ++ (generateIdentifierContext p m c dag) ++ ";") ∷ []
-    generateModelElement    p m Main        (context me edges)                   dag = statementListToString (generateModelElementMain me p m (context me edges) dag)
+    generateModelElement p m Identifier  (context me edges)                   dag = (getModelElementName me) ∷ []
+    generateModelElement p m Declaration (context (InputInstance _ _) edges)  dag = []
+    generateModelElement p m Declaration (context (OutputInstance _ _) edges) dag = []
+    generateModelElement{n} p m Declaration c dag with getOutputType n m (c & dag)
+    generateModelElement{n} p m Declaration c dag | iNone = []
+    generateModelElement{n} p m Declaration c dag | t = ((getStringFromType t) ++ " " ++ (generateIdentifierContext p m c dag) ++ ";") ∷ []
+    generateModelElement p m Main        (context me edges)                   dag = statementListToString (generateModelElementMain me p m (context me edges) dag)
 
 -- Go over DAG and call generate section code for the model element.
 -- DAG is already ordered so that all necessary codes for a model element are generated before its own code.
-generateModelElements : ∀ {n} -> Project -> Model -> CodeSection -> ModelDAG n -> List String
-generateModelElements _ _ _ ∅ = []
-generateModelElements p m section (c & dag) = concatenateTwoList (generateModelElements p m section dag) (generateModelElement p m section c dag) 
+generateModelElements : ∀ {n} -> Project -> Model -> CodeSection -> ModelDAG n -> List ModelElement -> List String
+generateModelElements _ _ _ ∅ _ = []
+generateModelElements p m section ((context me edges) & dag) seen with containsModelElement seen me
+generateModelElements p m section (c & dag) seen | false = concatenateTwoList (generateModelElements p m section dag seen) (generateModelElement p m section c dag)
+generateModelElements p m section (c & dag) seen | true = (generateModelElements p m section dag seen)
 
-generateModelElementsStatementList : ∀ {n} -> Project -> Model -> ModelDAG n -> List StatementType
-generateModelElementsStatementList _ _ ∅ = []
-generateModelElementsStatementList p m ((context me edges) & dag) = concatenateTwoList (generateModelElementsStatementList p m dag) (generateModelElementMain me p m (context me edges) dag)
+DAGToListExcludingInputPrevious : ∀ {n} -> ModelDAG n -> List ModelElement
+DAGToListExcludingInputPrevious ∅ = []
+DAGToListExcludingInputPrevious ((context (Previous _ _) []) & dag) = DAGToListExcludingInputPrevious dag
+DAGToListExcludingInputPrevious ((context me e) & dag) = me ∷ (DAGToListExcludingInputPrevious dag)
 
-generateModelSource : ∀ {n} -> Project -> Model -> String -> ModelDAG n -> GeneratedFile
-generateModelSource p m n dag with generateModelElements p m Main dag | generateModelElements p m Declaration dag
+generateModelElementsDAGs : ∀ {n} -> Project -> Model -> CodeSection -> List (ModelDAG n) -> List ModelElement -> List String
+generateModelElementsDAGs _ _ _ [] _ = []
+generateModelElementsDAGs p m section (dag ∷ dags) seen = concatenateTwoList
+                                                            (generateModelElements p m section dag seen)
+                                                            (generateModelElementsDAGs p m section dags (seen Data.List.++ (DAGToListExcludingInputPrevious dag)))
+
+generateModelElementsStatementList : ∀ {n} -> Project -> Model -> ModelDAG n -> List ModelElement -> List StatementType
+generateModelElementsStatementList _ _ ∅ _ = []
+generateModelElementsStatementList p m ((context me edges) & dag) seen with containsModelElement seen me
+generateModelElementsStatementList p m ((context me edges) & dag) seen | false = concatenateTwoList
+                                                                        (generateModelElementsStatementList p m dag seen)
+                                                                        (generateModelElementMain me p m (context me edges) dag)
+generateModelElementsStatementList p m (c & dag) seen | true = (generateModelElementsStatementList p m dag seen)
+                                                                        
+generateModelElementsStatementListDAGs : ∀ {n} -> Project -> Model -> List (ModelDAG n) -> List ModelElement -> List StatementType
+generateModelElementsStatementListDAGs _ _ [] _ = []
+generateModelElementsStatementListDAGs p m (dag ∷ dags) seen = concatenateTwoList
+                                                            (generateModelElementsStatementListDAGs p m dags (seen Data.List.++ (DAGToListExcludingInputPrevious dag)))
+                                                            (generateModelElementsStatementList p m dag seen)
+
+generateModelSource : ∀ {n} -> Project -> Model -> String -> List (ModelDAG n) -> GeneratedFile
+generateModelSource p m n dags with generateModelElementsDAGs p m Main dags [] | generateModelElementsDAGs p m Declaration dags []
 ... | mainContent | declarationContent = File (n ++ ".c") (
     ("#include \"" ++ n ++ ".h\"") ∷ "" ∷
     ("void " ++ n ++ "Main(i_" ++ n ++ "* inputs, o_" ++ n ++ "* outputs)") ∷
@@ -324,7 +357,7 @@ generateModelSource p m n dag with generateModelElements p m Main dag | generate
 generateModel : Project -> Model -> CodeGenerationResult
 generateModel p (Operation n ins outs sms) with (createDAG (Operation n ins outs sms))
 ... | nothing = GenerationError ("Could not generate DAG for" ++ n)
-... | just dag = Success (generateModelSource p (Operation n ins outs sms) n dag ∷ [])
+... | just dags = Success (generateModelSource p (Operation n ins outs sms) n dags ∷ [])
 
 getInputsCondition : List ModelElement -> Condition
 getInputsCondition [] = true
@@ -340,16 +373,17 @@ getIOVars _ = []
 generateModelCodeCondition : Project -> Model -> Condition -> Maybe Condition
 generateModelCodeCondition p (Operation n ins outs sms) preC with (createDAG (Operation n ins outs sms))
 ... | nothing = nothing
-... | just dag = just (
+... | just dags = just (
     weaken 
         (statementListToCondition preC preC
-                                  (generateModelElementsStatementList p (Operation n ins outs sms) dag))
+                                  (generateModelElementsStatementListDAGs p (Operation n ins outs sms) dags []))
         (getIOVars (ins Data.List.++ outs)))
 
 generateModelCodeHoareTriplets : Project -> Model -> Maybe (List (HoareTriplet (List String)))
 generateModelCodeHoareTriplets p (Operation n ins outs sms) with (createDAG (Operation n ins outs sms))
 ... | nothing = nothing
-... | just dag = just (statementListToHoareTriplets (Defined (var "isInitialCycle") ∧ (getInputsCondition ins)) (generateModelElementsStatementList p (Operation n ins outs sms) dag))
+... | just dags = just (statementListToHoareTriplets (Defined (var "isInitialCycle") ∧ (getInputsCondition ins))
+                                                     (generateModelElementsStatementListDAGs p (Operation n ins outs sms) dags []))
 
 
 generateAdditionAnnotation : List String -> Annotation
@@ -384,11 +418,16 @@ generateCondition p m ((context (InputInstance (Properties n _ _ _ _) _) edges) 
 generateCondition p m ((context me edges) & dag) = let c = generateCondition p m dag in
     c ∧ replaceVarsInNewCondition c (generateModelElementCondition p m (context me edges) dag)
 
+generateConditionDAGs : ∀ {n} -> Project -> Model -> List (ModelDAG n) -> Condition
+generateConditionDAGs p m [] = true
+generateConditionDAGs p m (dag ∷ dags) = let c = generateCondition p m dag in
+    c ∧ replaceVarsInNewCondition c (generateConditionDAGs p m dags)
+
 generateModelDAGCondition : Project -> Model -> Maybe Condition
 generateModelDAGCondition p (Operation n ins outs sms) with (createDAG (Operation n ins outs sms))
 ... | nothing = nothing
-... | just dag = just (weaken
-    (generateCondition p (Operation n ins outs sms) dag) (getIOVars (ins Data.List.++ outs)))
+... | just dags = just (weaken
+    (generateConditionDAGs p (Operation n ins outs sms) dags) (getIOVars (ins Data.List.++ outs)))
 
 -- To generate a code for the project, code generation should have a root model to start.
 generateCode : Project -> String -> CodeGenerationResult

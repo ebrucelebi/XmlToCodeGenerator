@@ -2,14 +2,16 @@
 <!DOCTYPE prjx>
 <project name="ExampleIMODESave" id="1696681038889_1">
     <submodels>
-        <model path="logicModel1.mdlx" hash=""/>
-        <model path="hasCycle.mdlx" hash=""/>
-        <model path="hasCycle2.mdlx" hash=""/>
-        <model path="doubleOutput.mdlx" hash=""/>
-        <model path="ifExample.mdlx" hash=""/>
-        <model path="ifExample2.mdlx" hash=""/>
-        <model path="ifExample3.mdlx" hash=""/>
-        <model path="previous.mdlx" hash=""/>
+        <model hash="" path="logicModel1.mdlx"/>
+        <model hash="" path="hasCycle.mdlx"/>
+        <model hash="" path="hasCycle2.mdlx"/>
+        <model hash="" path="doubleOutput.mdlx"/>
+        <model hash="" path="ifExample.mdlx"/>
+        <model hash="" path="ifExample2.mdlx"/>
+        <model hash="" path="ifExample3.mdlx"/>
+        <model hash="" path="previous.mdlx"/>
+        <model hash="" path="previousCycle2.mdlx"/>
+        <model hash="" path="previousCycle.mdlx"/>
     </submodels>
     <types path="Types.typx"/>
     <constants path="Constants.constx"/>

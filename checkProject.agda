@@ -135,11 +135,15 @@ checkModelDAG (Operation n inputs outputs subModels) dag with checkForCyclic dag
 ... | true = ("There is a cycle in " ++ n) ∷ []
 ... | false = []
 
+checkModelDAGs : ∀ {n} -> Model -> List (ModelDAG n) -> List String
+checkModelDAGs m [] = []
+checkModelDAGs m (dag ∷ dags) = (checkModelDAG m dag) Data.List.++ (checkModelDAGs m dags)
+
 checkModel : Model -> List String
 checkModel (Operation n inputs outputs subModels) with checkModelElementsConnections (concatenate (inputs ∷ outputs ∷ subModels ∷ []))
 checkModel (Operation n inputs outputs subModels) | [] with createDAG (Operation n inputs outputs subModels)
 checkModel (Operation n inputs outputs subModels) | [] | nothing = ("Could not create DAG for " ++ n) ∷ []
-checkModel m                                      | [] | just dag = checkModelDAG m dag
+checkModel m                                      | [] | just dags = checkModelDAGs m dags
 checkModel (Operation n inputs outputs subModels) | l = l
 
 checkModels : List Model -> List String
