@@ -42,72 +42,72 @@ collectOutConIds ((n , id) ∷ xs) = id ∷ collectOutConIds xs
 
 
 checkInputConnectionCounts : ModelElement -> Bool
-checkInputConnectionCounts (InputInstance (Properties _ _ inCons _ _) _) = (Data.List.length inCons) ==ℕ 0
-checkInputConnectionCounts (OutputInstance (Properties _ _ inCons _ _) _) = (Data.List.length inCons) ==ℕ 1
-checkInputConnectionCounts (Addition (Properties _ _ inCons _ _)) = (Data.List.length inCons) >=ℕ 2
-checkInputConnectionCounts (Modulo (Properties _ _ inCons _ _)) = (Data.List.length inCons) ==ℕ 2
-checkInputConnectionCounts (Multiplication (Properties _ _ inCons _ _)) = (Data.List.length inCons) >=ℕ 2
-checkInputConnectionCounts (NumericCast (Properties _ _ inCons _ _)) = (Data.List.length inCons) ==ℕ 1
-checkInputConnectionCounts (PolymorphicDivision (Properties _ _ inCons _ _)) = (Data.List.length inCons) ==ℕ 2
-checkInputConnectionCounts (Subtraction (Properties _ _ inCons _ _)) = (Data.List.length inCons) ==ℕ 2
-checkInputConnectionCounts (UnaryMinus (Properties _ _ inCons _ _)) = (Data.List.length inCons) ==ℕ 1
-checkInputConnectionCounts (LogicalAnd (Properties _ _ inCons _ _)) = (Data.List.length inCons) >=ℕ 2
-checkInputConnectionCounts (LogicalNor (Properties _ _ inCons _ _)) = (Data.List.length inCons) ==ℕ 2
-checkInputConnectionCounts (LogicalNot (Properties _ _ inCons _ _)) = (Data.List.length inCons) ==ℕ 1
-checkInputConnectionCounts (LogicalOr (Properties _ _ inCons _ _)) = (Data.List.length inCons) >=ℕ 2
-checkInputConnectionCounts (LogicalSharp (Properties _ _ inCons _ _)) = (Data.List.length inCons) >=ℕ 2
-checkInputConnectionCounts (LogicalXor (Properties _ _ inCons _ _)) = (Data.List.length inCons) ==ℕ 2
-checkInputConnectionCounts (BitwiseAnd (Properties _ _ inCons _ _)) = (Data.List.length inCons) >=ℕ 2
-checkInputConnectionCounts (BitwiseNot (Properties _ _ inCons _ _)) = (Data.List.length inCons) ==ℕ 1
-checkInputConnectionCounts (BitwiseOr (Properties _ _ inCons _ _)) = (Data.List.length inCons) >=ℕ 2
-checkInputConnectionCounts (BitwiseXor (Properties _ _ inCons _ _)) = (Data.List.length inCons) ==ℕ 2
-checkInputConnectionCounts (LeftShift (Properties _ _ inCons _ _)) = (Data.List.length inCons) ==ℕ 2
-checkInputConnectionCounts (RightShift (Properties _ _ inCons _ _)) = (Data.List.length inCons) ==ℕ 2
-checkInputConnectionCounts (Different (Properties _ _ inCons _ _)) = (Data.List.length inCons) ==ℕ 2
-checkInputConnectionCounts (Equal (Properties _ _ inCons _ _)) = (Data.List.length inCons) ==ℕ 2
-checkInputConnectionCounts (GreaterThanEqual (Properties _ _ inCons _ _)) = (Data.List.length inCons) ==ℕ 2
-checkInputConnectionCounts (LessThanEqual (Properties _ _ inCons _ _)) = (Data.List.length inCons) ==ℕ 2
-checkInputConnectionCounts (StrictlyGreaterThan (Properties _ _ inCons _ _)) = (Data.List.length inCons) ==ℕ 2
-checkInputConnectionCounts (StrictlyLessThan (Properties _ _ inCons _ _)) = (Data.List.length inCons) ==ℕ 2
-checkInputConnectionCounts (If (Properties _ _ inCons _ _)) = (Data.List.length inCons) ==ℕ 2
-checkInputConnectionCounts (Previous (Properties _ _ inCons _ _) _ ) = (Data.List.length inCons) ==ℕ 1
+checkInputConnectionCounts (InputInstance (Properties _ _ inCons _ _ _) _) = (Data.List.length inCons) ==ℕ 0
+checkInputConnectionCounts (OutputInstance (Properties _ _ inCons _ _ _) _) = (Data.List.length inCons) ==ℕ 1
+checkInputConnectionCounts (Addition (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) >=ℕ 2
+checkInputConnectionCounts (Modulo (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (Multiplication (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) >=ℕ 2
+checkInputConnectionCounts (NumericCast (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) ==ℕ 1
+checkInputConnectionCounts (PolymorphicDivision (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (Subtraction (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (UnaryMinus (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) ==ℕ 1
+checkInputConnectionCounts (LogicalAnd (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) >=ℕ 2
+checkInputConnectionCounts (LogicalNor (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (LogicalNot (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) ==ℕ 1
+checkInputConnectionCounts (LogicalOr (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) >=ℕ 2
+checkInputConnectionCounts (LogicalSharp (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) >=ℕ 2
+checkInputConnectionCounts (LogicalXor (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (BitwiseAnd (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) >=ℕ 2
+checkInputConnectionCounts (BitwiseNot (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) ==ℕ 1
+checkInputConnectionCounts (BitwiseOr (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) >=ℕ 2
+checkInputConnectionCounts (BitwiseXor (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (LeftShift (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (RightShift (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (Different (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (Equal (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (GreaterThanEqual (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (LessThanEqual (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (StrictlyGreaterThan (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (StrictlyLessThan (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (If (Properties _ _ inCons _ _ _)) = (Data.List.length inCons) ==ℕ 2
+checkInputConnectionCounts (Previous (Properties _ _ inCons _ _ _) _ ) = (Data.List.length inCons) ==ℕ 1
 checkInputConnectionCounts _ = false
 
 
 checkOutputConnectionCounts : ModelElement -> Bool
-checkOutputConnectionCounts (InputInstance (Properties _ _ _ outCons _) _) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (OutputInstance (Properties _ _ _ outCons _) _) = (Data.List.length outCons) ==ℕ 0
-checkOutputConnectionCounts (Addition (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (Modulo (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (Multiplication (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (NumericCast (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (PolymorphicDivision (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (Subtraction (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (UnaryMinus (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (LogicalAnd (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (LogicalNor (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (LogicalNot (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (LogicalOr (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (LogicalSharp (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (LogicalXor (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (BitwiseAnd (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (BitwiseNot (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (BitwiseOr (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (BitwiseXor (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (LeftShift (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (RightShift (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (Different (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (Equal (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (GreaterThanEqual (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (LessThanEqual (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (StrictlyGreaterThan (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
-checkOutputConnectionCounts (StrictlyLessThan (Properties _ _ _ outCons _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (InputInstance (Properties _ _ _ outCons _ _) _) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (OutputInstance (Properties _ _ _ outCons _ _) _) = (Data.List.length outCons) ==ℕ 0
+checkOutputConnectionCounts (Addition (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (Modulo (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (Multiplication (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (NumericCast (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (PolymorphicDivision (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (Subtraction (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (UnaryMinus (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (LogicalAnd (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (LogicalNor (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (LogicalNot (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (LogicalOr (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (LogicalSharp (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (LogicalXor (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (BitwiseAnd (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (BitwiseNot (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (BitwiseOr (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (BitwiseXor (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (LeftShift (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (RightShift (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (Different (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (Equal (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (GreaterThanEqual (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (LessThanEqual (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (StrictlyGreaterThan (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
+checkOutputConnectionCounts (StrictlyLessThan (Properties _ _ _ outCons _ _)) = (Data.List.length outCons) ==ℕ 1
 checkOutputConnectionCounts _ = false
 
 checkInputConnections : ModelElement -> List String
 checkInputConnections m with getBaseModelProperties m
 ... | nothing = []
-... | just (Properties n id inCons outCons condCons) with checkInputConnectionCounts m
+... | just (Properties n _ inCons _ _ _) with checkInputConnectionCounts m
 ... | false = ("Input connection count is not correct for " ++ n) ∷ []
 ... | true with contains inCons ""
 ... | false = []
@@ -116,7 +116,7 @@ checkInputConnections m with getBaseModelProperties m
 checkOutputConnections : ModelElement -> List String
 checkOutputConnections m with getBaseModelProperties m
 ... | nothing = []
-... | just (Properties n id inCons outCons condCons) with true -- checkOutputConnectionCounts m
+... | just (Properties n _ _ outCons _ _) with true -- checkOutputConnectionCounts m
 ... | false = ("Output connection count is not correct for " ++ n) ∷ []
 ... | true with contains (collectOutConIds outCons) ""
 ... | false = []

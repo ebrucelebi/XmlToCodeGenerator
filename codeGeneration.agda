@@ -253,16 +253,27 @@ mutual
                                                                         (Variable (generateIdentifierAtEdge p m edges 2 dag))) ∷ []) ∷ []
 
     generatePreviousMain : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> List StatementType
-    generatePreviousMain p m (context (Previous pro (initValue ∷ [])) []) dag = let me = (Previous pro (initValue ∷ [])) in
+    generatePreviousMain p m (context (Previous (Properties a b c d f ("" ∷ [])) (initValue ∷ [])) []) dag = let me = (Previous (Properties a b c d f ("" ∷ [])) (initValue ∷ [])) in
         IfStatement (Variable "isInitialCycle")
                     ((Statement (generateIdentifierContext p m (context me []) dag)
                                 (Constant initValue)) ∷ [])
                     ((Statement (generateIdentifierContext p m (context me []) dag)
                                 (Variable ((generateIdentifierContext p m (context me []) dag) ++ "_mem"))) ∷ [])
                                 ∷ []
-    generatePreviousMain p m (context (Previous pro (initValue ∷ [])) edges) dag = let me = (Previous pro (initValue ∷ [])) in
-        Statement ((generateIdentifierContext p m (context me edges) dag) ++ "_mem")
-                  (Variable (generateIdentifierAtEdge p m edges 0 dag))
+    generatePreviousMain p m (context (Previous (Properties a b c d f ("" ∷ [])) (initValue ∷ [])) (e1 ∷ [])) dag = let me = (Previous (Properties a b c d f ("" ∷ [])) (initValue ∷ [])) in
+        Statement ((generateIdentifierContext p m (context me (e1 ∷ [])) dag) ++ "_mem")
+                  (Variable (generateIdentifierAtEdge p m (e1 ∷ []) 0 dag))
+                                ∷ []
+    generatePreviousMain p m (context (Previous (Properties a b c d f (s ∷ [])) (initValue ∷ [])) (e ∷ [])) dag = let me = (Previous (Properties a b c d f (s ∷ [])) (initValue ∷ [])) in
+        IfStatement (Variable "isInitialCycle")
+                    ((Statement (generateIdentifierContext p m (context me []) dag)
+                                (Variable (generateIdentifierAtEdge p m (e ∷ []) 0 dag))) ∷ [])
+                    ((Statement (generateIdentifierContext p m (context me []) dag)
+                                (Variable ((generateIdentifierContext p m (context me []) dag) ++ "_mem"))) ∷ [])
+                                ∷ []
+    generatePreviousMain p m (context (Previous (Properties a b c d f (s ∷ [])) (initValue ∷ [])) (e1 ∷ e2 ∷ [])) dag = let me = (Previous (Properties a b c d f (s ∷ [])) (initValue ∷ [])) in
+        Statement ((generateIdentifierContext p m (context me (e1 ∷ e2 ∷ [])) dag) ++ "_mem")
+                  (Variable (generateIdentifierAtEdge p m (e1 ∷ e2 ∷ []) 1 dag))
                                 ∷ []
     generatePreviousMain _ _ _ _ = []
 
@@ -356,7 +367,7 @@ generateModelSource p m n dags with generateModelElementsDAGs p m Main dags [] |
 -- Create DAG and start the code generation for the model elements in the order.
 generateModel : Project -> Model -> CodeGenerationResult
 generateModel p (Operation n ins outs sms) with (createDAG (Operation n ins outs sms))
-... | nothing = GenerationError ("Could not generate DAG for" ++ n)
+... | nothing = GenerationError ("Could not generate DAG for " ++ n)
 ... | just dags = Success (generateModelSource p (Operation n ins outs sms) n dags ∷ [])
 
 getInputsCondition : List ModelElement -> Condition
@@ -397,24 +408,24 @@ generateMultiplicationAnnotation (x ∷ []) = var x
 generateMultiplicationAnnotation (x ∷ xs) = (var x) * generateMultiplicationAnnotation xs
 
 generateModelElementCondition : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> Condition
-generateModelElementCondition p m (context (Addition (Properties n _ _ _ _)) edges) dag =
+generateModelElementCondition p m (context (Addition (Properties n _ _ _ _ _)) edges) dag =
     (var n) :=: generateAdditionAnnotation (generateIdentifierEdges p m edges dag)
-generateModelElementCondition p m (context (Multiplication (Properties n _ _ _ _)) edges) dag =
+generateModelElementCondition p m (context (Multiplication (Properties n _ _ _ _ _)) edges) dag =
     (var n) :=: generateMultiplicationAnnotation (generateIdentifierEdges p m edges dag)
-generateModelElementCondition p m (context (Subtraction (Properties n _ _ _ _)) edges) dag =
+generateModelElementCondition p m (context (Subtraction (Properties n _ _ _ _ _)) edges) dag =
     (var n) :=: (var (generateIdentifierAtEdge p m edges 0 dag)) - (var (generateIdentifierAtEdge p m edges 1 dag))
-generateModelElementCondition p m (context (StrictlyGreaterThan (Properties n _ _ _ _)) edges) dag =
+generateModelElementCondition p m (context (StrictlyGreaterThan (Properties n _ _ _ _ _)) edges) dag =
     (var n) :=: (var (generateIdentifierAtEdge p m edges 0 dag)) > (var (generateIdentifierAtEdge p m edges 1 dag))
-generateModelElementCondition p m (context (OutputInstance (Properties n _ _ _ _) _) edges) dag =
+generateModelElementCondition p m (context (OutputInstance (Properties n _ _ _ _ _) _) edges) dag =
     (var n) :=: (var (generateIdentifierAtEdge p m edges 0 dag))
-generateModelElementCondition p m (context (If (Properties n _ _ _ _)) edges) dag = let cond = (var (generateIdentifierAtEdge p m edges 0 dag)) in
+generateModelElementCondition p m (context (If (Properties n _ _ _ _ _)) edges) dag = let cond = (var (generateIdentifierAtEdge p m edges 0 dag)) in
     (((cond :=: true) ∧ (var n) :=: var (generateIdentifierAtEdge p m edges 1 dag)) ∨
      ((cond :=: false) ∧ (var n) :=: var (generateIdentifierAtEdge p m edges 2 dag)))
 generateModelElementCondition _ _ _ _ = false
 
 generateCondition : ∀ {n} -> Project -> Model -> ModelDAG n -> Condition
 generateCondition p m ∅ = true
-generateCondition p m ((context (InputInstance (Properties n _ _ _ _) _) edges) & dag) = generateCondition p m dag ∧ Defined (var n)
+generateCondition p m ((context (InputInstance (Properties n _ _ _ _ _) _) edges) & dag) = generateCondition p m dag ∧ Defined (var n)
 generateCondition p m ((context me edges) & dag) = let c = generateCondition p m dag in
     c ∧ replaceVarsInNewCondition c (generateModelElementCondition p m (context me edges) dag)
 

@@ -23,10 +23,20 @@ mutual
     -- (Final topological order starting with given model element)
     topologicalListAlt2 : Model -> Bool -> List ModelElement -> ℕ -> ModelElement -> Maybe (List ModelElement)
     topologicalListAlt2 m _ seen zero me = just (me ∷ []) -- If count down is finished return final model element.
+    
+    topologicalListAlt2 m true seen (suc n) (Previous (Properties na id iC oC cC ("" ∷ [])) v) with containsModelElement seen (Previous (Properties na id iC oC cC ("" ∷ [])) v)
+    topologicalListAlt2 m true seen (suc n) preMe | true = just [] -- It is the previous at the beginning
+    topologicalListAlt2 m true seen (suc n) preMe | false = just (preMe ∷ []) -- Treat previous as inputs and end here.
+
+    topologicalListAlt2 m true seen (suc n) (Previous (Properties na id iC oC cC paramConIds) v) with containsModelElement seen (Previous (Properties na id iC oC cC ("" ∷ [])) v)
+    topologicalListAlt2 m true seen (suc n) preMe | true = just [] -- It is the previous at the beginning
+    topologicalListAlt2 m true seen (suc n) (Previous (Properties na id iC oC cC paramConIds) v) | false with findModelElementsInModelWithID m paramConIds
+    topologicalListAlt2 m true seen (suc n) preMe | false | nothing = nothing
+    topologicalListAlt2 m true seen (suc n) preMe | false | just paramCons with topologicalListAlt m true (preMe ∷ seen) n paramCons
+    topologicalListAlt2 m true seen (suc n) preMe | false | just paramCons | nothing = nothing
+    topologicalListAlt2 m true seen (suc n) preMe | false | just paramCons | just ts = just (preMe ∷ ts)
+
     -- If it is a connection, find what model element it is coming from and continue with that model element. Do not add connection.
-    topologicalListAlt2 m true seen (suc n) (Previous p v) with containsModelElement seen (Previous p v)
-    ... | true = just [] -- It is the previous at athe beginning
-    ... | false = just ((Previous p v) ∷ []) -- Treat previous as inputs and end here.
     topologicalListAlt2 m prevAsInput seen (suc n) (Connection _ _ startMID _ ) with findModelElementInModelWithID m startMID
     topologicalListAlt2 m prevAsInput seen (suc n) c | nothing = nothing
     topologicalListAlt2 m prevAsInput seen (suc n) c | just startM = topologicalListAlt2 m prevAsInput (seen) n startM
@@ -35,22 +45,29 @@ mutual
     ... | true = just (me ∷ []) -- Cycle
     ... | false with getBaseModelProperties me -- It should have properties if it is not a connection.
     ... | nothing = nothing -- Should not come here. If that's the case load is wrong.
-    ... | just (Properties _ _ [] _ []) = just (me ∷ []) -- No input connections. Path ends here.
-    ... | just (Properties _ _ inConIds _ condConIds) with findModelElementsInModelWithID m condConIds | findModelElementsInModelWithID m inConIds -- Find model elements ofinput connections
-    ... | nothing | _ = nothing
-    ... | _ | nothing = nothing
-    ... | just inCons | just condCons with topologicalListAlt m true (me ∷ seen) n (inCons Data.List.++ condCons)
+    ... | just (Properties _ _ [] _ [] []) = just (me ∷ []) -- No input connections. Path ends here.
+    ... | just (Properties _ _ inConIds _ condConIds paramConIds) with findModelElementsInModelWithID m condConIds |
+                                                                       findModelElementsInModelWithID m paramConIds |
+                                                                       findModelElementsInModelWithID m inConIds -- Find model elements of input connections
+    ... | nothing | _ | _ = nothing
+    ... | _ | nothing | _ = nothing
+    ... | _ | _ | nothing = nothing
+    ... | just condCons | just paramCons | just inCons with topologicalListAlt m true (me ∷ seen) n (condCons Data.List.++ paramCons Data.List.++ inCons)
     ... | nothing = nothing
     ... | just ts = just (me ∷ ts)
     topologicalListAlt2 m false seen (suc n) me with getBaseModelProperties me -- It should have properties if it is not a connection.
     topologicalListAlt2 m false seen (suc n) me | nothing = nothing -- Should not come here. If that's the case load is wrong.
-    topologicalListAlt2 m false seen (suc n) me | just (Properties _ _ inConIds _ condConIds) with me | findModelElementsInModelWithID m condConIds | findModelElementsInModelWithID m inConIds -- Find model elements ofinput connections
-    topologicalListAlt2 m false seen (suc n) me | just p | _ | nothing | _ = nothing
-    topologicalListAlt2 m false seen (suc n) me | just p | _ | _ | nothing = nothing
-    topologicalListAlt2 m false seen (suc n) me | just p | (Previous _ _) | just inCons | just condCons with topologicalListAlt m true (me ∷ seen) n (inCons Data.List.++ condCons) -- Continue to the path with input connections. prevAsInput certainly false
-    topologicalListAlt2 m false seen (suc n) me | just p | (Previous _ _) | just inCons | just condCons | nothing = nothing
-    topologicalListAlt2 m false seen (suc n) me | just p | (Previous _ _) | just inCons | just condCons | just ts = just (me ∷ ts)
-    topologicalListAlt2 m false seen (suc n) me | just p | _ | just inCons | just condCons = topologicalListAlt m false (me ∷ seen) n (inCons Data.List.++ condCons) -- Continue to the path with input connections.
+    topologicalListAlt2 m false seen (suc n) me | just (Properties _ _ inConIds _ condConIds paramConIds) with me |
+                                                                                                findModelElementsInModelWithID m condConIds |
+                                                                                                findModelElementsInModelWithID m paramConIds |
+                                                                                                findModelElementsInModelWithID m inConIds -- Find model elements ofinput connections
+    topologicalListAlt2 m false seen (suc n) me | just p | _ | nothing | _ | _ = nothing
+    topologicalListAlt2 m false seen (suc n) me | just p | _ | _ | nothing | _ = nothing
+    topologicalListAlt2 m false seen (suc n) me | just p | _ | _ | _ | nothing = nothing
+    topologicalListAlt2 m false seen (suc n) me | just p | (Previous _ _) | just condCons | just paramCons | just inCons with topologicalListAlt m true (me ∷ seen) n (condCons Data.List.++ paramCons Data.List.++ inCons) -- Continue to the path with input connections. prevAsInput certainly false
+    topologicalListAlt2 m false seen (suc n) me | just p | (Previous _ _) | just condCons | just paramCons | just inCons | nothing = nothing
+    topologicalListAlt2 m false seen (suc n) me | just p | (Previous _ _) | just condCons | just paramCons | just inCons | just ts = just (me ∷ ts)
+    topologicalListAlt2 m false seen (suc n) me | just p | _ | just condCons | just paramCons | just inCons = topologicalListAlt m false (me ∷ seen) n (condCons Data.List.++ paramCons Data.List.++ inCons) -- Continue to the path with input connections.
 
     -- (Parent model) ->
     -- (Model elements that are already added to the list for the current path) ->
@@ -109,11 +126,14 @@ addEdges m ((context me l) & dag) with addEdges m dag
 ... | nothing = nothing
 ... | just newDag with getBaseModelProperties me
 ... | nothing = nothing
-... | just (Properties _ _ [] _ []) = just ((context me l) & newDag)
-... | just (Properties _ _ inConIds _ condConIds) with findModelElementsInModelWithID m condConIds | findModelElementsInModelWithID m inConIds -- Find model elements ofinput connections
-... | nothing | _ = nothing
-... | _ | nothing = nothing
-... | just inCons | just condCons with createEdges m (inCons Data.List.++ condCons) dag
+... | just (Properties _ _ [] _ [] []) = just ((context me l) & newDag)
+... | just (Properties _ _ inConIds _ condConIds paramConIds) with findModelElementsInModelWithID m condConIds |
+                                                                   findModelElementsInModelWithID m paramConIds |
+                                                                   findModelElementsInModelWithID m inConIds -- Find model elements ofinput connections
+... | nothing | _ | _ = nothing
+... | _ | nothing | _ = nothing
+... | _ | _ | nothing = nothing
+... | just condCons | just paramCons | just inCons with createEdges m (condCons Data.List.++ paramCons Data.List.++ inCons) dag
 ... | nothing = nothing
 ... | just es  = just ((context me es) & newDag)
 

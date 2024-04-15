@@ -101,6 +101,7 @@ data BaseModelElementProperties : Set where
                 (inputConsId : List String) ->
                 (outputConsId : List (ℕ × String)) ->
                 (condConsId : List String) ->
+                (paramConsId : List String) ->
                 BaseModelElementProperties
 
 data ModelElement : Set where
@@ -186,7 +187,7 @@ getBaseModelProperties _ = nothing
 
 getModelElementName : ModelElement -> String
 getModelElementName m with getBaseModelProperties m
-... | just (Properties n _ _ _ _) = n
+... | just (Properties n _ _ _ _ _) = n
 ... | _ with m
 ... | Input n _ _ = n 
 ... | Output n _ _ = n
@@ -195,7 +196,7 @@ getModelElementName m with getBaseModelProperties m
 
 getModelElementID : ModelElement -> String
 getModelElementID m with getBaseModelProperties m
-... | just (Properties _ id _ _ _) = id
+... | just (Properties _ id _ _ _ _) = id
 ... | _ with m
 ... | Input _ id _ = id 
 ... | Output _ id _ = id
@@ -213,6 +214,7 @@ findModelElementInModelWithID (Operation _ inputs outputs subModels) id = findMo
 
 findModelElementsInModelWithID : Model -> List String -> Maybe (List ModelElement)
 findModelElementsInModelWithID _ [] = just []
+findModelElementsInModelWithID m ("" ∷ xs) = findModelElementsInModelWithID m xs
 findModelElementsInModelWithID m (x ∷ xs) with findModelElementInModelWithID m x | findModelElementsInModelWithID m xs
 ... | just me | just mes = just (me ∷ mes)
 ... | _ | _ = nothing
@@ -238,7 +240,7 @@ findModelInProjectWithName record {subModels = sms} n = findModelInModelListWith
 findEndModels : List ModelElement -> List ModelElement
 findEndModels [] = []
 findEndModels (x ∷ xs) with getBaseModelProperties x
-... | just (Properties _ _ _ [] _) = x ∷ findEndModels xs
+... | just (Properties _ _ _ [] _ _) = x ∷ findEndModels xs
 ... | _ = findEndModels xs
 
 findPreviousModels : List ModelElement -> List ModelElement
@@ -278,18 +280,18 @@ exampleModel = (Operation "logicModel1"
  (Output "Output1" "1696681118077_2" iInt16 ∷ [])
  (InputInstance
   (Properties "Input1" "1696681110644_1" []
-   ((0 , "1696681114575_1") ∷ []) [])
+   ((0 , "1696681114575_1") ∷ []) [] [])
   "1696681110711_2"
   ∷
   InputInstance
   (Properties "Input3" "1696681112129_3" []
-   ((0 , "1696681115337_2") ∷ []) [])
+   ((0 , "1696681115337_2") ∷ []) [] [])
   "1696681112176_4"
   ∷
   Addition
   (Properties "Addition1" "1696681114187_1"
    ("1696681114575_1" ∷ "1696681115337_2" ∷ [])
-   ((0 , "1696681118357_3") ∷ []) [])
+   ((0 , "1696681118357_3") ∷ []) [] [])
   ∷
   Connection "Connect1" "1696681114575_1" "1696681110644_1"
   "1696681114187_1"
@@ -299,7 +301,7 @@ exampleModel = (Operation "logicModel1"
   ∷
   OutputInstance
   (Properties "Output1" "1696681118011_1" ("1696681118357_3" ∷ []) []
-   [])
+   [] [])
   "1696681118077_2"
   ∷
   Connection "Connect3" "1696681118357_3" "1696681114187_1"
@@ -312,17 +314,17 @@ exampleModelThatHasCycle = (Operation "hasCycle"
  (Output "Output5" "1702980105810_6" iInt16 ∷ [])
  (InputInstance
   (Properties "Input7" "1702980090841_7" []
-   ((0 , "1702980106934_9") ∷ []) [])
+   ((0 , "1702980106934_9") ∷ []) [] [])
   "1702980090917_8"
   ∷
   Addition
   (Properties "Addition3" "1702980093845_3"
    ("1702980106934_9" ∷ "1702980107873_10" ∷ [])
-   ((0 , "1702980106161_8") ∷ (0 , "1702980107873_10") ∷ []) [])
+   ((0 , "1702980106161_8") ∷ (0 , "1702980107873_10") ∷ []) [] [])
   ∷
   OutputInstance
   (Properties "Output5" "1702980105745_5" ("1702980106161_8" ∷ []) []
-   [])
+   [] [])
   "1702980105810_6"
   ∷
   Connection "Connect8" "1702980106161_8" "1702980093845_3"
@@ -341,22 +343,22 @@ exampleModelThatHasCycle2 = (Operation "hasCycle2"
  (Output "Output7" "1702980363847_8" iInt16 ∷ [])
  (InputInstance
   (Properties "Input9" "1702980358768_9" []
-   ((0 , "1702980381220_13") ∷ []) [])
+   ((0 , "1702980381220_13") ∷ []) [] [])
   "1702980358820_10"
   ∷
   Addition
   (Properties "Addition4" "1702980359718_4"
    ("1702980381220_13" ∷ "1702980391184_15" ∷ [])
-   ((0 , "1702980379810_12") ∷ (0 , "1702980388605_14") ∷ []) [])
+   ((0 , "1702980379810_12") ∷ (0 , "1702980388605_14") ∷ []) [] [])
   ∷
   Addition
   (Properties "Addition5" "1702980360884_5"
    ("1702980379810_12" ∷ "1702980388605_14" ∷ [])
-   ((0 , "1702980364216_11") ∷ (0 , "1702980391184_15") ∷ []) [])
+   ((0 , "1702980364216_11") ∷ (0 , "1702980391184_15") ∷ []) [] [])
   ∷
   OutputInstance
   (Properties "Output7" "1702980363784_7" ("1702980364216_11" ∷ [])
-   [] [])
+   [] [] [])
   "1702980363847_8"
   ∷
   Connection "Connect11" "1702980364216_11" "1702980360884_5"
@@ -383,23 +385,23 @@ doubleOutputModel = (Operation "doubleOutput"
   Output "Output11" "1702982556952_12" iInt16 ∷ [])
  (InputInstance
   (Properties "Input11" "1702982541825_11" []
-   ((0 , "1702982548262_16") ∷ []) [])
+   ((0 , "1702982548262_16") ∷ []) [] [])
   "1702982541890_12"
   ∷
   InputInstance
   (Properties "Input13" "1702982542875_13" []
-   ((0 , "1702982549172_17") ∷ (0 , "1702982551338_19") ∷ []) [])
+   ((0 , "1702982549172_17") ∷ (0 , "1702982551338_19") ∷ []) [] [])
   "1702982542944_14"
   ∷
   Addition
   (Properties "Addition6" "1702982544232_6"
    ("1702982548262_16" ∷ "1702982549172_17" ∷ [])
-   ((0 , "1702982549830_18") ∷ (0 , "1702982558161_20") ∷ []) [])
+   ((0 , "1702982549830_18") ∷ (0 , "1702982558161_20") ∷ []) [] [])
   ∷
   Multiplication
   (Properties "Multiplication1" "1702982546543_1"
    ("1702982549830_18" ∷ "1702982551338_19" ∷ [])
-   ((0 , "1702982559195_21") ∷ []) [])
+   ((0 , "1702982559195_21") ∷ []) [] [])
   ∷
   Connection "Connect16" "1702982548262_16" "1702982541825_11"
   "1702982544232_6"
@@ -415,12 +417,12 @@ doubleOutputModel = (Operation "doubleOutput"
   ∷
   OutputInstance
   (Properties "Output9" "1702982555559_9" ("1702982558161_20" ∷ [])
-   [] [])
+   [] [] [])
   "1702982555602_10"
   ∷
   OutputInstance
   (Properties "Output11" "1702982556907_11" ("1702982559195_21" ∷ [])
-   [] [])
+   [] [] [])
   "1702982556952_12"
   ∷
   Connection "Connect20" "1702982558161_20" "1702982544232_6"
@@ -437,18 +439,18 @@ ifExample = (Operation "ifExample"
  (Output "Output" "1710592289986_12" iInt16 ∷ [])
  (InputInstance
   (Properties "Input1" "1710592239427_15" []
-   ((0 , "1710592252981_21") ∷ []) [])
+   ((0 , "1710592252981_21") ∷ []) [] [])
   "1710592239485_16"
   ∷
   InputInstance
   (Properties "Input2" "1710592245044_17" []
-   ((0 , "1710592253797_22") ∷ []) [])
+   ((0 , "1710592253797_22") ∷ []) [] [])
   "1710592245120_18"
   ∷
   StrictlyGreaterThan
   (Properties "StrictlyGreaterThan1" "1710592252194_1"
    ("1710592252981_21" ∷ "1710592253797_22" ∷ [])
-   ((0 , "1710592256880_23") ∷ []) [])
+   ((0 , "1710592256880_23") ∷ []) [] [])
   ∷
   Connection "Connect21" "1710592252981_21" "1710592239427_15"
   "1710592252194_1"
@@ -459,34 +461,34 @@ ifExample = (Operation "ifExample"
   If
   (Properties "If1" "1710592255112_1"
    ("1710592281009_29" ∷ "1710592275621_26" ∷ [])
-   ((0 , "1710592290399_30") ∷ []) ("1710592256880_23" ∷ []))
+   ((0 , "1710592290399_30") ∷ []) ("1710592256880_23" ∷ []) [])
   ∷
   Connection "Connect23" "1710592256880_23" "1710592252194_1"
   "1710592255112_1"
   ∷
   InputInstance
   (Properties "Input1" "1710592265198_19" []
-   ((0 , "1710592279296_27") ∷ []) [])
+   ((0 , "1710592279296_27") ∷ []) [] [])
   "1710592239485_16"
   ∷
   InputInstance
   (Properties "Input2" "1710592266085_20" []
-   ((0 , "1710592279930_28") ∷ []) [])
+   ((0 , "1710592279930_28") ∷ []) [] [])
   "1710592245120_18"
   ∷
   Addition
   (Properties "Addition6" "1710592268194_6"
    ("1710592273829_24" ∷ "1710592274553_25" ∷ [])
-   ((0 , "1710592275621_26") ∷ []) [])
+   ((0 , "1710592275621_26") ∷ []) [] [])
   ∷
   InputInstance
   (Properties "Input1" "1710592272301_21" []
-   ((0 , "1710592273829_24") ∷ []) [])
+   ((0 , "1710592273829_24") ∷ []) [] [])
   "1710592239485_16"
   ∷
   InputInstance
   (Properties "Input2" "1710592273211_22" []
-   ((0 , "1710592274553_25") ∷ []) [])
+   ((0 , "1710592274553_25") ∷ []) [] [])
   "1710592245120_18"
   ∷
   Connection "Connect24" "1710592273829_24" "1710592272301_21"
@@ -501,7 +503,7 @@ ifExample = (Operation "ifExample"
   Subtraction
   (Properties "Subtraction1" "1710592278893_1"
    ("1710592279296_27" ∷ "1710592279930_28" ∷ [])
-   ((0 , "1710592281009_29") ∷ []) [])
+   ((0 , "1710592281009_29") ∷ []) [] [])
   ∷
   Connection "Connect27" "1710592279296_27" "1710592265198_19"
   "1710592278893_1"
@@ -514,7 +516,7 @@ ifExample = (Operation "ifExample"
   ∷
   OutputInstance
   (Properties "Output" "1710592289927_11"
-   ("1710592290399_30" ∷ []) [] [])
+   ("1710592290399_30" ∷ []) [] [] [])
   "1710592289986_12"
   ∷
   Connection "Connect30" "1710592290399_30" "1710592255112_1"
@@ -533,7 +535,7 @@ ifExample2 = (Operation "ifExample2"
   (Properties "If1" "1711548117930_3"
    ("1711548158236_46" ∷ "1711548157599_45" ∷ [])
    ((0 , "1711548153726_43") ∷ (0 , "1711548227433_56") ∷ [])
-   ("1711548123135_41" ∷ []))
+   ("1711548123135_41" ∷ []) [])
   ∷
   Connection "Connect41" "1711548123135_41" "1711548137457_35"
   "1711548117930_3"
@@ -541,31 +543,31 @@ ifExample2 = (Operation "ifExample2"
   If
   (Properties "If2" "1711548125723_4"
    ("1711548153726_43" ∷ "1711548155675_44" ∷ [])
-   ((0 , "1711548225982_55") ∷ []) ("1711548152108_42" ∷ []))
+   ((0 , "1711548225982_55") ∷ []) ("1711548152108_42" ∷ []) [])
   ∷
   InputInstance
   (Properties "Cond1" "1711548137457_35" []
-   ((0 , "1711548123135_41") ∷ []) [])
+   ((0 , "1711548123135_41") ∷ []) [] [])
   "1711548137505_36"
   ∷
   InputInstance
   (Properties "Cond2" "1711548139256_37" []
-   ((0 , "1711548152108_42") ∷ []) [])
+   ((0 , "1711548152108_42") ∷ []) [] [])
   "1711548139329_38"
   ∷
   InputInstance
   (Properties "Input1" "1711548140806_39" []
-   ((0 , "1711548158236_46") ∷ []) [])
+   ((0 , "1711548158236_46") ∷ []) [] [])
   "1711548140858_40"
   ∷
   InputInstance
   (Properties "Input2" "1711548142356_41" []
-   ((0 , "1711548157599_45") ∷ []) [])
+   ((0 , "1711548157599_45") ∷ []) [] [])
   "1711548142405_42"
   ∷
   InputInstance
   (Properties "Input3" "1711548144751_43" []
-   ((0 , "1711548155675_44") ∷ []) [])
+   ((0 , "1711548155675_44") ∷ []) [] [])
   "1711548144841_44"
   ∷
   Connection "Connect42" "1711548152108_42" "1711548139256_37"
@@ -585,13 +587,13 @@ ifExample2 = (Operation "ifExample2"
   ∷
   OutputInstance
   (Properties "Output" "1711548202968_17" ("1711548230844_57" ∷ [])
-   [] [])
+   [] [] [])
   "1711548075521_13"
   ∷
   Addition
   (Properties "Addition8" "1711548224252_8"
    ("1711548227433_56" ∷ "1711548225982_55" ∷ [])
-   ((0 , "1711548230844_57") ∷ []) [])
+   ((0 , "1711548230844_57") ∷ []) [] [])
   ∷
   Connection "Connect55" "1711548225982_55" "1711548125723_4"
   "1711548224252_8"
@@ -615,7 +617,7 @@ ifExample3 = (Operation "ifExample3"
  (If
   (Properties "If1" "1711548209596_5"
    ("1711548209598_53" ∷ "1711548209598_52" ∷ [])
-   ((0 , "1711548209598_50") ∷ []) ("1711548209596_48" ∷ []))
+   ((0 , "1711548209598_50") ∷ []) ("1711548209596_48" ∷ []) [])
   ∷
   Connection "Connect41" "1711548209596_48" "1711548209597_52"
   "1711548209596_5"
@@ -623,31 +625,31 @@ ifExample3 = (Operation "ifExample3"
   If
   (Properties "If2" "1711548209596_6"
    ("1711548209598_51" ∷ "1711548257535_58" ∷ [])
-   ((0 , "1711548265539_59") ∷ []) ("1711548209598_49" ∷ []))
+   ((0 , "1711548265539_59") ∷ []) ("1711548209598_49" ∷ []) [])
   ∷
   InputInstance
   (Properties "Cond1" "1711548209597_52" []
-   ((0 , "1711548209596_48") ∷ []) [])
+   ((0 , "1711548209596_48") ∷ []) [] [])
   "1711548209594_47"
   ∷
   InputInstance
   (Properties "Cond2" "1711548209597_53" []
-   ((0 , "1711548209598_49") ∷ []) [])
+   ((0 , "1711548209598_49") ∷ []) [] [])
   "1711548209594_48"
   ∷
   InputInstance
   (Properties "Input1" "1711548209597_54" []
-   ((0 , "1711548209598_53") ∷ []) [])
+   ((0 , "1711548209598_53") ∷ []) [] [])
   "1711548209595_49"
   ∷
   InputInstance
   (Properties "Input2" "1711548209597_55" []
-   ((0 , "1711548209598_52") ∷ []) [])
+   ((0 , "1711548209598_52") ∷ []) [] [])
   "1711548209595_50"
   ∷
   InputInstance
   (Properties "Input3" "1711548209598_56" []
-   ((0 , "1711548209598_51") ∷ []) [])
+   ((0 , "1711548209598_51") ∷ []) [] [])
   "1711548209595_51"
   ∷
   Connection "Connect42" "1711548209598_49" "1711548209597_53"
@@ -670,17 +672,17 @@ ifExample3 = (Operation "ifExample3"
   ∷
   OutputInstance
   (Properties "Output" "1711548209598_19" ("1711548209598_54" ∷ [])
-   [] [])
+   [] [] [])
   "1711548209596_18"
   ∷
   Addition
   (Properties "Addition9" "1711548249118_9"
    ("1711548209598_50" ∷ "1711548265539_59" ∷ [])
-   ((0 , "1711548209598_54") ∷ []) [])
+   ((0 , "1711548209598_54") ∷ []) [] [])
   ∷
   InputInstance
   (Properties "Input4" "1711548253401_57" []
-   ((0 , "1711548257535_58") ∷ []) [])
+   ((0 , "1711548257535_58") ∷ []) [] [])
   "1711548253444_58"
   ∷
   Connection "Connect58" "1711548257535_58" "1711548253401_57"
@@ -696,12 +698,12 @@ previousExample = Operation "previous"
  (Output "Output" "1711905218206_18" iInt16 ∷ [])
  (InputInstance
   (Properties "Input" "1711905183341_45" []
-   ((0 , "1711905204184_49") ∷ []) [])
+   ((0 , "1711905204184_49") ∷ []) [] [])
   "1711905183406_46"
   ∷
   Previous
   (Properties "Previous1" "1711905202015_1" ("1711905204184_49" ∷ [])
-   ((0 , "1711905209522_50") ∷ []) [])
+   ((0 , "1711905209522_50") ∷ []) [] ("" ∷ []))
   ("0" ∷ [])
   ∷
   Connection "Connect49" "1711905204184_49" "1711905183341_45"
@@ -712,7 +714,7 @@ previousExample = Operation "previous"
   ∷
   OutputInstance
   (Properties "Output" "1711905218125_17" ("1711905209522_50" ∷ [])
-   [] [])
+   [] [] [])
   "1711905218206_18"
   ∷ [])
   
@@ -721,25 +723,25 @@ previousCycle = Operation "previousCycle" []
  (Output "Output" "1713010148490_28" iInt16 ∷ [])
  (OutputInstance
   (Properties "Output" "1713010148462_27" ("1713010169932_75" ∷ [])
-   [] [])
+   [] [] [])
   "1713010148490_28"
   ∷
   Previous
   (Properties "Previous1" "1713010155494_6" ("1713010171125_76" ∷ [])
-   ((0 , "1713010160524_73") ∷ []) [])
+   ((0 , "1713010160524_73") ∷ []) [] ("" ∷ []))
   ("0" ∷ [])
   ∷
   Addition
   (Properties "Addition1" "1713010159611_11"
    ("1713010160524_73" ∷ "1713010165756_74" ∷ [])
-   ((0 , "1713010169932_75") ∷ (0 , "1713010171125_76") ∷ []) [])
+   ((0 , "1713010169932_75") ∷ (0 , "1713010171125_76") ∷ []) [] [])
   ∷
   Connection "Connect73" "1713010160524_73" "1713010155494_6"
   "1713010159611_11"
   ∷
   Textual
   (Properties "Textual1" "1713010163528_1" []
-   ((0 , "1713010165756_74") ∷ []) [])
+   ((0 , "1713010165756_74") ∷ []) [] [])
   "1"
   ∷
   Connection "Connect74" "1713010165756_74" "1713010163528_1"
@@ -752,3 +754,91 @@ previousCycle = Operation "previousCycle" []
   "1713010155494_6"
   ∷ [])
   
+previousCycle2 : Model
+previousCycle2 = Operation "previousCycle2"
+ (Input "Input1" "1713010102167_53" iInt16 ∷
+  Input "Input2" "1713010102167_54" iInt16 ∷
+  Input "Input5" "1713010102168_55" iInt16 ∷ [])
+ (Output "Output1" "1713010102168_23" iInt16 ∷
+  Output "Output3" "1713010102168_24" iInt16 ∷ [])
+ (Addition
+  (Properties "Addition1" "1713010102169_10"
+   ("1713010102172_69" ∷
+    "1713010102171_64" ∷ "1713010102170_62" ∷ "1713010102172_72" ∷ [])
+   ((0 , "1713010102170_63") ∷
+    (0 , "1713010102172_67") ∷ (0 , "1713010102172_71") ∷ [])
+   [] [])
+  ∷
+  Previous
+  (Properties "Previous1" "1713010102169_4" ("1713010102172_71" ∷ [])
+   ((0 , "1713010102171_64") ∷ []) [] ("1713010102172_70" ∷ []))
+  ("" ∷ [])
+  ∷
+  OutputInstance
+  (Properties "Output1" "1713010102170_25" ("1713010102172_68" ∷ [])
+   [] [] [])
+  "1713010102168_23"
+  ∷
+  InputInstance
+  (Properties "Input1" "1713010102170_56" []
+   ((0 , "1713010102170_62") ∷ []) [] [])
+  "1713010102167_53"
+  ∷
+  Connection "Connect4" "1713010102170_62" "1713010102170_56"
+  "1713010102169_10"
+  ∷
+  OutputInstance
+  (Properties "Output3" "1713010102170_26" ("1713010102170_63" ∷ [])
+   [] [] [])
+  "1713010102168_24"
+  ∷
+  Connection "Connect5" "1713010102170_63" "1713010102169_10"
+  "1713010102170_26"
+  ∷
+  Connection "Connect11" "1713010102171_64" "1713010102169_4"
+  "1713010102169_10"
+  ∷
+  Previous
+  (Properties "Previous3" "1713010102171_5" ("1713010102172_67" ∷ [])
+   ((0 , "1713010102171_65") ∷ []) [] ("" ∷ []))
+  ("1" ∷ [])
+  ∷
+  Multiplication
+  (Properties "Multiplication2" "1713010102171_3"
+   ("1713010102171_65" ∷ "1713010102172_66" ∷ [])
+   ((0 , "1713010102172_68") ∷ (0 , "1713010102172_69") ∷ []) [] [])
+  ∷
+  Connection "Connect62" "1713010102171_65" "1713010102171_5"
+  "1713010102171_3"
+  ∷
+  InputInstance
+  (Properties "Input2" "1713010102172_57" []
+   ((0 , "1713010102172_66") ∷ []) [] [])
+  "1713010102167_54"
+  ∷
+  Connection "Connect63" "1713010102172_66" "1713010102172_57"
+  "1713010102171_3"
+  ∷
+  Connection "Connect66" "1713010102172_67" "1713010102169_10"
+  "1713010102171_5"
+  ∷
+  Connection "Connect69" "1713010102172_68" "1713010102171_3"
+  "1713010102170_25"
+  ∷
+  Connection "Connect70" "1713010102172_69" "1713010102171_3"
+  "1713010102169_10"
+  ∷
+  InputInstance
+  (Properties "Input5" "1713010102172_58" []
+   ((0 , "1713010102172_70") ∷ (0 , "1713010102172_72") ∷ []) [] [])
+  "1713010102168_55"
+  ∷
+  Connection "Connect76" "1713010102172_70" "1713010102172_58"
+  "1713010102169_4"
+  ∷
+  Connection "Connect78" "1713010102172_71" "1713010102169_10"
+  "1713010102169_4"
+  ∷
+  Connection "Connect79" "1713010102172_72" "1713010102172_58"
+  "1713010102169_10"
+  ∷ [])

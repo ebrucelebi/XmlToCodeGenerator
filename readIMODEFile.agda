@@ -135,6 +135,17 @@ readCondConnections : Maybe XmlElement -> Maybe (List String)
 readCondConnections (just (Element "conditionConnections" _ es)) = readCondConnectionIds es
 readCondConnections _ = nothing
 
+readParamConnectionIds : List XmlElement -> Maybe (List String)
+readParamConnectionIds [] = just []
+readParamConnectionIds ((Element "parameterConnection" as _) ∷ xs) with readParamConnectionIds xs | getAttributeValue as "connectedTo"
+... | just paramConIds | just id = just (id ∷ paramConIds)
+... | _ | _ = nothing
+readParamConnectionIds _ = nothing
+
+readParamConnections : Maybe XmlElement -> Maybe (List String)
+readParamConnections (just (Element "parameterConnections" _ es)) = readParamConnectionIds es
+readParamConnections _ = nothing
+
 readInputConnectionIds : List XmlElement -> Maybe (List String)
 readInputConnectionIds [] = just []
 readInputConnectionIds ((Element "inputConnection" as _) ∷ xs) with readInputConnectionIds xs | getAttributeValue as "connectedTo"
@@ -162,8 +173,11 @@ readOutputConnections _ = nothing
 
 
 createBasicOpModelElement : String -> String -> String -> List XmlElement -> Maybe ModelElement
-createBasicOpModelElement hash n id es with readInputConnections (getElement es "inputConnections") | readOutputConnections (getElement es "outputConnections") | readCondConnections (getElement es "conditionConnections")
-... | just inCons | just outCons | just condCons with Properties n id inCons outCons condCons
+createBasicOpModelElement hash n id es with readInputConnections (getElement es "inputConnections") |
+                                            readOutputConnections (getElement es "outputConnections") |
+                                            readCondConnections (getElement es "conditionConnections") |
+                                            readParamConnections (getElement es "parameterConnections")
+... | just inCons | just outCons | just condCons | just paramCons with Properties n id inCons outCons condCons paramCons
 ... | p with hash
 ... | "955ca6d568f93954497d59e165f9fa9b" = just (Addition p)
 ... | "f8806a128e6f1a8d41cfa9b5f0f38f82" = just (Modulo p)
@@ -192,7 +206,7 @@ createBasicOpModelElement hash n id es with readInputConnections (getElement es 
 ... | "10c8829be556be2c9869269b7d3782c2" = just (StrictlyLessThan p)
 ... | "4fa6a2c3bb81b810e11c467a111b4a7a" = just (If p)
 ... | _ = nothing
-createBasicOpModelElement hash n id es | _ | _ | _ = nothing
+createBasicOpModelElement hash n id es | _ | _ | _ | _ = nothing
 
 
 createInput : String -> String -> List XmlElement -> Maybe ModelElement
@@ -204,7 +218,7 @@ createInput n id es | just e | just (Element _ as _) with getAttributeValue as "
 createInput n id es | just e | _ = nothing
 createInput n id es | nothing with getElement es "copyOf"
 createInput n id es | nothing | just (Element _ as _) with getAttributeValue as "value" | readOutputConnections (getElement es "outputConnections")
-...                                                   | just sourceId | just outCons = just (InputInstance (Properties n id [] outCons []) sourceId)
+...                                                   | just sourceId | just outCons = just (InputInstance (Properties n id [] outCons [] []) sourceId)
 ...                                                   | _ | _ = nothing
 createInput n id es | nothing | _ = nothing
 
@@ -218,7 +232,7 @@ createOutput n id es | just e | just (Element _ as _) with getAttributeValue as 
 createOutput n id es | just e | _ = nothing
 createOutput n id es | nothing with getElement es "copyOf"
 createOutput n id es | nothing | just (Element _ as _) with getAttributeValue as "value" | readInputConnections (getElement es "inputConnections")
-...                                                    | just sourceId | just inCons = just (OutputInstance (Properties n id inCons [] []) sourceId)
+...                                                    | just sourceId | just inCons = just (OutputInstance (Properties n id inCons [] [] []) sourceId)
 ...                                                    | _ | _ = nothing
 createOutput n id es | nothing | _ = nothing
 
@@ -245,16 +259,17 @@ readValues _ = nothing
 createPrevious : String -> String -> List XmlElement -> Maybe ModelElement
 createPrevious n id es with readInputConnections (getElement es "inputConnections") |
                              readOutputConnections (getElement es "outputConnections") |
+                             readParamConnections (getElement es "parameterConnections") |
                              readValues (getElement es "values")
-... | just inCons | just outCons | just values = just (Previous (Properties n id inCons outCons []) values)
-... | _ | _ | _ = nothing
+... | just inCons | just outCons | just paramCons | just values = just (Previous (Properties n id inCons outCons [] paramCons) values)
+... | _ | _ | _ | _ = nothing
 
 createTextual : String -> String -> List XmlElement -> Maybe ModelElement
 createTextual n id es with readInputConnections (getElement es "inputConnections") |
                              readOutputConnections (getElement es "outputConnections") |
                              getElement es "text"
 ... | just inCons | just outCons | just (Element "text" as _) with getAttributeValue as "value"
-... | just text = just (Textual (Properties n id inCons outCons []) text)
+... | just text = just (Textual (Properties n id inCons outCons [] []) text)
 ... | _ = nothing
 createTextual n id es | _ | _ | _ = nothing
 
