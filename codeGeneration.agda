@@ -70,7 +70,8 @@ getOutputType i m (context (LessThanEqual _) edges & dag) = iBool
 getOutputType i m (context (StrictlyGreaterThan _) edges & dag) = iBool
 getOutputType i m (context (StrictlyLessThan _) edges & dag) = iBool
 getOutputType (suc i) m (context (If _) (e1 ∷ e2 ∷ es) & dag) = getOutputType i m (getEdgeDestination dag e2) -- e1 is condition
-getOutputType (suc i) m (context (Previous _ _) (e ∷ es) & dag) = getOutputType i m (getEdgeDestination dag e)
+getOutputType (suc i) m (context (Previous (Properties a b c1 d f ("" ∷ [])) _) (e ∷ []) & dag) = getOutputType i m (getEdgeDestination dag e)
+getOutputType (suc i) m (context (Previous (Properties a b c1 d f (s ∷ [])) _) (e1 ∷ e2 ∷ []) & dag) = getOutputType i m (getEdgeDestination dag e2)
 getOutputType _ _ _ = iNone
 
 mutual
@@ -328,32 +329,41 @@ mutual
 generateModelElements : ∀ {n} -> Project -> Model -> CodeSection -> ModelDAG n -> List ModelElement -> List String
 generateModelElements _ _ _ ∅ _ = []
 generateModelElements p m section ((context me edges) & dag) seen with containsModelElement seen me
-generateModelElements p m section (c & dag) seen | false = concatenateTwoList (generateModelElements p m section dag seen) (generateModelElement p m section c dag)
-generateModelElements p m section (c & dag) seen | true = (generateModelElements p m section dag seen)
-
-DAGToListExcludingInputPrevious : ∀ {n} -> ModelDAG n -> List ModelElement
-DAGToListExcludingInputPrevious ∅ = []
-DAGToListExcludingInputPrevious ((context (Previous _ _) []) & dag) = DAGToListExcludingInputPrevious dag
-DAGToListExcludingInputPrevious ((context me e) & dag) = me ∷ (DAGToListExcludingInputPrevious dag)
+generateModelElements p m section (c & dag) seen                    | false = concatenateTwoList (generateModelElements p m section dag seen) (generateModelElement p m section c dag)
+generateModelElements p m section ((context me edges) & dag) seen   | true with me | edges
+generateModelElements p m section (c & dag) seen                    | true | (Previous (Properties a b c1 d f ("" ∷ [])) _) | (e ∷ []) = 
+                                                concatenateTwoList (generateModelElements p m section dag seen) (generateModelElement p m section c dag)
+generateModelElements p m section (c & dag) seen                    | true | (Previous (Properties a b c1 d f (s ∷ [])) _) | (e1 ∷ e2 ∷ []) = 
+                                                concatenateTwoList (generateModelElements p m section dag seen) (generateModelElement p m section c dag)
+generateModelElements p m section (c & dag) seen                    | true | _ | _ = (generateModelElements p m section dag seen)
 
 generateModelElementsDAGs : ∀ {n} -> Project -> Model -> CodeSection -> List (ModelDAG n) -> List ModelElement -> List String
 generateModelElementsDAGs _ _ _ [] _ = []
 generateModelElementsDAGs p m section (dag ∷ dags) seen = concatenateTwoList
                                                             (generateModelElements p m section dag seen)
-                                                            (generateModelElementsDAGs p m section dags (seen Data.List.++ (DAGToListExcludingInputPrevious dag)))
+                                                            (generateModelElementsDAGs p m section dags (seen Data.List.++ (DAGToList dag)))
 
 generateModelElementsStatementList : ∀ {n} -> Project -> Model -> ModelDAG n -> List ModelElement -> List StatementType
 generateModelElementsStatementList _ _ ∅ _ = []
 generateModelElementsStatementList p m ((context me edges) & dag) seen with containsModelElement seen me
-generateModelElementsStatementList p m ((context me edges) & dag) seen | false = concatenateTwoList
+generateModelElementsStatementList p m ((context me edges) & dag) seen   | false = concatenateTwoList
                                                                         (generateModelElementsStatementList p m dag seen)
                                                                         (generateModelElementMain me p m (context me edges) dag)
-generateModelElementsStatementList p m (c & dag) seen | true = (generateModelElementsStatementList p m dag seen)
+generateModelElementsStatementList p m ((context me edges) & dag) seen   | true with me | edges
+generateModelElementsStatementList p m ((context me edges) & dag) seen   | true | (Previous (Properties a b c1 d f ("" ∷ [])) _) | (e ∷ []) = 
+                                                concatenateTwoList
+                                                    (generateModelElementsStatementList p m dag seen)
+                                                    (generateModelElementMain me p m (context me edges) dag)
+generateModelElementsStatementList p m ((context me edges) & dag) seen   | true | (Previous (Properties a b c1 d f (s ∷ [])) _) | (e1 ∷ e2 ∷ []) = 
+                                                concatenateTwoList
+                                                    (generateModelElementsStatementList p m dag seen)
+                                                    (generateModelElementMain me p m (context me edges) dag)
+generateModelElementsStatementList p m (c & dag) seen                    | true | _ | _ = (generateModelElementsStatementList p m dag seen)
                                                                         
 generateModelElementsStatementListDAGs : ∀ {n} -> Project -> Model -> List (ModelDAG n) -> List ModelElement -> List StatementType
 generateModelElementsStatementListDAGs _ _ [] _ = []
 generateModelElementsStatementListDAGs p m (dag ∷ dags) seen = concatenateTwoList
-                                                            (generateModelElementsStatementListDAGs p m dags (seen Data.List.++ (DAGToListExcludingInputPrevious dag)))
+                                                            (generateModelElementsStatementListDAGs p m dags (seen Data.List.++ (DAGToList dag)))
                                                             (generateModelElementsStatementList p m dag seen)
 
 generateModelSource : ∀ {n} -> Project -> Model -> String -> List (ModelDAG n) -> GeneratedFile
