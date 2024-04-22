@@ -363,8 +363,8 @@ generateModelElementsStatementList p m (c & dag) seen                    | true 
 generateModelElementsStatementListDAGs : ∀ {n} -> Project -> Model -> List (ModelDAG n) -> List ModelElement -> List StatementType
 generateModelElementsStatementListDAGs _ _ [] _ = []
 generateModelElementsStatementListDAGs p m (dag ∷ dags) seen = concatenateTwoList
-                                                            (generateModelElementsStatementListDAGs p m dags (seen Data.List.++ (DAGToList dag)))
                                                             (generateModelElementsStatementList p m dag seen)
+                                                            (generateModelElementsStatementListDAGs p m dags (seen Data.List.++ (DAGToList dag)))
 
 generateModelSource : ∀ {n} -> Project -> Model -> String -> List (ModelDAG n) -> GeneratedFile
 generateModelSource p m n dags with generateModelElementsDAGs p m Main dags [] | generateModelElementsDAGs p m Declaration dags []
