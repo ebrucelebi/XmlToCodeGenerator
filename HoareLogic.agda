@@ -19,6 +19,7 @@ data Annotation : Set where
     _-_  : Annotation -> Annotation -> Annotation
     _*_  : Annotation -> Annotation -> Annotation
     _/_  : Annotation -> Annotation -> Annotation
+    _%_  : Annotation -> Annotation -> Annotation
     -_   : Annotation -> Annotation
     _&&_ : Annotation -> Annotation -> Annotation
     !_   : Annotation -> Annotation
@@ -63,6 +64,7 @@ _≟A_ (_+_  a1 a2) (_+_  a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
 _≟A_ (_-_  a1 a2) (_-_  a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
 _≟A_ (_*_  a1 a2) (_*_  a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
 _≟A_ (_/_  a1 a2) (_/_  a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
+_≟A_ (_%_  a1 a2) (_%_  a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
 _≟A_ (-_   a1)    (-_   a3)    = (a1 ≟A a3)
 _≟A_ (_&&_ a1 a2) (_&&_ a3 a4) = (a1 ≟A a3) Data.Bool.∧ (a2 ≟A a4)
 _≟A_ (!_   a1)    (!_   a3)    = (a1 ≟A a3)
@@ -127,6 +129,7 @@ replaceVarInAnnotation (_+_  a1 a2) v a3 = replaceVarInAnnotation a1 v a3 + repl
 replaceVarInAnnotation (_-_  a1 a2) v a3 = replaceVarInAnnotation a1 v a3 - replaceVarInAnnotation a2 v a3
 replaceVarInAnnotation (_*_  a1 a2) v a3 = replaceVarInAnnotation a1 v a3 * replaceVarInAnnotation a2 v a3
 replaceVarInAnnotation (_/_  a1 a2) v a3 = replaceVarInAnnotation a1 v a3 / replaceVarInAnnotation a2 v a3
+replaceVarInAnnotation (_%_  a1 a2) v a3 = replaceVarInAnnotation a1 v a3 % replaceVarInAnnotation a2 v a3
 replaceVarInAnnotation (-_   a1)    v a3 = - replaceVarInAnnotation a1 v a3 
 replaceVarInAnnotation (_&&_ a1 a2) v a3 = replaceVarInAnnotation a1 v a3 && replaceVarInAnnotation a2 v a3
 replaceVarInAnnotation (!_   a1)    v a3 = ! replaceVarInAnnotation a1 v a3 
@@ -158,6 +161,8 @@ replaceVarsInNewAnnotation _ a = a
 
 replaceVarsInNewCondition : Condition -> Condition -> Condition
 replaceVarsInNewCondition true c = c
+replaceVarsInNewCondition _ true = true
+replaceVarsInNewCondition _ false = false
 replaceVarsInNewCondition (Defined (var v1)) c = c
 replaceVarsInNewCondition ((var v1) :=: a1) ((var v2) :=: a2) = (var v2) :=: replaceVarInAnnotation a2 (var v1) a1
 replaceVarsInNewCondition ((a1 :=: true ∧ c1) ∨ (a2 :=: false ∧ c2)) c3 with replaceVarsInNewCondition c1 c3 | replaceVarsInNewCondition c2 c3

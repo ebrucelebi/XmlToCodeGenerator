@@ -16,6 +16,7 @@ data Oper : Set where
     Subtraction : Oper
     Multiplication : Oper
     Division : Oper
+    Modulo : Oper
     Minus : Oper
     LogicalAnd : Oper
     LogicalNot : Oper
@@ -56,6 +57,7 @@ operationToString Addition = "+"
 operationToString Subtraction = "-"
 operationToString Multiplication = "*"
 operationToString Division = "/"
+operationToString Modulo = "%"
 operationToString Minus = "-"
 operationToString LogicalAnd = "&&"
 operationToString LogicalNot = "!"
@@ -110,6 +112,7 @@ codeToAnnotation (Expression c1 Addition c2) = (codeToAnnotation c1) + (codeToAn
 codeToAnnotation (Expression c1 Subtraction c2) = (codeToAnnotation c1) - (codeToAnnotation c2)
 codeToAnnotation (Expression c1 Multiplication c2) = (codeToAnnotation c1) * (codeToAnnotation c2)
 codeToAnnotation (Expression c1 Division c2) = (codeToAnnotation c1) / (codeToAnnotation c2)
+codeToAnnotation (Expression c1 Modulo c2) = (codeToAnnotation c1) % (codeToAnnotation c2)
 codeToAnnotation (RightExpression Minus c1) = - (codeToAnnotation c1)
 codeToAnnotation (Expression c1 LogicalAnd c2) = (codeToAnnotation c1) && (codeToAnnotation c2)
 codeToAnnotation (RightExpression LogicalNot c1) = ! (codeToAnnotation c1)
