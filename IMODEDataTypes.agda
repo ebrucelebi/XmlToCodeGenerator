@@ -258,6 +258,12 @@ findNonConnectionModelElementCount (Operation _ _ _ sm) = findNonConnectionModel
 
 containsModelElement : List ModelElement -> ModelElement -> Bool
 containsModelElement [] _ = false
+containsModelElement ((InputInstance p1 source1) ∷ ms) (InputInstance p2 source2) with source1 == source2
+... | true = true
+... | false = containsModelElement ms (InputInstance p2 source2)
+containsModelElement ((OutputInstance p1 source1) ∷ ms) (OutputInstance p2 source2) with source1 == source2
+... | true = true
+... | false = containsModelElement ms (OutputInstance p2 source2)
 containsModelElement (m1 ∷ ms) m2 with (getModelElementID m1) == (getModelElementID m2)
 ... | true = true
 ... | false = containsModelElement ms m2

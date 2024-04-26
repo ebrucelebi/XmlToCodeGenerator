@@ -96,6 +96,16 @@ topologicalList m | _ | _ = nothing
 -- Find the successor range index for the given model element is the given DAG.
 DAGIndexOfModelElement : ∀ {n} -> ModelDAG n -> ModelElement -> Maybe (Fin n)
 DAGIndexOfModelElement ∅ _ = nothing
+DAGIndexOfModelElement ((context (InputInstance p1 source1) l) & ms) (InputInstance p2 source2) with source1 == source2
+... | true = just zero
+... | false with DAGIndexOfModelElement ms (InputInstance p2 source2)
+... | nothing = nothing
+... | just n = just (suc n)
+DAGIndexOfModelElement ((context (OutputInstance p1 source1) l) & ms) (OutputInstance p2 source2) with source1 == source2
+... | true = just zero
+... | false with DAGIndexOfModelElement ms (OutputInstance p2 source2)
+... | nothing = nothing
+... | just n = just (suc n)
 DAGIndexOfModelElement ((context m1 l) & ms) m2 with (getModelElementID m1) == (getModelElementID m2)
 ... | true = just zero
 ... | false with DAGIndexOfModelElement ms m2
