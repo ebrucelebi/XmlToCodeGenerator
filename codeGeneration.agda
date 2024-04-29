@@ -531,33 +531,50 @@ generateModelElementCondition p m (context (If (Properties n _ _ _ _ _)) edges) 
     (((cond :=: true) ∧ (var n) :=: var (generateIdentifierAtEdge p m edges 1 dag)) ∨
      ((cond :=: false) ∧ (var n) :=: var (generateIdentifierAtEdge p m edges 2 dag)))
 
-generateModelElementCondition p m (context (Previous (Properties n _ _ _ _ _) initValue) edges) dag = let cond = (var (generateIdentifierAtEdge p m edges 0 dag)) in
-    (((cond :=: true) ∧ (var n) :=: var (generateIdentifierAtEdge p m edges 1 dag)) ∨
-     ((cond :=: false) ∧ (var n) :=: var (generateIdentifierAtEdge p m edges 2 dag)))
+generateModelElementCondition p m (context (Previous (Properties n _ _ _ _ ("" ∷ [])) (initValue ∷ [])) []) dag =
+    ((((var "isInitialCycle") :=: true) ∧ (var n) :=: (const initValue)) ∨
+     (((var "isInitialCycle") :=: false) ∧ (var n) :=: (var (n ++ "_mem"))))
+
+generateModelElementCondition p m (context (Previous (Properties n _ _ _ _ ("" ∷ [])) (initValue ∷ [])) (e1 ∷ [])) dag =
+    (var (n ++ "_mem")) :=: var (generateIdentifierAtEdge p m (e1 ∷ []) 0 dag)
+
+generateModelElementCondition p m (context (Previous (Properties n _ _ _ _ (s ∷ [])) (initValue ∷ [])) (e ∷ [])) dag =
+    ((((var "isInitialCycle") :=: true) ∧ (var n) :=: (var (generateIdentifierAtEdge p m (e ∷ []) 0 dag))) ∨
+     (((var "isInitialCycle") :=: false) ∧ (var n) :=: (var (n ++ "_mem"))))
+
+generateModelElementCondition p m (context (Previous (Properties n _ _ _ _ (s ∷ [])) (initValue ∷ [])) (e1 ∷ e2 ∷ [])) dag =
+    (var (n ++ "_mem")) :=: (var (generateIdentifierAtEdge p m (e1 ∷ e2 ∷ []) 1 dag))
 
 generateModelElementCondition p m (context (Textual (Properties n _ _ _ _ _) s) edges) dag =
     (var n) :=: const s
 
 generateModelElementCondition _ _ _ _ = false
 
-generateCondition : ∀ {n} -> Project -> Model -> ModelDAG n -> Condition
-generateCondition p m ∅ = true
-generateCondition p m ((context me edges) & ∅) = generateModelElementCondition p m (context me edges) ∅
-generateCondition p m ((context me edges) & dag) = let c = generateCondition p m dag in
-    c ∧ replaceVarsInNewCondition c (generateModelElementCondition p m (context me edges) dag)
+generateCondition : ∀ {n} -> Project -> Model -> ModelDAG n -> List ModelElement -> Condition
+generateCondition p m ∅ seen = true
+generateCondition p m ((context me edges) & dag) seen with containsModelElement seen me | me | edges | generateCondition p m dag seen | generateModelElementCondition p m (context me edges) dag
+... | true | (Previous (Properties a b c d f ("" ∷ [])) _) | (e ∷ []) | true | c2 = c2
+... | true | (Previous (Properties a b c d f ("" ∷ [])) _) | (e ∷ []) | c1 | c2 = c1 ∧ replaceVarsInNewCondition c1 c2
+... | true | (Previous (Properties a b c d f (s ∷ [])) _) | (e1 ∷ e2 ∷ []) | true | c2 = c2
+... | true | (Previous (Properties a b c d f (s ∷ [])) _) | (e1 ∷ e2 ∷ []) | c1 | c2 = c1 ∧ replaceVarsInNewCondition c1 c2
+... | true | _ | _ | c1 | c2 = c1
+... | false | _ | _ | true | c2 = generateModelElementCondition p m (context me edges) dag
+... | false | _ | _ | c1 | c2 = c1 ∧ replaceVarsInNewCondition c1 c2
 
-generateConditionDAGs : ∀ {n} -> Project -> Model -> List (ModelDAG n) -> Condition
-generateConditionDAGs p m [] = true
-generateConditionDAGs p m (dag ∷ []) = generateCondition p m dag
-generateConditionDAGs p m (dag ∷ dags) = let c = generateCondition p m dag in
-    c ∧ replaceVarsInNewCondition c (generateConditionDAGs p m dags)
+generateConditionDAGs : ∀ {n} -> Project -> Model -> List (ModelDAG n) -> List ModelElement -> Condition
+generateConditionDAGs p m [] seen = true
+generateConditionDAGs p m (dag ∷ dags) seen with generateCondition p m dag seen | generateConditionDAGs p m dags (seen Data.List.++ DAGToList dag)
+... | true | true = true
+... | true | c2 = c2
+... | c1 | true = c1
+... | c1 | c2 = c1 ∧ replaceVarsInNewCondition c1 c2
 
 generateModelDAGCondition : Project -> Model -> Maybe Condition
 generateModelDAGCondition p (Operation n ins outs sms) with (createDAG (Operation n ins outs sms))
 ... | nothing = nothing
 ... | just dags = just (
     -- weaken
-    (generateConditionDAGs p (Operation n ins outs sms) dags)
+    (generateConditionDAGs p (Operation n ins outs sms) dags [])
     -- (getIOVars (ins Data.List.++ outs))
     )
 
