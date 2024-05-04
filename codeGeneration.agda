@@ -558,7 +558,7 @@ generateCondition p m ((context me edges) & dag) seen with containsModelElement 
 ... | true | (Previous (Properties a b c d f (s ∷ [])) _) | (e1 ∷ e2 ∷ []) | true | c2 = c2
 ... | true | (Previous (Properties a b c d f (s ∷ [])) _) | (e1 ∷ e2 ∷ []) | c1 | c2 = c1 ∧ replaceVarsInNewCondition c1 c2
 ... | true | _ | _ | c1 | c2 = c1
-... | false | _ | _ | true | c2 = generateModelElementCondition p m (context me edges) dag
+... | false | _ | _ | true | c2 = c2
 ... | false | _ | _ | c1 | c2 = c1 ∧ replaceVarsInNewCondition c1 c2
 
 generateConditionDAGs : ∀ {n} -> Project -> Model -> List (ModelDAG n) -> List ModelElement -> Condition
@@ -574,7 +574,7 @@ generateModelDAGCondition p (Operation n ins outs sms) with (createDAG (Operatio
 ... | nothing = nothing
 ... | just dags = just (
     -- weaken
-    (generateConditionDAGs p (Operation n ins outs sms) dags [])
+    (Defined (var "isInitialCycle") ∧ (generateConditionDAGs p (Operation n ins outs sms) dags []))
     -- (getIOVars (ins Data.List.++ outs))
     )
 

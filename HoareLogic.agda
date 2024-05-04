@@ -163,6 +163,7 @@ replaceVarsInNewCondition : Condition -> Condition -> Condition
 replaceVarsInNewCondition true c = c
 replaceVarsInNewCondition _ true = true
 replaceVarsInNewCondition _ false = false
+replaceVarsInNewCondition _ (Defined v) = (Defined v)
 replaceVarsInNewCondition (Defined (var v1)) c = c
 replaceVarsInNewCondition ((var v1) :=: a1) ((var v2) :=: a2) = (var v2) :=: replaceVarInAnnotation a2 (var v1) a1
 replaceVarsInNewCondition ((a1 :=: true ∧ c1) ∨ (a2 :=: false ∧ c2)) c3 with replaceVarsInNewCondition c1 c3 | replaceVarsInNewCondition c2 c3
