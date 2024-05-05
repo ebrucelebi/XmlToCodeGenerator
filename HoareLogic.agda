@@ -112,6 +112,12 @@ findConditionForVar (c1 ∨ c2) v with findConditionForVar c1 v
 ... | nothing = nothing
 findConditionForVar _ _ = nothing
 
+findVarInCondition : Condition -> Maybe Var
+findVarInCondition (Defined (var v)) = just (var v)
+findVarInCondition ((var v) :=: a) = just (var v)
+findVarInCondition ((a1 :=: true ∧ c1) ∨ (a2 :=: false ∧ c2)) = findVarInCondition c1
+findVarInCondition _ = nothing
+
 weaken : Condition -> List Var -> Condition
 weaken c [] = true
 weaken c (v ∷ []) with findConditionForVar c v
@@ -175,3 +181,39 @@ replaceVarsInNewCondition preC ((a1 :=: true ∧ c1) ∨ (a2 :=: false ∧ c2)) 
     (replaceVarsInNewAnnotation preC a2 :=: false ∧ replaceVarsInNewCondition preC c2)
 replaceVarsInNewCondition (c1 ∧ c2) c3 = replaceVarsInNewCondition c1 (replaceVarsInNewCondition c2 c3)
 replaceVarsInNewCondition _ _ = false
+
+varAppearsInDefinitionA : Annotation -> Var -> Bool
+varAppearsInDefinitionA (var v1) (var v2) = v1 Data.String.== v2
+varAppearsInDefinitionA (_+_  a1 a2) v = (varAppearsInDefinitionA a1 v) Data.Bool.∨ (varAppearsInDefinitionA a2 v)
+varAppearsInDefinitionA (_-_  a1 a2) v = (varAppearsInDefinitionA a1 v) Data.Bool.∨ (varAppearsInDefinitionA a2 v)
+varAppearsInDefinitionA (_*_  a1 a2) v = (varAppearsInDefinitionA a1 v) Data.Bool.∨ (varAppearsInDefinitionA a2 v)
+varAppearsInDefinitionA (_/_  a1 a2) v = (varAppearsInDefinitionA a1 v) Data.Bool.∨ (varAppearsInDefinitionA a2 v)
+varAppearsInDefinitionA (_%_  a1 a2) v = (varAppearsInDefinitionA a1 v) Data.Bool.∨ (varAppearsInDefinitionA a2 v)
+varAppearsInDefinitionA (-_   a1)    v = varAppearsInDefinitionA a1 v
+varAppearsInDefinitionA (_&&_ a1 a2) v = (varAppearsInDefinitionA a1 v) Data.Bool.∨ (varAppearsInDefinitionA a2 v)
+varAppearsInDefinitionA (!_   a1)    v = varAppearsInDefinitionA a1 v
+varAppearsInDefinitionA (_||_ a1 a2) v = (varAppearsInDefinitionA a1 v) Data.Bool.∨ (varAppearsInDefinitionA a2 v)
+varAppearsInDefinitionA (_^_  a1 a2) v = (varAppearsInDefinitionA a1 v) Data.Bool.∨ (varAppearsInDefinitionA a2 v)
+varAppearsInDefinitionA (_&_  a1 a2) v = (varAppearsInDefinitionA a1 v) Data.Bool.∨ (varAppearsInDefinitionA a2 v)
+varAppearsInDefinitionA (~_   a1)    v = varAppearsInDefinitionA a1 v
+varAppearsInDefinitionA (_|b_ a1 a2) v = (varAppearsInDefinitionA a1 v) Data.Bool.∨ (varAppearsInDefinitionA a2 v)
+varAppearsInDefinitionA (_<<_ a1 a2) v = (varAppearsInDefinitionA a1 v) Data.Bool.∨ (varAppearsInDefinitionA a2 v)
+varAppearsInDefinitionA (_>>_ a1 a2) v = (varAppearsInDefinitionA a1 v) Data.Bool.∨ (varAppearsInDefinitionA a2 v)
+varAppearsInDefinitionA (_!=_ a1 a2) v = (varAppearsInDefinitionA a1 v) Data.Bool.∨ (varAppearsInDefinitionA a2 v)
+varAppearsInDefinitionA (_==_ a1 a2) v = (varAppearsInDefinitionA a1 v) Data.Bool.∨ (varAppearsInDefinitionA a2 v)
+varAppearsInDefinitionA (_>=_ a1 a2) v = (varAppearsInDefinitionA a1 v) Data.Bool.∨ (varAppearsInDefinitionA a2 v)
+varAppearsInDefinitionA (_<=_ a1 a2) v = (varAppearsInDefinitionA a1 v) Data.Bool.∨ (varAppearsInDefinitionA a2 v)
+varAppearsInDefinitionA (_>_  a1 a2) v = (varAppearsInDefinitionA a1 v) Data.Bool.∨ (varAppearsInDefinitionA a2 v)
+varAppearsInDefinitionA (_<_  a1 a2) v = (varAppearsInDefinitionA a1 v) Data.Bool.∨ (varAppearsInDefinitionA a2 v)
+varAppearsInDefinitionA _ _ = false
+
+varAppearsInDefinitionC : Condition -> Maybe Var -> Bool
+varAppearsInDefinitionC ((var v1) :=: a1) (just v2) = varAppearsInDefinitionA a1 v2
+varAppearsInDefinitionC ((a1 :=: true ∧ c1) ∨ (a2 :=: false ∧ c2)) v = varAppearsInDefinitionC c1 v Data.Bool.∨ varAppearsInDefinitionC c2 v
+varAppearsInDefinitionC _ _ = false
+
+checkAndReplaceVarsInNewCondition : Condition -> Condition -> Condition
+checkAndReplaceVarsInNewCondition c1 c2 with replaceVarsInNewCondition c1 c2
+... | replacedC with varAppearsInDefinitionC replacedC (findVarInCondition c2)
+... | false = replacedC
+... | true = c2

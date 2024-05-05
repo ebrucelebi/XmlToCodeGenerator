@@ -142,11 +142,11 @@ mutual
 
     statementListToCondition : Condition -> Condition -> List StatementType -> Condition
     statementListToCondition a1 a2 [] = a2
-    statementListToCondition a1 a2 (x ∷ xs) = let a3 = (replaceVarsInNewCondition a1 (statementToCondition a1 x)) in statementListToCondition (a1 ∧ a3) (a2 ∧ a3) xs
+    statementListToCondition a1 a2 (x ∷ xs) = let a3 = (checkAndReplaceVarsInNewCondition a1 (statementToCondition a1 x)) in statementListToCondition (a1 ∧ a3) (a2 ∧ a3) xs
 
 statementListToHoareTriplets : Condition -> List StatementType -> List (HoareTriplet (List String))
 statementListToHoareTriplets a [] = (⟪ a ⟫ (statementToString EmptyStatement) ⟪ false ⟫) ∷ [] -- Should not come here
-statementListToHoareTriplets a (x ∷ []) = let pC = (a ∧ replaceVarsInNewCondition a (statementToCondition a x)) in 
+statementListToHoareTriplets a (x ∷ []) = let pC = (a ∧ checkAndReplaceVarsInNewCondition a (statementToCondition a x)) in 
                                     ⟪ a ⟫ (statementToString x) ⟪ pC ⟫ ∷ []
-statementListToHoareTriplets a (x ∷ xs) = let pC = (a ∧ replaceVarsInNewCondition a (statementToCondition a x)) in 
+statementListToHoareTriplets a (x ∷ xs) = let pC = (a ∧ checkAndReplaceVarsInNewCondition a (statementToCondition a x)) in 
                                     ⟪ a ⟫ (statementToString x) ⟪ pC ⟫ ∷ (statementListToHoareTriplets pC xs)

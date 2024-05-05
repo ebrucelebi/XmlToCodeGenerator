@@ -554,12 +554,12 @@ generateCondition : ∀ {n} -> Project -> Model -> ModelDAG n -> List ModelEleme
 generateCondition p m ∅ seen = true
 generateCondition p m ((context me edges) & dag) seen with containsModelElement seen me | me | edges | generateCondition p m dag seen | generateModelElementCondition p m (context me edges) dag
 ... | true | (Previous (Properties a b c d f ("" ∷ [])) _) | (e ∷ []) | true | c2 = c2
-... | true | (Previous (Properties a b c d f ("" ∷ [])) _) | (e ∷ []) | c1 | c2 = c1 ∧ replaceVarsInNewCondition c1 c2
+... | true | (Previous (Properties a b c d f ("" ∷ [])) _) | (e ∷ []) | c1 | c2 = c1 ∧ checkAndReplaceVarsInNewCondition c1 c2
 ... | true | (Previous (Properties a b c d f (s ∷ [])) _) | (e1 ∷ e2 ∷ []) | true | c2 = c2
-... | true | (Previous (Properties a b c d f (s ∷ [])) _) | (e1 ∷ e2 ∷ []) | c1 | c2 = c1 ∧ replaceVarsInNewCondition c1 c2
+... | true | (Previous (Properties a b c d f (s ∷ [])) _) | (e1 ∷ e2 ∷ []) | c1 | c2 = c1 ∧ checkAndReplaceVarsInNewCondition c1 c2
 ... | true | _ | _ | c1 | c2 = c1
 ... | false | _ | _ | true | c2 = c2
-... | false | _ | _ | c1 | c2 = c1 ∧ replaceVarsInNewCondition c1 c2
+... | false | _ | _ | c1 | c2 = c1 ∧ checkAndReplaceVarsInNewCondition c1 c2
 
 generateConditionDAGs : ∀ {n} -> Project -> Model -> List (ModelDAG n) -> List ModelElement -> Condition
 generateConditionDAGs p m [] seen = true
@@ -567,7 +567,7 @@ generateConditionDAGs p m (dag ∷ dags) seen with generateCondition p m dag see
 ... | true | true = true
 ... | true | c2 = c2
 ... | c1 | true = c1
-... | c1 | c2 = c1 ∧ replaceVarsInNewCondition c1 c2
+... | c1 | c2 = c1 ∧ checkAndReplaceVarsInNewCondition c1 c2
 
 generateModelDAGCondition : Project -> Model -> Maybe Condition
 generateModelDAGCondition p (Operation n ins outs sms) with (createDAG (Operation n ins outs sms))
