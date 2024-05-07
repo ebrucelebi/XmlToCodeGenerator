@@ -9,13 +9,12 @@ open import Data.Bool
 open import Data.Product
 open import Data.Nat
 open import Data.Maybe
-open import Data.Vec
 open import Data.Empty
 open import Data.Unit
 open import Data.Fin
 open import Relation.Nullary.Decidable
 open import Relation.Binary.PropositionalEquality
-open import Data.Graph.Acyclic
+open import Data.Graph.Acyclic hiding (reverse)
 
 data ModelDAG : ℕ → Set where
   -- TestDAG : {n : ℕ} -> String -> ModelDAG n
@@ -26,6 +25,10 @@ data ModelDAG : ℕ → Set where
 DAGToList : ∀ {n} -> ModelDAG n -> List ModelElement
 DAGToList ∅ = []
 DAGToList ((context me e) & dag) = me ∷ (DAGToList dag)
+
+DAGsToListReverse : ∀ {n} -> List (ModelDAG n) -> List ModelElement
+DAGsToListReverse [] = []
+DAGsToListReverse (dag ∷ dags) = appendUniqueModelElement (reverse (DAGToList dag)) (DAGsToListReverse dags)
 
 sub : (n : ℕ) -> Fin n -> ℕ
 sub zero _ = zero

@@ -393,19 +393,19 @@ getInputsCondition ((Input n _ _) ∷ []) = Defined (var n)
 getInputsCondition ((Input n _ _) ∷ xs) = (Defined (var n)) ∧ getInputsCondition xs
 getInputsCondition _ = false
 
-getIOVars : List ModelElement -> List Var
-getIOVars ((Output n _ _) ∷ xs) = (var n) ∷ getIOVars xs
-getIOVars ((Input n _ _) ∷ xs) = (var n) ∷ getIOVars xs
-getIOVars _ = []
+getModelElementVars : List ModelElement -> List Var
+getModelElementVars [] = []
+getModelElementVars ((Previous (Properties n _ _ _ _ _) _) ∷ xs) = (var n) ∷ (var (n ++ "_mem")) ∷ getModelElementVars xs
+getModelElementVars (me ∷ xs) = (var (getModelElementName me)) ∷ getModelElementVars xs
 
 generateModelCodeCondition : Project -> Model -> Condition -> Maybe Condition
 generateModelCodeCondition p (Operation n ins outs sms) preC with (createDAG (Operation n ins outs sms))
 ... | nothing = nothing
 ... | just dags = just (
-    -- weaken 
+     weaken 
         (statementListToCondition preC preC
                                   (generateModelElementsStatementListDAGs p (Operation n ins outs sms) dags []))
-        -- (getIOVars (ins Data.List.++ outs))
+        ((var "isInitialCycle") ∷ (getModelElementVars (DAGsToListReverse dags)))
         )
 
 generateModelCodeHoareTriplets : Project -> Model -> Maybe (List (HoareTriplet (List String)))
@@ -573,9 +573,9 @@ generateModelDAGCondition : Project -> Model -> Maybe Condition
 generateModelDAGCondition p (Operation n ins outs sms) with (createDAG (Operation n ins outs sms))
 ... | nothing = nothing
 ... | just dags = just (
-    -- weaken
+    weaken
     (Defined (var "isInitialCycle") ∧ (generateConditionDAGs p (Operation n ins outs sms) dags []))
-    -- (getIOVars (ins Data.List.++ outs))
+     ((var "isInitialCycle") ∷ (getModelElementVars (DAGsToListReverse dags)))
     )
 
 -- To generate a code for the project, code generation should have a root model to start.
@@ -637,14 +637,38 @@ checkResult4 with denemeCodeCond ifExample3 | denemeDAGCond ifExample3
 ... | just c1 | just c2 = c1 ≟C c2
 ... | _ | _ = false
 
--- testHoare : checkResult ≡ true
--- testHoare = refl
--- 
--- testHoare2 : checkResult2 ≡ true
--- testHoare2 = refl
--- 
--- testHoare3 : checkResult3 ≡ true
--- testHoare3 = refl
--- 
--- testHoare4 : checkResult4 ≡ true
--- testHoare4 = refl
+checkResult5 : Bool
+checkResult5 with denemeCodeCond previousExample | denemeDAGCond previousExample
+... | just c1 | just c2 = c1 ≟C c2
+... | _ | _ = false
+
+checkResult6 : Bool
+checkResult6 with denemeCodeCond previousCycle | denemeDAGCond previousCycle
+... | just c1 | just c2 = c1 ≟C c2
+... | _ | _ = false
+
+checkResult7 : Bool
+checkResult7 with denemeCodeCond previousCycle2 | denemeDAGCond previousCycle2
+... | just c1 | just c2 = c1 ≟C c2
+... | _ | _ = false
+
+testHoare : checkResult ≡ true
+testHoare = refl
+
+testHoare2 : checkResult2 ≡ true
+testHoare2 = refl
+
+testHoare3 : checkResult3 ≡ true
+testHoare3 = refl
+
+testHoare4 : checkResult4 ≡ true
+testHoare4 = refl
+
+testHoare5 : checkResult5 ≡ true
+testHoare5 = refl
+
+testHoare6 : checkResult6 ≡ true
+testHoare6 = refl
+
+testHoare7 : checkResult7 ≡ true
+testHoare7 = refl

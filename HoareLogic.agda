@@ -166,20 +166,21 @@ replaceVarsInNewAnnotation (c1 ∧ c2) a3 = replaceVarsInNewAnnotation c1 (repla
 replaceVarsInNewAnnotation _ a = a
 
 replaceVarsInNewCondition : Condition -> Condition -> Condition
-replaceVarsInNewCondition true c = c
-replaceVarsInNewCondition _ true = true
-replaceVarsInNewCondition _ false = false
-replaceVarsInNewCondition _ (Defined v) = (Defined v)
-replaceVarsInNewCondition (Defined (var v1)) c = c
-replaceVarsInNewCondition ((var v1) :=: a1) ((var v2) :=: a2) = (var v2) :=: replaceVarInAnnotation a2 (var v1) a1
-replaceVarsInNewCondition ((a1 :=: true ∧ c1) ∨ (a2 :=: false ∧ c2)) c3 with replaceVarsInNewCondition c1 c3 | replaceVarsInNewCondition c2 c3
+replaceVarsInNewCondition true                                          c                   = c
+replaceVarsInNewCondition _                                             true                = true
+replaceVarsInNewCondition _                                             false               = false
+replaceVarsInNewCondition _                                             (Defined v)         = (Defined v)
+replaceVarsInNewCondition (Defined (var v1))                            c                   = c
+replaceVarsInNewCondition ((var v1) :=: a1)                             ((var v2) :=: a2)   = (var v2) :=: replaceVarInAnnotation a2 (var v1) a1
+replaceVarsInNewCondition ((a1 :=: true ∧ c1) ∨ (a2 :=: false ∧ c2))    c3                  with replaceVarsInNewCondition c1 c3 | replaceVarsInNewCondition c2 c3
 ... | c13 | c23 with c13 ≟C c3 | c23 ≟C c3
 ... | true | true = c3
 ... | _ | _ = (a1 :=: true ∧ c13) ∨ (a2 :=: false ∧ c23)
-replaceVarsInNewCondition preC ((a1 :=: true ∧ c1) ∨ (a2 :=: false ∧ c2)) =
+replaceVarsInNewCondition preC                                          ((a1 :=: true ∧ c1) ∨ (a2 :=: false ∧ c2)) =
     (replaceVarsInNewAnnotation preC a1 :=: true ∧ replaceVarsInNewCondition preC c1) ∨
     (replaceVarsInNewAnnotation preC a2 :=: false ∧ replaceVarsInNewCondition preC c2)
-replaceVarsInNewCondition (c1 ∧ c2) c3 = replaceVarsInNewCondition c1 (replaceVarsInNewCondition c2 c3)
+replaceVarsInNewCondition preC                                          (c1 ∧ c2) = replaceVarsInNewCondition preC c1 ∧ replaceVarsInNewCondition preC c2
+replaceVarsInNewCondition (c1 ∧ c2)                                     c3 = replaceVarsInNewCondition c1 (replaceVarsInNewCondition c2 c3)
 replaceVarsInNewCondition _ _ = false
 
 varAppearsInDefinitionA : Annotation -> Var -> Bool
@@ -213,7 +214,21 @@ varAppearsInDefinitionC ((a1 :=: true ∧ c1) ∨ (a2 :=: false ∧ c2)) v = var
 varAppearsInDefinitionC _ _ = false
 
 checkAndReplaceVarsInNewCondition : Condition -> Condition -> Condition
+checkAndReplaceVarsInNewCondition c1 (c2 ∧ c3) = checkAndReplaceVarsInNewCondition c1 c2 ∧ checkAndReplaceVarsInNewCondition c1 c3
 checkAndReplaceVarsInNewCondition c1 c2 with replaceVarsInNewCondition c1 c2
 ... | replacedC with varAppearsInDefinitionC replacedC (findVarInCondition c2)
 ... | false = replacedC
 ... | true = c2
+
+denemee : Condition
+denemee = replaceVarsInNewCondition ((((var "isInitialCycle") :=: true ∧
+  (var "Previous1") :=: (const "0"))
+ ∨
+ ((var "isInitialCycle") :=: false ∧
+  (var "Previous1") :=: (var "Previous1_mem")))
+ ∧
+ (((var "isInitialCycle") :=: true ∧ (var "Output") :=: (const "0"))
+ ∨
+ ((var "isInitialCycle") :=: false ∧
+  (var "Output") :=: (var "Previous1_mem"))))
+  ((Defined (var "Input")) ∧ (var "Previous1_mem") :=: (var "Input"))
