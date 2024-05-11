@@ -406,6 +406,7 @@ generateModelCodeCondition p (Operation n ins outs sms) preC with (createDAG (Op
         (statementListToCondition preC preC
                                   (generateModelElementsStatementListDAGs p (Operation n ins outs sms) dags []))
         ((var "isInitialCycle") ∷ (getModelElementVars (DAGsToListReverse dags)))
+        ((var "isInitialCycle") ∷ (getModelElementVars (ins Data.List.++ outs)))
         )
 
 generateModelCodeHoareTriplets : Project -> Model -> Maybe (List (HoareTriplet (List String)))
@@ -576,6 +577,7 @@ generateModelDAGCondition p (Operation n ins outs sms) with (createDAG (Operatio
     weaken
     (Defined (var "isInitialCycle") ∧ (generateConditionDAGs p (Operation n ins outs sms) dags []))
      ((var "isInitialCycle") ∷ (getModelElementVars (DAGsToListReverse dags)))
+     ((var "isInitialCycle") ∷ (getModelElementVars (ins Data.List.++ outs)))
     )
 
 -- To generate a code for the project, code generation should have a root model to start.

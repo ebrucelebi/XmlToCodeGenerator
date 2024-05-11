@@ -118,15 +118,6 @@ findVarInCondition ((var v) :=: a) = just (var v)
 findVarInCondition ((a1 :=: true ∧ c1) ∨ (a2 :=: false ∧ c2)) = findVarInCondition c1
 findVarInCondition _ = nothing
 
-weaken : Condition -> List Var -> Condition
-weaken c [] = true
-weaken c (v ∷ []) with findConditionForVar c v
-... | nothing = true
-... | just c1 = c1
-weaken c (v ∷ vs) with findConditionForVar c v
-... | nothing = weaken c vs
-... | just c1 = c1 ∧ weaken c vs
-
 replaceVarInAnnotation : Annotation -> Var -> Annotation -> Annotation
 replaceVarInAnnotation (var v1) (var v2) a with v1 Data.String.== v2
 ... | true = a
@@ -210,7 +201,10 @@ varAppearsInDefinitionA _ _ = false
 
 varAppearsInDefinitionC : Condition -> Maybe Var -> Bool
 varAppearsInDefinitionC ((var v1) :=: a1) (just v2) = varAppearsInDefinitionA a1 v2
-varAppearsInDefinitionC ((a1 :=: true ∧ c1) ∨ (a2 :=: false ∧ c2)) v = varAppearsInDefinitionC c1 v Data.Bool.∨ varAppearsInDefinitionC c2 v
+varAppearsInDefinitionC ((a1 :=: true ∧ c1) ∨ (a2 :=: false ∧ c2)) (just v2) = varAppearsInDefinitionC c1 (just v2) Data.Bool.∨
+                                                                               varAppearsInDefinitionC c2 (just v2) Data.Bool.∨
+                                                                               varAppearsInDefinitionA a1 v2 Data.Bool.∨
+                                                                               varAppearsInDefinitionA a2 v2
 varAppearsInDefinitionC _ _ = false
 
 checkAndReplaceVarsInNewCondition : Condition -> Condition -> Condition
@@ -220,15 +214,38 @@ checkAndReplaceVarsInNewCondition c1 c2 with replaceVarsInNewCondition c1 c2
 ... | false = replacedC
 ... | true = c2
 
-denemee : Condition
-denemee = replaceVarsInNewCondition ((((var "isInitialCycle") :=: true ∧
-  (var "Previous1") :=: (const "0"))
- ∨
- ((var "isInitialCycle") :=: false ∧
-  (var "Previous1") :=: (var "Previous1_mem")))
- ∧
- (((var "isInitialCycle") :=: true ∧ (var "Output") :=: (const "0"))
- ∨
- ((var "isInitialCycle") :=: false ∧
-  (var "Output") :=: (var "Previous1_mem"))))
-  ((Defined (var "Input")) ∧ (var "Previous1_mem") :=: (var "Input"))
+getConditionsWithVars : Condition -> List Var -> Condition
+getConditionsWithVars c [] = true
+getConditionsWithVars c (v ∷ []) with findConditionForVar c v
+... | nothing = true
+... | just c1 = c1
+getConditionsWithVars c (v ∷ vs) with findConditionForVar c v
+... | nothing = getConditionsWithVars c vs
+... | just c1 = c1 ∧ getConditionsWithVars c vs
+
+checkConditionVarAppearsInCondition : Condition -> Condition -> Bool
+checkConditionVarAppearsInCondition c1 (c2 ∧ c3) = checkConditionVarAppearsInCondition c1 c2 Data.Bool.∨ checkConditionVarAppearsInCondition c1 c3
+checkConditionVarAppearsInCondition c1 c2 = varAppearsInDefinitionC c2 (findVarInCondition c1)
+
+containsVar : List Var -> Var -> Bool
+containsVar [] v = false
+containsVar ((var v1) ∷ vs) (var v2) with v1 Data.String.== v2
+... | true = true
+... | false = containsVar vs (var v2) 
+
+removeConditionsWithUnusedVars : Condition -> Condition -> List Var -> Condition
+removeConditionsWithUnusedVars (c1 ∧ c2) c3 mustV with removeConditionsWithUnusedVars c1 c3 mustV | removeConditionsWithUnusedVars c2 c3 mustV
+... | true | true = true
+... | true | c1 = c1
+... | c1 | true = c1
+... | c1 | c2 = c1 ∧ c2
+removeConditionsWithUnusedVars c1 c2 mustV with findVarInCondition c1
+... | just v with containsVar mustV v
+... | true = c1
+... | false with checkConditionVarAppearsInCondition c1 c2
+... | true = c1
+... | false = true
+removeConditionsWithUnusedVars c1 c2 mustV | nothing = c1
+
+weaken : Condition -> List Var -> List Var -> Condition
+weaken c vs mustV = let cs = getConditionsWithVars c vs in removeConditionsWithUnusedVars cs cs mustV
