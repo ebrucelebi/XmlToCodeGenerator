@@ -323,7 +323,12 @@ mutual
     generateModelElementMain _ p m c dag = []
 
     generateModelElement : ∀ {n} -> Project -> Model -> CodeSection -> Context ModelElement ModelElement n -> ModelDAG n -> List String
-    generateModelElement p m Identifier  (context me edges)                   dag = (getModelElementName me) ∷ []
+    -- generateModelElement p m Identifier  (context (InputInstance pr s) edges)  dag = ("inputs->" ++ (getModelElementName (InputInstance pr s))) ∷ []
+    -- generateModelElement p m Identifier  (context (OutputInstance pr s) edges) dag = ("outputs->" ++ (getModelElementName (OutputInstance pr s))) ∷ []
+    generateModelElement p m Identifier (context me edges) dag with me | getModelElementName me
+    ... | (InputInstance _ _) | name = ("inputs->" ++ name) ∷ []
+    ... | (OutputInstance _ _) | name = ("outputs->" ++ name) ∷ []
+    ... | _ | name = name ∷ []
     generateModelElement p m Declaration (context (InputInstance _ _) edges)  dag = []
     generateModelElement p m Declaration (context (OutputInstance _ _) edges) dag = []
     generateModelElement{n} p m Declaration c dag with getOutputType n m (c & dag)
@@ -389,14 +394,19 @@ generateModel p (Operation n ins outs sms) with (createDAG (Operation n ins outs
 
 getInputsCondition : List ModelElement -> Condition
 getInputsCondition [] = true
-getInputsCondition ((Input n _ _) ∷ []) = Defined (var n)
-getInputsCondition ((Input n _ _) ∷ xs) = (Defined (var n)) ∧ getInputsCondition xs
+getInputsCondition ((Input n _ _) ∷ []) = Defined (var ("inputs->" ++ n))
+getInputsCondition ((Input n _ _) ∷ xs) = (Defined (var ("inputs->" ++ n))) ∧ getInputsCondition xs
 getInputsCondition _ = false
 
 getModelElementVars : List ModelElement -> List Var
 getModelElementVars [] = []
 getModelElementVars ((Previous (Properties n _ _ _ _ _) _) ∷ xs) = (var n) ∷ (var (n ++ "_mem")) ∷ getModelElementVars xs
-getModelElementVars (me ∷ xs) = (var (getModelElementName me)) ∷ getModelElementVars xs
+getModelElementVars (me ∷ xs) with me | getModelElementName me
+... | (InputInstance _ _) | name = (var ("inputs->" ++ name)) ∷ getModelElementVars xs
+... | (OutputInstance _ _) | name = (var ("outputs->" ++ name)) ∷ getModelElementVars xs
+... | (Input _ _ _) | name = (var ("inputs->" ++ name)) ∷ getModelElementVars xs
+... | (Output _ _ _) | name = (var ("outputs->" ++ name)) ∷ getModelElementVars xs
+... | _ | name = (var name) ∷ getModelElementVars xs
 
 generateModelCodeCondition : Project -> Model -> Condition -> Maybe Condition
 generateModelCodeCondition p (Operation n ins outs sms) preC with (createDAG (Operation n ins outs sms))
@@ -448,10 +458,10 @@ generateBitwiseOrAnnotation (x ∷ xs) = (var x) |b generateBitwiseOrAnnotation 
 
 generateModelElementCondition : ∀ {n} -> Project -> Model -> Context ModelElement ModelElement n -> ModelDAG n -> Condition
 generateModelElementCondition p m (context (InputInstance (Properties n _ _ _ _ _) _) edges) dag =
-    Defined (var n)
+    Defined (var ("inputs->" ++ n))
 
 generateModelElementCondition p m (context (OutputInstance (Properties n _ _ _ _ _) _) edges) dag =
-    (var n) :=: (var (generateIdentifierAtEdge p m edges 0 dag))
+    (var ("outputs->" ++ n)) :=: (var (generateIdentifierAtEdge p m edges 0 dag))
 
 generateModelElementCondition p m (context (Addition (Properties n _ _ _ _ _)) edges) dag =
     (var n) :=: generateAdditionAnnotation (generateIdentifierEdges p m edges dag)
@@ -674,3 +684,4 @@ testHoare6 = refl
 
 testHoare7 : checkResult7 ≡ true
 testHoare7 = refl
+ 
